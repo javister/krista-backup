@@ -1,0 +1,215 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>PgDump &#8212; Документация KristaBackup 1.0</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../_static/translations.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../../genindex.html" />
+    <link rel="search" title="Поиск" href="../../search.html" />
+    <link rel="next" title="Mount/Umount" href="mount_umount.html" />
+    <link rel="prev" title="Rsync" href="rsync.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="pgdump">
+<span id="id1"></span><h1>PgDump<a class="headerlink" href="#pgdump" title="Ссылка на этот заголовок">¶</a></h1>
+<p>Оболочка над pgdump.</p>
+<div class="section" id="id2">
+<h2>Параметры:<a class="headerlink" href="#id2" title="Ссылка на этот заголовок">¶</a></h2>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 46%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>название</p></th>
+<th class="head"><p>описание</p></th>
+<th class="head"><p>значение</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>exclusions</p></td>
+<td><p>базы, которые стоит игнорировать</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>format</p></td>
+<td><p>формат бэкапа</p></td>
+<td><p>directory или custom (стандартное значение)</p></td>
+</tr>
+<tr class="row-even"><td><p>host</p></td>
+<td><p>адрес/ip хоста</p></td>
+<td><p>'' (ip, стандартное значение)</p></td>
+</tr>
+<tr class="row-odd"><td><p>port</p></td>
+<td><p>порт базы</p></td>
+<td><p>5432 (порт, стандартное значение)</p></td>
+</tr>
+<tr class="row-even"><td><p>user</p></td>
+<td><p>пользователь</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>password</p></td>
+<td><p>пароль</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>opts</p></td>
+<td><p>опции для pgdump</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>extension</p></td>
+<td><p>расширение файла бэкапа</p></td>
+<td><p>pg_dump (стандартное значение</p></td>
+</tr>
+<tr class="row-even"><td><p>command_path</p></td>
+<td><p>имя команды pgdump</p></td>
+<td><p>pg_dump (стандартное значение)</p></td>
+</tr>
+<tr class="row-odd"><td><p>mode</p></td>
+<td><p>режим, определяющий выбираемые базы</p></td>
+<td><p>all = бэкап всех баз, single = бэкап баз в databases</p></td>
+</tr>
+<tr class="row-even"><td><p>databases</p></td>
+<td><p>имя баз, бэкап которых нужно выполнить</p></td>
+<td><p>[] (лист, работает если mode = 'single')</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id3">
+<h2>Пример:<a class="headerlink" href="#id3" title="Ссылка на этот заголовок">¶</a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pgdump</span><span class="p">:</span>
+  <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">бекап базы postgresql</span>
+  <span class="nt">basename</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">pgdump</span>
+  <span class="nt">databases</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">db_test_app</span>
+  <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup/db/</span>
+  <span class="nt">exclusions</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">postgres.*, template.*</span>
+  <span class="nt">format</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">custom</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">pgdump</span>
+  <span class="nt">mode</span><span class="p">:</span> <span class="s">&#39;single&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">KristaBackup</a></h1>
+
+
+
+
+
+
+
+
+<h3>Навигация</h3>
+<p class="caption"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../setup.html">Установка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../setup.html#downloading">Скачивание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup.html#dependencies">Установка зависимостей</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup.html#building">Создание исполняемого файла</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Использование</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#run-task">Запуск заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#crontab">Работа с crontab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#id5">Запуск веб-модуля</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Конфигурация</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id2">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id3">Расписание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id5">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id6">Пример написания конфигурации</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Действия</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="action.html">Action (основной)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tar.html">Tar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cleaner.html">Cleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rsync.html">Rsync</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">PgDump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mount_umount.html">Mount/Umount</a></li>
+<li class="toctree-l2"><a class="reference internal" href="movebkpperiod.html">MoveBkpPeriod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="progress_ticket.html">InProgressTicket</a></li>
+<li class="toctree-l2"><a class="reference internal" href="check_backup.html">Check backup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dschecker.html">DataSpaceChecker</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Действия</a><ul>
+      <li>Previous: <a href="rsync.html" title="предыдущая глава">Rsync</a></li>
+      <li>Next: <a href="mount_umount.html" title="следующая глава">Mount/Umount</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Быстрый поиск</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, НПО Криста.
+      
+      |
+      <a href="../../_sources/pages/actions/pgdump.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

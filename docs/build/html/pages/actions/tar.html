@@ -1,0 +1,232 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tar &#8212; Документация KristaBackup 1.0</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../_static/translations.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../../genindex.html" />
+    <link rel="search" title="Поиск" href="../../search.html" />
+    <link rel="next" title="Cleaner" href="cleaner.html" />
+    <link rel="prev" title="Action (основной)" href="action.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="tar">
+<span id="id1"></span><h1>Tar<a class="headerlink" href="#tar" title="Ссылка на этот заголовок">¶</a></h1>
+<p>Создаёт бэкап в формате <code class="docutils literal notranslate"><span class="pre">tar.gz</span></code> или <code class="docutils literal notranslate"><span class="pre">tar.bz2</span></code>. Для бэкапа создаётся
+<code class="docutils literal notranslate"><span class="pre">shapshot</span> <span class="pre">list</span></code>, который содержит путь к соответствующему бэкапу и
+хранит для каждого файла время изменения, его размер и имя.</p>
+<p>Файл добавляется в инкрементальный бэкап,
+если он не был создан или у старого файла было изменено время изменения/размер.</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 46%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>название</p></th>
+<th class="head"><p>описание</p></th>
+<th class="head"><p>значение</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>basename</p></td>
+<td><p>используется для генерации имени архива, должно быть уникально</p></td>
+<td><p>желательно название последних двух папок, например home_user, var_log, etc</p></td>
+</tr>
+<tr class="row-odd"><td><p>check_level_list_only</p></td>
+<td><p>проверять только наличие snaphot листа; имеет смысл использовать, если сервер жёстко ограничен по памяти и предыдущий уровень бэкапа хранится в другом месте</p></td>
+<td><p>false (стандартное значение)</p></td>
+</tr>
+<tr class="row-even"><td><p>exclusions</p></td>
+<td><p>файлы, которые стоит игнорировать</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>use_re_in_exclusions</p></td>
+<td><p>использовать регулярные выражения (false для unix wildcard)</p></td>
+<td><p>false (стандартное значение)</p></td>
+</tr>
+<tr class="row-even"><td><p>compression</p></td>
+<td><p>уровень сжатия</p></td>
+<td><p>3 (стандартное значение)</p></td>
+</tr>
+<tr class="row-odd"><td><p>src_path</p></td>
+<td><p>путь к содержимому, бэкап которого нужно выполнить</p></td>
+<td><p>путь к директории</p></td>
+</tr>
+<tr class="row-even"><td><p>dest_path</p></td>
+<td><p>уровень сжатия</p></td>
+<td><p>путь к директории</p></td>
+</tr>
+<tr class="row-odd"><td><p>level</p></td>
+<td><p>уровень бэкапа</p></td>
+<td><p>число  (0 - стандартное значение)</p></td>
+</tr>
+<tr class="row-even"><td><p>level_folders</p></td>
+<td><p>название директорий в порядке соответствующих уровню</p></td>
+<td><p>список через запятую</p></td>
+</tr>
+<tr class="row-odd"><td><p>extension</p></td>
+<td><p>расширение архива</p></td>
+<td><p>gz (стандартное значение), bz2</p></td>
+</tr>
+<tr class="row-even"><td><p>use_absolute_path</p></td>
+<td><p>использовать относительные или абсолютные пути</p></td>
+<td><p>false (стандартное значение)</p></td>
+</tr>
+<tr class="row-odd"><td><p>list_extension</p></td>
+<td><p>расширение snapshot листа</p></td>
+<td><p>list (стандартное значение)</p></td>
+</tr>
+<tr class="row-even"><td><p>log_tar_files</p></td>
+<td><p>логгировать добавленные и исключенные из бэкапа файлы</p></td>
+<td><p>False (стандартное значение)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="id2">
+<h2>Пример:<a class="headerlink" href="#id2" title="Ссылка на этот заголовок">¶</a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tarjob_0level_etc</span><span class="p">:</span>
+  <span class="nt">basename</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">etc</span>
+  <span class="nt">check_level_list_only</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+  <span class="nt">compression</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3</span>
+  <span class="nt">exclusions</span><span class="p">:</span> <span class="s">&#39;./*/index/*,</span><span class="nv"> </span><span class="s">*/logs/archived/.indexed&#39;</span>
+  <span class="nt">use_re_in_exclusions</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+  <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/etc</span>
+  <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup</span>
+  <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+  <span class="nt">level_folders</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0,1</span>
+  <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">бэкап файлов /etc 0-го уровня</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h2>Примечание:<a class="headerlink" href="#id3" title="Ссылка на этот заголовок">¶</a></h2>
+<p>На данный момент явно не прописана логика для 2-го уровня бэкапа,
+поэтому рекомендуется использовать только 0 и 1 уровень.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">KristaBackup</a></h1>
+
+
+
+
+
+
+
+
+<h3>Навигация</h3>
+<p class="caption"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../setup.html">Установка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../setup.html#downloading">Скачивание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup.html#dependencies">Установка зависимостей</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup.html#building">Создание исполняемого файла</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Использование</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#run-task">Запуск заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#crontab">Работа с crontab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#id5">Запуск веб-модуля</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Конфигурация</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id2">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id3">Расписание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id5">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id6">Пример написания конфигурации</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Действия</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="action.html">Action (основной)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cleaner.html">Cleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rsync.html">Rsync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pgdump.html">PgDump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mount_umount.html">Mount/Umount</a></li>
+<li class="toctree-l2"><a class="reference internal" href="movebkpperiod.html">MoveBkpPeriod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="progress_ticket.html">InProgressTicket</a></li>
+<li class="toctree-l2"><a class="reference internal" href="check_backup.html">Check backup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dschecker.html">DataSpaceChecker</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Действия</a><ul>
+      <li>Previous: <a href="action.html" title="предыдущая глава">Action (основной)</a></li>
+      <li>Next: <a href="cleaner.html" title="следующая глава">Cleaner</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Быстрый поиск</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, НПО Криста.
+      
+      |
+      <a href="../../_sources/pages/actions/tar.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

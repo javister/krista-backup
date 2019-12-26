@@ -1,0 +1,18 @@
+syntax: glob
+.idea/*
+.vscode/*
+*.diff
+*.pyc
+*.zip
+*.log
+venv/*
+*egg-info/*
+venv3/*
+config_history/*
+*.list
+*.gz
+.mypy_cache
+out
+users.yaml
+servers.yaml
+config.yaml

@@ -1,0 +1,397 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>KristaBackup &#8212; Документация KristaBackup 1.0</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Установка" href="pages/setup.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="kristabackup">
+<h1>KristaBackup<a class="headerlink" href="#kristabackup" title="Ссылка на этот заголовок">¶</a></h1>
+<div class="section" id="id1">
+<h2>Описание<a class="headerlink" href="#id1" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Система для автоматизации процесса создания, ротирования и перемещения бэкапов.</p>
+<p>Особенности:</p>
+<ol class="arabic simple">
+<li><p>Работает автономно</p></li>
+<li><p>Имеет кросс-платформенную конфигурацию</p></li>
+<li><p>Логирование во время выполнения: сокращённое и подробное</p></li>
+<li><p>Имеет веб модуль для проверки состояния и просмотра логов</p></li>
+<li><p>Интегрируема с системами мониторинга (например, Zabbix)</p></li>
+</ol>
+</div>
+<div class="section" id="id2">
+<h2>Требования<a class="headerlink" href="#id2" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Поддержимаемые OS: Ubuntu 14.04, Debian 8, CentOS 7, AltLinux 8, Astra Linux 1.6</p>
+<p>Для запуска: <code class="docutils literal notranslate"><span class="pre">python3.4</span></code></p>
+<p>Для сборки: <code class="docutils literal notranslate"><span class="pre">python3.7</span></code></p>
+</div>
+<div class="section" id="id3">
+<h2>Установка<a class="headerlink" href="#id3" title="Ссылка на этот заголовок">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hg clone KristaBackup
+</pre></div>
+</div>
+<p>Назначаем владельца и права, если копировали не под рутом:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chown -R root:root KristaBackup
+chmod -R <span class="m">0755</span> KristaBackup/KristaBackup.py
+</pre></div>
+</div>
+<p>Для сборки:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 build.py
+<span class="c1"># если стандартная версия питона ниже</span>
+python3.7 build.py
+</pre></div>
+</div>
+<p>В папке <code class="docutils literal notranslate"><span class="pre">out</span></code> будет результат сборки, который удобно использовать и распростронять:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>root@pc:~/KristaBackup$ ls out/
+KristaBackup  requirements.system
+</pre></div>
+</div>
+</div>
+<div class="section" id="id4">
+<h2>Терминология<a class="headerlink" href="#id4" title="Ссылка на этот заголовок">¶</a></h2>
+<ul class="simple">
+<li><p>Минимальная единица – действие (action).</p></li>
+<li><p>Задание (task) содержит список действий, которые требуется выполнить.</p></li>
+<li><p>Все задания вместе явлются расписанием (schedule).</p></li>
+</ul>
+<p>Схематичный пример:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">schedule</span><span class="p">:</span> <span class="c1"># расписание</span>
+  <span class="nt">full_dump</span><span class="p">:</span> <span class="c1"># задание</span>
+    <span class="nt">actions</span><span class="p">:</span> <span class="c1"># действия в задании</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">some_action_1</span> <span class="c1"># действие 1</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">some_action_2</span> <span class="c1"># действие 2</span>
+    <span class="nt">cron</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">00 23 * * 1-6</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">описание задания</span>
+
+<span class="nt">actions</span><span class="p">:</span> <span class="c1">#  список всех действий</span>
+  <span class="nt">some_action_1</span><span class="p">:</span> <span class="c1">#  конфигурация действия 1</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">type1</span>
+
+  <span class="nt">some_action_2</span><span class="p">:</span> <span class="c1">#  конфигурация действия 2</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">type2</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>Использование<a class="headerlink" href="#id5" title="Ссылка на этот заголовок">¶</a></h2>
+<p>По-умолчанию, требуется запуск от пользователя с root правами.</p>
+<p>Запуск задания вручную:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./KristaBackup run your_task
+</pre></div>
+</div>
+<p>Для подробного вывода действий в консоль существует флаг <code class="docutils literal notranslate"><span class="pre">-v</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./KristaBackup run your_task -v
+</pre></div>
+</div>
+<p>Также, выполнение заданий можно автоматизировать добавлением их в <code class="docutils literal notranslate"><span class="pre">crontab</span></code>.</p>
+<p>Добавить задание в <code class="docutils literal notranslate"><span class="pre">crontab</span></code> и убрать можно следующими командами:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./KristaBackup en your_task  <span class="c1"># включить задание</span>
+./KristaBackup dis your_task <span class="c1"># выключить задание</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id6">
+<h2>Пример написания конфигурации<a class="headerlink" href="#id6" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Здесь будет рассматриваться пример файла конфигураций, который будет
+содержать настройки для выполнения полного и разностного бэкапа каталога <code class="docutils literal notranslate"><span class="pre">/etc</span></code>.</p>
+<p>Ротация полного бэкапа будет выполняться раз в неделю, одновременно будут хранится
+две копии; ротация разностного бэкапа будет выполняться ежедневно, одновременно
+будут хранится 4 копии.</p>
+<p>В корневом каталоге находится файл <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>, содержащий конфигурацию
+в формате <code class="docutils literal notranslate"><span class="pre">yaml</span></code>.</p>
+<p>Добавим в начало файла блок <code class="docutils literal notranslate"><span class="pre">naming</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">naming</span><span class="p">:</span>
+  <span class="nt">server_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example_server</span> <span class="c1"># имя серверва</span>
+  <span class="nt">project</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">server_backup</span> <span class="c1"># название проекта</span>
+  <span class="nt">region</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">region_name</span> <span class="c1"># название региона</span>
+</pre></div>
+</div>
+<p>Этот блок используется для подстановки в результирующие файлы. Далее добавим блок <code class="docutils literal notranslate"><span class="pre">logging</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">logging</span><span class="p">:</span>
+  <span class="nt">logs_path</span><span class="p">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">/var/log/KristaBackup</span> <span class="c1"># директория, в которой</span>
+    <span class="c1"># будут храниться логи</span>
+</pre></div>
+</div>
+<p>Теперь опишем действия. Создадим блок <code class="docutils literal notranslate"><span class="pre">actions</span></code> и добавим в него действие, которое
+будет выполнять полный бэкап:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">actions</span><span class="p">:</span>
+  <span class="nt">tarjob_0level_etc</span><span class="p">:</span>
+    <span class="nt">basename</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">etc</span> <span class="c1"># уникальное имя</span>
+    <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/etc</span> <span class="c1"># исходная директория</span>
+    <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup</span> <span class="c1"># результирующая директория</span>
+    <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span> <span class="c1"># уровень бэкапа</span>
+    <span class="nt">level_folders</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0,1</span> <span class="c1"># имена папок для уровней бэкапа</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">бэкап файлов /etc 0-го уровня</span> <span class="c1"># ёмкое описание</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span> <span class="c1"># тип</span>
+</pre></div>
+</div>
+<p>Наследуем от <code class="docutils literal notranslate"><span class="pre">tarjob_0level_etc</span></code> новое действие, которое будет выполнять разностный бэкап:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">actions</span><span class="p">:</span>
+  <span class="nt">tarjob_0level_etc</span><span class="p">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+
+  <span class="nt">tarjob_1level_etc</span><span class="p">:</span>
+    <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_0level_etc</span>   <span class="c1"># указано родительское действие</span>
+    <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">бэкап файлов /etc 1-го уровня</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+</pre></div>
+</div>
+<p>Действие <code class="docutils literal notranslate"><span class="pre">tarjob_1level_etc</span></code> импортировало все параметры, которые установлены в <code class="docutils literal notranslate"><span class="pre">tarjob_0level_etc</span></code>,
+но не установлены в нём самом.</p>
+<p>Заметим, что в <code class="docutils literal notranslate"><span class="pre">tarjob_1level_etc</span></code> указан тип <code class="docutils literal notranslate"><span class="pre">tar</span></code>, хотя его
+можно и упустить, так как в таком случае он бы был заимствован из <code class="docutils literal notranslate"><span class="pre">tarjob_0level_etc</span></code>.</p>
+<p>По аналогии добавим действия для ротации:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">actions</span><span class="p">:</span>
+  <span class="nt">tarjob_0level_etc</span><span class="p">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+
+  <span class="nt">tarjob_1level_etc</span><span class="p">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">...</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+
+<span class=" -Error"> </span><span class="nt">cleaner_tarjob_0level_etc</span><span class="p">:</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">очистка каталога от файлов в зависимости от их количества</span>
+    <span class="nt">max_files</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
+    <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_0level_etc</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cleaner</span>
+
+ <span class=" -Error"> </span><span class="nt">cleaner_tarjob_1level_etc</span><span class="p">:</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">очистка каталога от файлов в зависимости от их количества</span>
+    <span class="nt">max_files</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
+    <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_1level_etc</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cleaner</span>
+</pre></div>
+</div>
+<p>Осталось собрать действия в задания. Добавим <code class="docutils literal notranslate"><span class="pre">schedule</span></code> после <code class="docutils literal notranslate"><span class="pre">logging</span></code>,
+а в него задание для выполнения полного бэкапа:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nn">...</span>
+<span class="nt">logging</span><span class="p">:</span>
+  <span class="nt">logs_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/var/log/KristaBackup</span>
+
+<span class="nt">schedule</span><span class="p">:</span>
+  <span class="nt">full_dump</span><span class="p">:</span>                        <span class="c1"># имя задания</span>
+    <span class="nt">actions</span><span class="p">:</span>                        <span class="c1"># список действий</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_0level_etc</span>           <span class="c1"># действие для создания бэкапа</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cleaner_tarjob_0level_etc</span>   <span class="c1"># действие для ротации копий</span>
+    <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;00</span><span class="nv"> </span><span class="s">23</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">0&#39;</span>             <span class="c1"># время, в которое требуется</span>
+                                    <span class="c1"># выполнять задание</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Бекап каталога 0-го уровня (полный)</span>
+
+<span class="nt">actions</span><span class="p">:</span>
+  <span class="nt">tarjob_0level_etc</span><span class="p">:</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+<p>По аналогии сделаем задания для выполнения разностного бэкапа:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nn">...</span>
+<span class="nt">logging</span><span class="p">:</span>
+  <span class="nt">logs_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/var/log/KristaBackup</span>
+
+<span class="nt">schedule</span><span class="p">:</span>
+  <span class="nt">full_dump</span><span class="p">:</span>                        <span class="c1"># имя задания</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+    <span class="l l-Scalar l-Scalar-Plain">descr</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Бекап каталога 0-го уровня (полный)</span>
+
+  <span class="nt">diff_dump</span><span class="p">:</span>
+    <span class="nt">actions</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_1level_etc</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cleaner_tarjob_1level_etc</span>
+    <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;00</span><span class="nv"> </span><span class="s">23</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1-6&#39;</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Бекап каталога 0-го уровня (полный)</span>
+</pre></div>
+</div>
+<p>Конфигурация завершена. Финальный результат:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">naming</span><span class="p">:</span>
+  <span class="nt">server_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example_server</span>
+  <span class="nt">project</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">server_backup</span>
+  <span class="nt">region</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">region_name</span>
+
+<span class="nt">logging</span><span class="p">:</span>
+  <span class="nt">logs_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/var/log/KristaBackup</span>
+
+<span class="nt">schedule</span><span class="p">:</span>
+  <span class="nt">full_dump</span><span class="p">:</span>
+    <span class="nt">actions</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_0level_etc</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cleaner_tarjob_0level_etc</span>
+    <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;00</span><span class="nv"> </span><span class="s">23</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">0&#39;</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Бекап каталога 0-го уровня (полный)</span>
+
+  <span class="nt">diff_dump</span><span class="p">:</span>
+    <span class="nt">actions</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_1level_etc</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cleaner_tarjob_1level_etc</span>
+    <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;00</span><span class="nv"> </span><span class="s">23</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1-6&#39;</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Бекап каталога 0-го уровня (полный)</span>
+
+<span class="nt">actions</span><span class="p">:</span>
+  <span class="nt">tarjob_0level_etc</span><span class="p">:</span>
+    <span class="nt">basename</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">etc</span>
+    <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/etc</span>
+    <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup</span>
+    <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+    <span class="nt">level_folders</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0,1</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">бэкап файлов /etc 0-го уровня</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+
+  <span class="nt">tarjob_1level_etc</span><span class="p">:</span>
+    <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_0level_etc</span>
+    <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">бэкап файлов /etc 1-го уровня</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+
+  <span class="nt">cleaner_tarjob_0level_etc</span><span class="p">:</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">очистка каталога от файлов в зависимости от их количества</span>
+    <span class="nt">max_files</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
+    <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_0level_etc</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cleaner</span>
+
+  <span class="nt">cleaner_tarjob_1level_etc</span><span class="p">:</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">очистка каталога от файлов в зависимости от их количества</span>
+    <span class="nt">max_files</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
+    <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_1level_etc</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cleaner</span>
+</pre></div>
+</div>
+<p>Подробнее о конфигурировании можно прочитать в docs/build/html/pages/configuration.html</p>
+</div>
+</div>
+<div class="section" id="id7">
+<h1>Разработчики<a class="headerlink" href="#id7" title="Ссылка на этот заголовок">¶</a></h1>
+<p><a class="reference external" href="mailto:s&#46;postnikov&#37;&#52;&#48;krista&#46;ru">s<span>&#46;</span>postnikov<span>&#64;</span>krista<span>&#46;</span>ru</a>, <a class="reference external" href="mailto:m&#46;adrian&#37;&#52;&#48;krista&#46;ru">m<span>&#46;</span>adrian<span>&#64;</span>krista<span>&#46;</span>ru</a></p>
+</div>
+<div class="section" id="id8">
+<h1>Лицензия<a class="headerlink" href="#id8" title="Ссылка на этот заголовок">¶</a></h1>
+<p>Copyright 2019 ООО НПО Криста</p>
+<p>Licensed under the Apache License, Version 2.0</p>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">KristaBackup</a></h1>
+
+
+
+
+
+
+
+
+<h3>Навигация</h3>
+<p class="caption"><span class="caption-text">Содержание:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pages/setup.html">Установка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pages/setup.html#downloading">Скачивание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/setup.html#dependencies">Установка зависимостей</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/setup.html#building">Создание исполняемого файла</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pages/usage.html">Использование</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pages/usage.html#run-task">Запуск заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/usage.html#crontab">Работа с crontab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/usage.html#id5">Запуск веб-модуля</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pages/configuration.html">Конфигурация</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pages/configuration.html#id2">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/configuration.html#id3">Расписание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/configuration.html#id5">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/configuration.html#id6">Пример написания конфигурации</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pages/actions/index.html">Действия</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pages/actions/action.html">Action (основной)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/actions/tar.html">Tar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/actions/cleaner.html">Cleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/actions/rsync.html">Rsync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/actions/pgdump.html">PgDump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/actions/mount_umount.html">Mount/Umount</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/actions/movebkpperiod.html">MoveBkpPeriod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/actions/progress_ticket.html">InProgressTicket</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/actions/check_backup.html">Check backup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/actions/dschecker.html">DataSpaceChecker</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="pages/setup.html" title="следующая глава">Установка</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Быстрый поиск</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, НПО Криста.
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

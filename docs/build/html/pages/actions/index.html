@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>Действия &#8212; Документация KristaBackup 1.0</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../_static/translations.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../../genindex.html" />
+    <link rel="search" title="Поиск" href="../../search.html" />
+    <link rel="next" title="Action (основной)" href="action.html" />
+    <link rel="prev" title="Конфигурация" href="../configuration.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="actions-index">
+<span id="id1"></span><h1>Действия<a class="headerlink" href="#actions-index" title="Ссылка на этот заголовок">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<h2>Описание</h2><p><code class="docutils literal notranslate"><span class="pre">Action</span></code> (действие, задача) – атомарная операция, например: создать архив,
+очистка одной папки, и т.п.</p>
+<p>На данный момент реализованы следующие действия:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../usage.html#usage"><span class="std std-ref">tar</span></a> делает архивы бэкапов</p></li>
+<li><p><a class="reference internal" href="pgdump.html#pgdump"><span class="std std-ref">pgdump</span></a> делает бэкапы баз данных <code class="docutils literal notranslate"><span class="pre">PostgreSQL</span></code></p></li>
+<li><p><a class="reference internal" href="rsync.html#rsync"><span class="std std-ref">rsync</span></a> позволяет работать с <code class="docutils literal notranslate"><span class="pre">rsync</span></code></p></li>
+<li><p><a class="reference internal" href="cleaner.html#cleaner"><span class="std std-ref">cleaner</span></a> реализует механизмы ротации и очистки</p></li>
+<li><p><a class="reference internal" href="movebkpperiod.html#move-bkp-period"><span class="std std-ref">move_bkp_period</span></a> делает копирование бэкапов</p></li>
+<li><p><a class="reference internal" href="mount_umount.html#mount"><span class="std std-ref">mount</span></a> и <a class="reference internal" href="mount_umount.html#umount"><span class="std std-ref">umount</span></a> позволяют монтировать
+и отмонтировать fs</p></li>
+<li><p><a class="reference internal" href="progress_ticket.html#set-in-progress-ticket"><span class="std std-ref">set_in_progress_ticket</span></a>,
+<a class="reference internal" href="progress_ticket.html#unset-in-progress-ticket"><span class="std std-ref">unset_in_progress_ticket</span></a>
+и <a class="reference internal" href="progress_ticket.html#check-in-progress-ticket"><span class="std std-ref">check_in_progress_ticket</span></a> позволяют
+создавать, удалять и проверять наличие тикета</p></li>
+<li><p><a class="reference internal" href="check_backup.html#check-backup"><span class="std std-ref">check_backup</span></a> проверяет успешность последнего бэкапа</p></li>
+<li><p><a class="reference internal" href="dschecker.html#dschecker"><span class="std std-ref">dschecker</span></a> выводит в лог сведения о
+ресурсах файловой системы</p></li>
+</ul>
+<p>Все действия реализованы наследованием от общего класса <code class="docutils literal notranslate"><span class="pre">Action</span></code>
+и переопределяют абстрактный метод <code class="docutils literal notranslate"><span class="pre">start()</span></code>.</p>
+<p>Также для действий реализовано наследования конфигурируемых свойств через
+атрибут <code class="docutils literal notranslate"><span class="pre">source</span></code>.
+Например, если уже описано действие для бекапа 0-го уровня (полного), то для
+создания действия бэкапа 1-го уровня (инкрементального) достаточно только
+поменять уровень бекапа и указать от кого он наследуется.</p>
+<p>Параметры можно унаследовать от разнородных действий. Поэтому <code class="docutils literal notranslate"><span class="pre">cleaner</span></code>,
+который выполняет ротацию файлов созданных при
+помощи действия <code class="docutils literal notranslate"><span class="pre">tar</span></code>, можно реализовать через наследование от
+соответствующего действия <code class="docutils literal notranslate"><span class="pre">tar</span></code> и указание в конфигурации
+количества хранимых файлов.</p>
+<p>Свойства в конфигурации всегда должны соответствовать свойствам класса
+по названиям.</p>
+<p>Для некоторых свойств, которые являются списками, реализована упрощенная
+форма записи. Например, действие <code class="docutils literal notranslate"><span class="pre">tar</span></code> имеет атрибут <code class="docutils literal notranslate"><span class="pre">exclusions</span></code> и
+его можно записать двумя способами:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># первый вариант</span>
+<span class="nt">exclusions</span><span class="p">:</span> <span class="s">&#39;*/data/*,</span><span class="nv"> </span><span class="s">*/attachments/*,</span><span class="nv"> </span><span class="s">*/tmp/*&#39;</span>
+
+<span class="c1"># второй вариант</span>
+<span class="nt">exclusions</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="s">&#39;*/data/*&#39;</span>
+  <span class="p p-Indicator">-</span> <span class="s">&#39;*/attachments/*&#39;</span>
+  <span class="p p-Indicator">-</span> <span class="s">&#39;*/tmp/*</span>
+</pre></div>
+</div>
+<h2>Как создать свой тип действия</h2><p>Создать свой тип действий просто – достаточно создать новый класс,
+унаследовать его от <code class="docutils literal notranslate"><span class="pre">Action</span></code> и реализовать у него метод <code class="docutils literal notranslate"><span class="pre">start()</span></code>.</p>
+<p>Новый класс нужно зарегистрировать в <code class="docutils literal notranslate"><span class="pre">ScheduleRunner.py</span></code>:
+в свойстве <code class="docutils literal notranslate"><span class="pre">action_types</span></code> добавить в конце <code class="docutils literal notranslate"><span class="pre">tuple</span></code>
+(<code class="docutils literal notranslate"><span class="pre">&lt;имя_в_конфиге&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;Тип&gt;</span></code>),где <code class="docutils literal notranslate"><span class="pre">&lt;имя_в_конфиге&gt;</span></code> - произвольное
+названия для использования в <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>, а <code class="docutils literal notranslate"><span class="pre">&lt;Тип&gt;</span></code> - имя класса,
+который реализует задачу.</p>
+<p>Для реализации упрощённой записи свойств-списков достаточно соответствующему
+атрибуту указать в классе значение <code class="docutils literal notranslate"><span class="pre">[]</span></code>.</p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">KristaBackup</a></h1>
+
+
+
+
+
+
+
+
+<h3>Навигация</h3>
+<p class="caption"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../setup.html">Установка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../setup.html#downloading">Скачивание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup.html#dependencies">Установка зависимостей</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup.html#building">Создание исполняемого файла</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Использование</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#run-task">Запуск заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#crontab">Работа с crontab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#id5">Запуск веб-модуля</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Конфигурация</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id2">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id3">Расписание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id5">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id6">Пример написания конфигурации</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Действия</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="action.html">Action (основной)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tar.html">Tar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cleaner.html">Cleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rsync.html">Rsync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pgdump.html">PgDump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mount_umount.html">Mount/Umount</a></li>
+<li class="toctree-l2"><a class="reference internal" href="movebkpperiod.html">MoveBkpPeriod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="progress_ticket.html">InProgressTicket</a></li>
+<li class="toctree-l2"><a class="reference internal" href="check_backup.html">Check backup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dschecker.html">DataSpaceChecker</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../configuration.html" title="предыдущая глава">Конфигурация</a></li>
+      <li>Next: <a href="action.html" title="следующая глава">Action (основной)</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Быстрый поиск</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, НПО Криста.
+      
+      |
+      <a href="../../_sources/pages/actions/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
