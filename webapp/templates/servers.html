@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+        <div class="left"><a href="/">Обновить статусы серверов</a></div>
+        {% if not current_user.is_anonymous and current_user.is_admin() %}
+            <p>
+                <form action="" method="post" novalidate>
+                {{ form.hidden_tag() }}
+            <p>{{ form.address.label }} : {{ form.address(size=30) }} {{ form.submit() }}</p>
+                </form>
+        {% endif %}
+        <table>
+        <tr>
+            <th>URL</th>
+            <th>Наименование</th>
+            <th>Доступность</th>
+            <th>Статус</th>
+            <th>Ошибки</th>
+            <th>Веб-интерфейс</th>
+            <th></th>
+        </tr>
+        {% for server in servers %}
+            <td><a href="/info/{{ server.hash }}">{{ server.url }}</a></td>
+            <td>{{ server.name }}</td>
+            <td>{% if server.state %}онлайн{% endif %}</td>
+            <td>{{ server.msg }}
+                {% if server.errors==None %}
+                <br>server.msg
+                {% endif %}
+            </td>
+            <td>{{ server.errors }}</td>
+            <td>{% if server.flask %}
+                <a href="{{ server.url }}">перейти</a>
+                {% endif %}
+            </td>
+            <td><a href="/s-confirm/{{ server.hash }}">Удалить</a></td>
+        </tr>
+        {% endfor %}
+        </table>
+        <div class="left"><a href="/">Обновить статусы серверов</a></div>
+    </div>
+{% endblock %}

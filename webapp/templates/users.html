@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <table>
+    <tr>
+        <th>Логин</th>
+        <th>e-mail</th>
+        <th>админ</th>
+        <th></th>
+        <th></th>
+    </tr>
+    {% for user in users.keys() %}
+    <tr>
+        <td>{{ user }}</td>
+        <td>{{ users[user].mail}}</td>
+        <td>{{ users[user].adm }}</td>
+        <td>
+        {% if not users[user].adm %}
+            <a href="/mka/{{ user }}">Сделать админом</a>
+        {% else %}
+            <a href="/mku/{{ user }}">Убрать права</a>
+        {% endif %}
+        </td>
+        <td><a href="/u-confirm/{{ user }}">Удалить</a></td>
+    </tr>
+    {% endfor %}
+    </table>
+{% endblock %}

@@ -1,0 +1,50 @@
+{
+    naming: {server_name: example-cons-app},
+
+    logging: {
+        logs_path: /var/log/bc,
+        trigger_filepath: /etc/zabbix/backup.trigger},
+
+    cron: {cron_user: root},
+
+    actions: {
+        check_backup: {type: check_backup},
+        tarjob_0level_etc: {
+            basename: etc,
+            check_level_list_only: 'False',
+            compression: 3,
+            descr: бэкап файлов /etc 0-го уровня,
+            dest_path: /backup, exclusions: '*/data/*, */attachments/*, */tmp/*, ./backup/*, ./updates/*',
+            level: 0,
+            level_folders: '0,1,2',
+            src_path: /etc,
+            type: tar,
+            use_re_in_exclusions: false},
+        tarjob_1level_etc: {descr: бэкап файлов etc 1-го уровня,
+            level: 1,
+            source: tarjob_0level_etc, type: tar}
+    },
+
+    schedule: {
+        make_full_dump_cons_noregion: {
+            actions: [cleaner_by_count_tarjob_0level_etc, tarjob_0level_etc],
+            cron: 00 23 * * 0, descr: Бекап каталога 0-го уровня (полный),
+            naming: {project: cons, region: noregion}}
+        },
+        make_diff_dump_cons_noregion: {
+            actions: [tarjob_1level_etc, cleaner_by_count_tarjob_1level_etc],
+            cron: 00 23 * * 1-6,
+            descr: Бекап каталога 1-го уровня (разностный),
+            naming: {project: cons, region: noregion}
+        },
+        make_full_dump_cons_36: {
+            actions: [
+                cleaner_by_count_tarjob_0level_jboss_36,
+                cleaner_by_count_tarjob_0level_audit_36,
+                tarjob_0level_jboss_36, tarjob_0level_audit_36
+            ],
+            cron: 00 23 * * 0,
+            descr: Бекап каталога 0-го уровня (полный),
+            naming: {project: cons, region: 36}
+        }
+}

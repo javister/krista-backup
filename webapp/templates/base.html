@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+<title>Backup Central remote server {{full_name}}</title>
+</head>
+
+<body>
+        <h1>{{ full_name }}</h1>
+        <div class="menu">
+            <div class="left">
+                <a href="/">Домой</a>
+                <a href="/info/0">Информация о сервере</a>
+                {% if not current_user.is_anonymous and current_user.is_admin() %}
+                    <a href="/users">Пользователи</a>
+                {% endif %}
+            </div>
+            <div class="right">
+                {% if current_user.is_anonymous %}
+                    <a href="{{ url_for('login') }}">Вход</a>
+                {% else %}
+                    пользователь: {{ current_user.get_name() }}
+                    {% if current_user.is_admin() %}
+                        (администратор)
+                    {% else %}
+                        (гость)
+                    {% endif %}
+                <a href="{{ url_for('logout') }}">Выход</a>
+            {% endif %}
+            </div>
+        </div>
+        <div>
+            <p>
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            {% endwith %}
+            </p>
+        </div>
+        <div>
+            {% block content %}{% endblock %}
+        </div>
+</body>
+</html>

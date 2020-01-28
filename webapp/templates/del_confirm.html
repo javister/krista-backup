@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3>Подтвердите удаление</h3>
+<br>
+<div>Удалить объект типа {{ obj_type }} с именем {{ obj_name}}? <a href="{{ return_link }}">Отменить</a><a href="{{ del_link }}">Удалить</a></div>
+
+{% endblock %}

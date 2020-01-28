@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Bottle is a fast and simple micro-framework for small web applications. It
+Bottle is a fast and simple micro-framework for small webmodule applications. It
 offers request dispatching (Routes) with URL parameter support, templates,
 a built-in HTTP Server and adapters for many third party WSGI/HTTP-server and
 template engines - all in a single file and with no dependencies other than the
@@ -621,7 +621,7 @@ class Route(object):
 
 
 class Bottle(object):
-    """ Each Bottle object represents a single, distinct web application and
+    """ Each Bottle object represents a single, distinct webmodule application and
         consists of routes, callbacks, plugins, resources and configuration.
         Instances are callable WSGI applications.
 
@@ -1508,7 +1508,7 @@ class BaseRequest(object):
         """ HTTP authentication data as a (user, password) tuple. This
             implementation currently supports basic (not digest) authentication
             only. If the authentication happened at a higher level (e.g. in the
-            front web-server or a middleware), the password field is None, but
+            front webmodule-server or a middleware), the password field is None, but
             the user field is looked up from the ``REMOTE_USER`` environ
             variable. On any errors, None is returned. """
         basic = parse_auth(self.environ.get('HTTP_AUTHORIZATION', ''))

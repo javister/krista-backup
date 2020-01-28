@@ -1,0 +1,3 @@
+users:
+  admin: {adm: true, email: admin@foo.bar, pass: 'pbkdf2:sha256:50000$WbEKw2kn$9733fd1a21a3203e7ed747f3654ba9a902727859a04b4d9338dd13c1d305daeb'}
+  guest: {adm: false, email: guest@foo.bar, pass: 'pbkdf2:sha256:50000$dqImdL8V$e1bfa35c35ad418aac150233c7ae36eb347f3dcee77aaa9c9588a8c4c9e36ac1'}

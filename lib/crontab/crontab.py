@@ -772,22 +772,6 @@ class CronItem(object):
                               " python module via pip or your package manager")
         return croniter(self.slices.clean_render(), date_from, ret_type=datetime)
 
-    # Не используется и требует зависимость
-    # def description(self, **kw):
-    #     """
-    #     Returns a description of the crontab's schedule (if available)
-
-    #     **kw - Keyword arguments to pass to cron_descriptor (see docs)
-    #     """
-    #     try:
-    #         from cron_descriptor import ExpressionDescriptor
-    #     except ImportError:
-    #         raise ImportError("cron_descriptor not available. Please install"\
-    #           "cron_descriptor python module via pip or your package manager")
-
-    #     exdesc = ExpressionDescriptor(self.slices.clean_render(), **kw)
-    #     return exdesc.get_description()
-
     @property
     def log(self):
         """Return a cron log specific for this job only"""

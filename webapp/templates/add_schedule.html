@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="left">
+    {% if edit %}
+        <h1>Изменить расписание</h1>
+    {% else %}
+        <h1>Добавить расписание</h1>
+    {% endif %}
+
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.name.label }}<br>
+            {{ form.name(size=32) }}<br>
+            {% for error in form.name.errors %}
+                <span class="error">[{{ error }}]</span>
+            {% endfor %}
+        </p><p>
+            {{ form.descr.label }}<br>
+            {{ form.descr(size=64) }}<br>
+            {% for error in form.descr.errors %}
+                <span class="error">[{{ error }}]</span>
+            {% endfor %}
+        </p><p>
+            {{ form.cron.label }}<br>
+            {{ form.cron(size=64) }}<br>
+            {% for error in form.cron.errors %}
+                <span class="error">[{{ error }}]</span>
+            {% endfor %}
+        </p><p>
+            {{ form.actions.label }}<br>
+            {{ form.actions(size=64) }}<br>
+            {% for error in form.actions.errors %}
+                <span class="error">[{{ error }}]</span>
+            {% endfor %}
+        </p><p>
+            {{ form.submit() }}
+        </p>
+    </form>
+</div>
+
+<div class="right">
+    <div class="header">Actions</div>
+    {% for item in sorted_actions %}
+        <button class="collapsible">{{ item }} <span class="show">показать</span></button>
+        <div class="content">
+            <table>
+            {% for prop in actions[item] %}
+                <tr><td>{{ prop }}:</td><td>{{ actions[item][prop] }}</td></tr>
+            {% endfor %}
+            </table>
+        </div>
+    {% endfor %}
+</div>
+
+<script src="{{ url_for('static', filename='control.js') }}"></script>
+
+{% endblock %}

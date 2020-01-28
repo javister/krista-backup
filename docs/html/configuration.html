@@ -1,0 +1,427 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>Конфигурация &#8212; документация KristaBackup 1.0</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Действия" href="actions/actions_index.html" />
+    <link rel="prev" title="Использование" href="usage.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="toctree-wrapper compound" id="configuration">
+</div>
+<div class="section" id="id1">
+<h1>Конфигурация<a class="headerlink" href="#id1" title="Ссылка на этот заголовок">¶</a></h1>
+<div class="section" id="id2">
+<h2>Общая стуктура<a class="headerlink" href="#id2" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Рядом с выполняемым файлом должен находится файл конфигураций <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>.</p>
+<p>Конфигурация состоит из следующих частей:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">naming</span></code></p></li>
+</ul>
+<blockquote>
+<div><p>Содержит <code class="docutils literal notranslate"><span class="pre">server_name</span></code>, <code class="docutils literal notranslate"><span class="pre">region</span></code> и <code class="docutils literal notranslate"><span class="pre">project</span></code>. Они используются для генерации выходящих файлов и
+логов. <code class="docutils literal notranslate"><span class="pre">region</span></code> и <code class="docutils literal notranslate"><span class="pre">project</span></code>  могут быть пропущены, если их явно указать в запускаемом расписании.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cron</span></code></p></li>
+</ul>
+<blockquote>
+<div><p>Содержит <code class="docutils literal notranslate"><span class="pre">cron_user</span></code> -- имя пользователя, в чей <code class="docutils literal notranslate"><span class="pre">crontab</span></code> будет добавляться расписание.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">logging</span></code></p></li>
+</ul>
+<blockquote>
+<div><p>Содержит <code class="docutils literal notranslate"><span class="pre">logs_path</span></code> -- директорию для хранения логов.</p>
+<p>Также имеет вариативный параметр <code class="docutils literal notranslate"><span class="pre">trigger_filepath</span></code>, который содержит
+путь к триггер-файлу. Если путь указан, то будет создан файл, который
+будет хранить состояние последнего бэкапа:
+&quot;SUCCESS&quot;, &quot;WARNING&quot; или &quot;ERROR&quot; (обновляется после выполнения, если последняя запись имела приоритет ниже или была
+сделана более 5 часов назад).</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">web</span></code></p></li>
+</ul>
+<blockquote>
+<div><p>Содержит <code class="docutils literal notranslate"><span class="pre">host</span></code>, <code class="docutils literal notranslate"><span class="pre">port</span></code> и <code class="docutils literal notranslate"><span class="pre">SECRET_KEY</span></code> для конфигурации веб модуля.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions</span></code></p></li>
+</ul>
+<blockquote>
+<div><p>Содержит список действий. Подробнее о действиях можно узнать <a class="reference internal" href="actions/actions_index.html#actions-index"><span class="std std-ref">здесь</span></a>.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">schedule</span></code></p></li>
+</ul>
+<blockquote>
+<div><p>Расписание -- список всех заданий; ниже подробно описана его структура.</p>
+</div></blockquote>
+</div>
+<div class="section" id="id3">
+<h2>Расписание<a class="headerlink" href="#id3" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Расписание (<code class="docutils literal notranslate"><span class="pre">schedule</span></code>) -- список всех заданий.</p>
+<div class="section" id="id4">
+<h3>Терминология<a class="headerlink" href="#id4" title="Ссылка на этот заголовок">¶</a></h3>
+<ul class="simple">
+<li><p>Минимальная единица -- действие (action).</p></li>
+<li><p>Задание (task) содержит список действий, которые требуется выполнить.</p></li>
+<li><p>Все задания вместе явлются расписанием (schedule).</p></li>
+</ul>
+<p>Схематичный пример:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">schedule</span><span class="p">:</span> <span class="c1"># расписание</span>
+  <span class="nt">full_dump</span><span class="p">:</span> <span class="c1"># задание</span>
+    <span class="nt">actions</span><span class="p">:</span> <span class="c1"># действия в задании</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">some_action_1</span> <span class="c1"># действие 1</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">some_action_2</span> <span class="c1"># действие 2</span>
+    <span class="nt">cron</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">00 23 * * 1-6</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">описание задания</span>
+
+<span class="nt">actions</span><span class="p">:</span> <span class="c1">#  список всех действий</span>
+  <span class="nt">some_action_1</span><span class="p">:</span> <span class="c1">#  конфигурация действия 1</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">type1</span>
+
+  <span class="nt">some_action_2</span><span class="p">:</span> <span class="c1">#  конфигурация действия 2</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">type2</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>Описание заданий<a class="headerlink" href="#id5" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Как было выше упомянуто, задания указаны в расписании. Каждое
+задание содержит следующие параметры:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">naming</span></code></p></li>
+</ul>
+<blockquote>
+<div><p>содержит <code class="docutils literal notranslate"><span class="pre">project</span></code> и <code class="docutils literal notranslate"><span class="pre">region</span></code>: если они не указаны, то будут
+использованы параметры из <code class="docutils literal notranslate"><span class="pre">naming</span></code> в корне конфигурации</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions</span></code></p></li>
+</ul>
+<blockquote>
+<div><p>упорядоченный список действий</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cron</span></code></p></li>
+</ul>
+<blockquote>
+<div><p>время повторения задания в формате <code class="docutils literal notranslate"><span class="pre">cron</span></code></p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">all_fields_match</span></code></p></li>
+</ul>
+<blockquote>
+<div><p>стандартное значение <code class="docutils literal notranslate"><span class="pre">false</span></code></p>
+<p>используется в редких случаях,
+когда требуется точное совпадение дня месяца И дня недели в <code class="docutils literal notranslate"><span class="pre">crontab</span></code>
+(по умолчанию в <code class="docutils literal notranslate"><span class="pre">crontab</span></code> используется отношение ИЛИ)</p>
+</div></blockquote>
+<p>Также, имя задания должно быть уникальным.</p>
+<p>Пример:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">schedule</span><span class="p">:</span>
+  <span class="nt">full_dump</span><span class="p">:</span>
+    <span class="nt">naming</span><span class="p">:</span>
+        <span class="nt">project</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">app</span>
+        <span class="nt">region</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">99</span>
+    <span class="nt">actions</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cleaner_tarjob_0level_application</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_0level_application</span>
+    <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;00</span><span class="nv"> </span><span class="s">23</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1-6&#39;</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Бекап каталога /application 0-го уровня (полный)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id6">
+<h2>Пример написания конфигурации<a class="headerlink" href="#id6" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Здесь будет рассмотрен пример файла конфигураций, который будет
+содержать настройки для выполнения полного и разностного бэкапа каталога <code class="docutils literal notranslate"><span class="pre">/etc</span></code>.</p>
+<p>Ротация полного бэкапа будет выполняться раз в неделю, одновременно будут хранится
+две копии; ротация разностного бэкапа будет выполняться ежедневно, одновременно
+будут хранится 4 копии.</p>
+<p>В корневом каталоге находится файл <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>, содержащий конфигурацию
+в формате <code class="docutils literal notranslate"><span class="pre">yaml</span></code>.</p>
+<p>Добавим в начало файла блок <code class="docutils literal notranslate"><span class="pre">naming</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">naming</span><span class="p">:</span>
+  <span class="nt">server_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example_server</span> <span class="c1"># имя серверва</span>
+  <span class="nt">project</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">server_backup</span> <span class="c1"># название проекта</span>
+  <span class="nt">region</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">region_name</span> <span class="c1"># название региона</span>
+</pre></div>
+</div>
+<p>Этот блок используется для подстановки в результирующие файлы.
+Далее добавим блок <code class="docutils literal notranslate"><span class="pre">logging</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">logging</span><span class="p">:</span>
+  <span class="nt">logs_path</span><span class="p">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">/var/log/KristaBackup</span> <span class="c1"># директория, в которой</span>
+                          <span class="c1"># будут храниться логи</span>
+</pre></div>
+</div>
+<p>Теперь опишем действия. Создадим блок <code class="docutils literal notranslate"><span class="pre">actions</span></code> и
+добавим в него действие, которое будет выполнять полный бэкап:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">actions</span><span class="p">:</span>
+  <span class="nt">tarjob_0level_etc</span><span class="p">:</span>
+    <span class="nt">basename</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">etc</span> <span class="c1"># уникальное имя</span>
+    <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/etc</span> <span class="c1"># исходная директория</span>
+    <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup</span> <span class="c1"># результирующая директория</span>
+    <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span> <span class="c1"># уровень бэкапа</span>
+    <span class="nt">level_folders</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0,1</span> <span class="c1"># имена папок для уровней бэкапа</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">бэкап файлов /etc 0-го уровня</span> <span class="c1"># ёмкое описание</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span> <span class="c1"># тип</span>
+</pre></div>
+</div>
+<p>Наследуем от <code class="docutils literal notranslate"><span class="pre">tarjob_0level_etc</span></code> новое действие, которое
+будет выполнять разностный бэкап:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">actions</span><span class="p">:</span>
+  <span class="nt">tarjob_0level_etc</span><span class="p">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+
+  <span class="nt">tarjob_1level_etc</span><span class="p">:</span>
+    <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_0level_etc</span>   <span class="c1"># указано родительское действие</span>
+    <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">бэкап файлов /etc 1-го уровня</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+</pre></div>
+</div>
+<p>Действие <code class="docutils literal notranslate"><span class="pre">tarjob_1level_etc</span></code> импортировало все параметры,
+которые установлены в <code class="docutils literal notranslate"><span class="pre">tarjob_0level_etc</span></code>,
+но не установлены в нём самом.</p>
+<p>Заметим, что в <code class="docutils literal notranslate"><span class="pre">tarjob_1level_etc</span></code> указан тип <code class="docutils literal notranslate"><span class="pre">tar</span></code>, хотя его
+можно и упустить, так как в таком случае он бы был заимствован из <code class="docutils literal notranslate"><span class="pre">tarjob_0level_etc</span></code>.</p>
+<p>По аналогии добавим действия для ротации:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">actions</span><span class="p">:</span>
+  <span class="nt">tarjob_0level_etc</span><span class="p">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+
+  <span class="nt">tarjob_1level_etc</span><span class="p">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">...</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+
+<span class="nt">cleaner_tarjob_0level_etc</span><span class="p">:</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">очистка каталога от файлов в зависимости от их количества</span>
+    <span class="nt">max_files</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
+    <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_0level_etc</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cleaner</span>
+
+<span class=" -Error">  </span><span class="nt">cleaner_tarjob_1level_etc</span><span class="p">:</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">очистка каталога от файлов в зависимости от их количества</span>
+    <span class="nt">max_files</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
+    <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_1level_etc</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cleaner</span>
+</pre></div>
+</div>
+<p>Осталось собрать действия в задания. Добавим <code class="docutils literal notranslate"><span class="pre">schedule</span></code> после <code class="docutils literal notranslate"><span class="pre">logging</span></code>,
+а в него задание для выполнения полного бэкапа:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nn">...</span>
+<span class="nt">logging</span><span class="p">:</span>
+  <span class="nt">logs_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/var/log/KristaBackup</span>
+
+<span class="nt">schedule</span><span class="p">:</span>
+  <span class="nt">full_dump</span><span class="p">:</span>                        <span class="c1"># имя задания</span>
+    <span class="nt">actions</span><span class="p">:</span>                        <span class="c1"># список действий</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_0level_etc</span>           <span class="c1"># действие для создания бэкапа</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cleaner_tarjob_0level_etc</span>   <span class="c1"># действие для ротации копий</span>
+    <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;00</span><span class="nv"> </span><span class="s">23</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">0&#39;</span>             <span class="c1"># время, в которое требуется</span>
+                                    <span class="c1"># выполнять задание</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Бекап каталога 0-го уровня (полный)</span>
+
+<span class="nt">actions</span><span class="p">:</span>
+  <span class="nt">tarjob_0level_etc</span><span class="p">:</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+<p>По аналогии сделаем задания для выполнения разностного бэкапа:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nn">...</span>
+<span class="nt">logging</span><span class="p">:</span>
+  <span class="nt">logs_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/var/log/KristaBackup</span>
+
+<span class="nt">schedule</span><span class="p">:</span>
+  <span class="nt">full_dump</span><span class="p">:</span>                        <span class="c1"># имя задания</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+    <span class="l l-Scalar l-Scalar-Plain">descr</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Бекап каталога 0-го уровня (полный)</span>
+
+  <span class="nt">diff_dump</span><span class="p">:</span>
+    <span class="nt">actions</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_1level_etc</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cleaner_tarjob_1level_etc</span>
+    <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;00</span><span class="nv"> </span><span class="s">23</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1-6&#39;</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Бекап каталога 0-го уровня (полный)</span>
+</pre></div>
+</div>
+<p>Конфигурация завершена. Финальный результат:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">naming</span><span class="p">:</span>
+  <span class="nt">server_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example_server</span>
+  <span class="nt">project</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">server_backup</span>
+  <span class="nt">region</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">region_name</span>
+
+<span class="nt">logging</span><span class="p">:</span>
+  <span class="nt">logs_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/var/log/KristaBackup</span>
+
+<span class="nt">schedule</span><span class="p">:</span>
+  <span class="nt">full_dump</span><span class="p">:</span>
+    <span class="nt">actions</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_0level_etc</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cleaner_tarjob_0level_etc</span>
+    <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;00</span><span class="nv"> </span><span class="s">23</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">0&#39;</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Бекап каталога 0-го уровня (полный)</span>
+
+  <span class="nt">diff_dump</span><span class="p">:</span>
+    <span class="nt">actions</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_1level_etc</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cleaner_tarjob_1level_etc</span>
+    <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;00</span><span class="nv"> </span><span class="s">23</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1-6&#39;</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Бекап каталога 0-го уровня (полный)</span>
+
+<span class="nt">actions</span><span class="p">:</span>
+  <span class="nt">tarjob_0level_etc</span><span class="p">:</span>
+    <span class="nt">basename</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">etc</span>
+    <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/etc</span>
+    <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup</span>
+    <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+    <span class="nt">level_folders</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0,1</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">бэкап файлов /etc 0-го уровня</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+
+  <span class="nt">tarjob_1level_etc</span><span class="p">:</span>
+    <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_0level_etc</span>
+    <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">бэкап файлов /etc 1-го уровня</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+
+  <span class="nt">cleaner_tarjob_0level_etc</span><span class="p">:</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">очистка каталога от файлов в зависимости от их количества</span>
+    <span class="nt">max_files</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
+    <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_0level_etc</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cleaner</span>
+
+  <span class="nt">cleaner_tarjob_1level_etc</span><span class="p">:</span>
+    <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">очистка каталога от файлов в зависимости от их количества</span>
+    <span class="nt">max_files</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
+    <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_1level_etc</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cleaner</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">KristaBackup</a></h1>
+
+
+
+
+
+
+
+
+<h3>Навигация</h3>
+<p class="caption"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Использование</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#run-task">Запуск заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#crontab">Работа с crontab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#api">Запуск веб-api или веб-приложения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#id5">Утилита для управления пользователями веб-приложения</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Конфигурация</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Расписание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">Пример написания конфигурации</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="actions/actions_index.html">Действия</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="actions/action.html">Action (основной)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/tar.html">Tar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/cleaner.html">Cleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/rsync.html">Rsync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/pgdump.html">PgDump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/mount_umount.html">Mount/Umount</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/movebkpperiod.html">MoveBkpPeriod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/progress_ticket.html">InProgressTicket</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/check_backup.html">Check backup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/dschecker.html">DataSpaceChecker</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="usage.html" title="предыдущая глава">Использование</a></li>
+      <li>Next: <a href="actions/actions_index.html" title="следующая глава">Действия</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Быстрый поиск</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, НПО Криста.
+      
+      |
+      <a href="_sources/configuration.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

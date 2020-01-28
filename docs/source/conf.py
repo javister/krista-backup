@@ -58,14 +58,14 @@ master_doc = 'index'
 # General information about the project.
 project = 'KristaBackup'
 copyright = '2019, НПО Криста'
-author = 'Maxim Adrian'
+author = 'M. Adrian, S. Postnikov'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = ''
+version = '1.0'
 # The full version, including alpha/beta/rc tags.
 release = '1.0'
 
@@ -170,7 +170,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'KristaBackup', 'KristaBackup Documentation',
-     author, 'KristaBackup', 'One line description of project.',
+     author, 'KristaBackup', 'backup system',
      'Miscellaneous'),
 ]
 

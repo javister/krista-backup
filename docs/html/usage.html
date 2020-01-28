@@ -1,0 +1,229 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>Использование &#8212; документация KristaBackup 1.0</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Конфигурация" href="configuration.html" />
+    <link rel="prev" title="KristaBackup" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="toctree-wrapper compound" id="usage">
+</div>
+<div class="section" id="id1">
+<h1>Использование<a class="headerlink" href="#id1" title="Ссылка на этот заголовок">¶</a></h1>
+<div class="section" id="run-task">
+<span id="id2"></span><h2>Запуск заданий<a class="headerlink" href="#run-task" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Для запуска заданий вручную:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>KristaBackup.py run task_name
+</pre></div>
+</div>
+<p>Для логгирования выполнения в терминал существует флаг <code class="docutils literal notranslate"><span class="pre">-v/--verbose</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>KristaBackup.py run task_name -v
+</pre></div>
+</div>
+<p id="crontab-task">Опции можно посмотреть выполнив ./KristaBackup.py --help.</p>
+</div>
+<div class="section" id="crontab">
+<h2>Работа с crontab<a class="headerlink" href="#crontab" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Выполнение заданий можно автоматизировать добавлением в <code class="docutils literal notranslate"><span class="pre">crontab</span></code>.
+Для этого у них должен быть указан атрибут <code class="docutils literal notranslate"><span class="pre">cron</span></code>, содержащий
+время в формате <code class="docutils literal notranslate"><span class="pre">cron</span></code>.</p>
+<div class="section" id="crontab-add">
+<span id="id3"></span><h3>Добавление заданий в crontab<a class="headerlink" href="#crontab-add" title="Ссылка на этот заголовок">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./KristaBackup.py en task_name
+./KristaBackup.py <span class="nb">enable</span> task_name
+</pre></div>
+</div>
+</div>
+<div class="section" id="crontab-del">
+<span id="id4"></span><h3>Удаление задания из crontab<a class="headerlink" href="#crontab-del" title="Ссылка на этот заголовок">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./KristaBackup.py dis task_name
+./KristaBackup.py disable task_name
+</pre></div>
+</div>
+<p>Также, все задания (которые указаны в <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>) можно одновременно
+добавить в <code class="docutils literal notranslate"><span class="pre">crontab</span></code> или удалить из него используя ключевое слово <code class="docutils literal notranslate"><span class="pre">all</span></code>.</p>
+<p>cron-расписания с заданиями хранятся в <code class="docutils literal notranslate"><span class="pre">crontab</span></code> пользователя,
+который указан в конфигурации (по умолчанию -- <code class="docutils literal notranslate"><span class="pre">root</span></code>).</p>
+</div>
+</div>
+<div class="section" id="api">
+<span id="run-web"></span><h2>Запуск веб-api или веб-приложения<a class="headerlink" href="#api" title="Ссылка на этот заголовок">¶</a></h2>
+<p>В приложение также встроен веб-модуль. С его помощью
+можно просмотривать файлы логов и состояние триггер-файла,
+если он используется.</p>
+<p>Для запуска веб-приложения нужно выполнить следующую команду:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./KristaBackup.py run web
+</pre></div>
+</div>
+<p>Для запуска веб-api нужно выполнить следующую команду:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./KristaBackup.py run webapi
+</pre></div>
+</div>
+<p>По-умолчанию, приложение запускается на <a class="reference external" href="http://127.0.0.1:5555">http://127.0.0.1:5555</a>. Порт и хост можно поменять в config.yaml:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">web</span><span class="p">:</span>
+  <span class="nt">host</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.0.0.0</span>
+  <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">333333</span>
+</pre></div>
+</div>
+<p>Опции можно посмотреть выполнив ./KristaBackup.py --help.</p>
+<p id="user-utils">Остановить приложение или аpi можно командами</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./KristaBackup.py stop web
+./KristaBackup.py stop webapi
+</pre></div>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>Утилита для управления пользователями веб-приложения<a class="headerlink" href="#id5" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Утилита поддерживает добавление, удаление и обновления свойств пользователей,
+позволяет просматривать список пользователей, добавлять, удалять и редактировать пользователя.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./UsersUtils.py list
+./UsersUtils.py add -u aaa -p passWord -m abcd@mail.com -a
+./UsersUtils.py mod -u aaa -p passWord -m abcd@mail.com -a
+./UsersUtils.py del -u aaa
+./UsersUtils.py check -u aaa
+./UsersUtils.py check -m abcd@mail.com
+</pre></div>
+</div>
+<p>Использование:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>UsersUtils.py действие <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-u USERNAME<span class="o">]</span> <span class="o">[</span>-m EMAIL<span class="o">]</span> <span class="o">[</span>-p PASSW<span class="o">]</span> <span class="o">[</span>-a<span class="o">]</span>
+
+Опции:
+-u    имя пользователя
+-p    пароль
+-m    abcd@mail.com
+-a    включить флаг администратора
+
+Действия:
+list      вывести имя пользователя
+add       добавить пользователя <span class="o">(</span>необходимо указать -u -p -m,
+          параметр -a указывается опицонально<span class="o">)</span>
+mod       изменить свойства пользователя заданного параметром -u,
+          параметры -m -p меняются только если переданы,
+          если не указать параметр -a, то флаг админа будет сброшен
+del       удалить пользователя -u
+check     проверить наличие пользователя по имени
+          или адресу электронной почты
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">KristaBackup</a></h1>
+
+
+
+
+
+
+
+
+<h3>Навигация</h3>
+<p class="caption"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Использование</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#run-task">Запуск заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crontab">Работа с crontab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api">Запуск веб-api или веб-приложения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">Утилита для управления пользователями веб-приложения</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Конфигурация</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id2">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id3">Расписание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id5">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id6">Пример написания конфигурации</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="actions/actions_index.html">Действия</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="actions/action.html">Action (основной)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/tar.html">Tar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/cleaner.html">Cleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/rsync.html">Rsync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/pgdump.html">PgDump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/mount_umount.html">Mount/Umount</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/movebkpperiod.html">MoveBkpPeriod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/progress_ticket.html">InProgressTicket</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/check_backup.html">Check backup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/dschecker.html">DataSpaceChecker</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="предыдущая глава">KristaBackup</a></li>
+      <li>Next: <a href="configuration.html" title="следующая глава">Конфигурация</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Быстрый поиск</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, НПО Криста.
+      
+      |
+      <a href="_sources/usage.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

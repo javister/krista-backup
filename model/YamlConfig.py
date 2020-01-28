@@ -8,7 +8,7 @@ from datetime import datetime
 from lib import yaml
 
 
-class AppConfig():
+class AppConfig:
     """Синглетон для хранения конфигурации приложения."""
 
     _config_filename = 'config.yaml'
@@ -23,6 +23,13 @@ class AppConfig():
         _filename_dateformat)  # Для имени лога и создаваемых файлов
     # Для записей в логах используем формат, совпадающий с syslog: YYYY-MM-DD hh:mm:ss
     _log_dateformat = '%Y-%m-%d %H:%M:%S'
+
+    flask_on = False
+    try:
+        from flask import app
+        flask_on = True
+    except Exception:
+        pass
 
     @staticmethod
     def get_log_dateformat():
@@ -59,6 +66,7 @@ class AppConfig():
 
     @staticmethod
     def set_task_name(task_name):
+        AppConfig._schedule_name = task_name
         if task_name not in AppConfig.conf().schedule:
             raise ConfigError(
                 'Не задано задание в расписании файла конфигураций {0}'.format(
@@ -66,36 +74,35 @@ class AppConfig():
                 )
             )
         else:
-            AppConfig._schedule_name = task_name
-        if 'project' not in AppConfig.conf().schedule[task_name].get(
-            'naming',
-            '',
-        ) and AppConfig._project is None:
-            raise ConfigError(
-                'Не задан проект для задания в расписании файла конфигураций {0}'
-                .format(AppConfig._config_filename),
-            )
-        elif 'project' in AppConfig.conf().schedule[task_name].get(
-            'naming',
-            '',
-        ):
-            AppConfig._project = AppConfig.conf().schedule[task_name].get('naming')[
-                'project']
-        if 'region' not in AppConfig.conf().schedule[task_name].get(
-            'naming',
-            '',
-        ) and AppConfig._region is None:
-            raise ConfigError(
-                'Не задан регион для задания в расписании файла конфигураций {0}'
-                .format(AppConfig._config_filename),
-            )
-        elif 'region' in AppConfig.conf().schedule[task_name].get(
-            'naming',
-            '',
-        ):
-            AppConfig._region = str(
-                AppConfig.conf().schedule[task_name].get('naming')['region']
-            )
+            if 'project' not in AppConfig.conf().schedule[task_name].get(
+                'naming',
+                '',
+            ) and AppConfig._project is None:
+                raise ConfigError(
+                    'Не задан проект для задания в расписании файла конфигураций {0}'
+                    .format(AppConfig._config_filename),
+                )
+            elif 'project' in AppConfig.conf().schedule[task_name].get(
+                'naming',
+                '',
+            ):
+                AppConfig._project = AppConfig.conf().schedule[task_name].get('naming')[
+                    'project']
+            if 'region' not in AppConfig.conf().schedule[task_name].get(
+                'naming',
+                '',
+            ) and AppConfig._region is None:
+                raise ConfigError(
+                    'Не задан регион для задания в расписании файла конфигураций {0}'
+                    .format(AppConfig._config_filename),
+                )
+            elif 'region' in AppConfig.conf().schedule[task_name].get(
+                'naming',
+                '',
+            ):
+                AppConfig._region = str(
+                    AppConfig.conf().schedule[task_name].get('naming')['region']
+                )
 
     @staticmethod
     def get_server_name():
@@ -111,9 +118,7 @@ class AppConfig():
                 AppConfig._config = YamlConfigMapper(
                     AppConfig._config_default_path, AppConfig._config_filename)
             except ConfigError:
-                AppConfig._config = YamlConfigMapper(os.getcwd(),
-                                                     AppConfig._config_filename)
-
+                AppConfig._config = YamlConfigMapper(os.getcwd(), AppConfig._config_filename)
             AppConfig.parseConfig()
         return AppConfig._config.config
 
@@ -142,6 +147,22 @@ class AppConfig():
         if 'project' in AppConfig.conf().naming.keys():
             AppConfig._project = AppConfig.conf().naming['project']
 
+        for s_name in sorted(AppConfig.conf().schedule.keys()):
+            sc = AppConfig.conf().schedule[s_name]
+            if type(sc)!=dict:
+                print(sc)
+                raise ConfigError("Ошибка в списке расписаний: конфиг не является словарем."
+                                  " Проверьте отступы и разделители в разделе schedule: "
+                                  " %s: %s" % (s_name, sc))
+
+        for a_name in sorted(AppConfig.conf().actions.keys()):
+            ac = AppConfig.conf().actions[a_name]
+            if type(ac)!=dict:
+                print(ac)
+                raise ConfigError("Ошибка в списке расписаний: конфиг не является словарем."
+                                  " Проверьте отступы и разделители в разделе actions: "
+                                  " %s: %s" % (s_name, ac))
+
 
 class YamlConfigMapper:
     """
@@ -153,18 +174,19 @@ class YamlConfigMapper:
 
     def __init__(self, path, filename):
         self.config_file_name = filename
-
         if os.path.exists(self.config_file_name) and os.path.isfile(
                 self.config_file_name):
             self.loadAll()
         else:
-            self.config_file_name = os.path.join(path, filename)
+            apath = path
+            if apath is None:
+                apath = AppConfig._config_default_path
+            self.config_file_name = os.path.join(apath, filename)
             if os.path.exists(self.config_file_name) and os.path.isfile(
                     self.config_file_name):
                 self.loadAll()
             else:
-                raise ConfigError("Отсутствует файл конфигурации %s" %
-                                  (self.config_file_name,))
+                raise ConfigError("Отсутствует файл конфигурации %s" % (self.config_file_name,))
 
     def getConf(self):
         return self.config
@@ -172,8 +194,13 @@ class YamlConfigMapper:
     def loadAll(self):
         with open(self.config_file_name, 'r') as stream:
             conf_dict = yaml.load(stream, Loader=yaml.FullLoader)
-        self.config = namedtuple('Config',
-                                 conf_dict.keys())(*conf_dict.values())
+        if type(conf_dict) == dict:
+            self.config = namedtuple('Config',
+                conf_dict.keys())(*conf_dict.values())
+        else:
+            raise ConfigError("Невозможно загрузить конфигурацию %s - проверте форматирование файла!"
+                              % (self.config_file_name,))
+
 
     def storeAll(self):
         if not os.path.exists('config_history'):

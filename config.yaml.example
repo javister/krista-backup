@@ -1,7 +1,9 @@
 naming:
   server_name: example-cons-app
+
 cron:
-  cron_user: root
+  cron_user: postnikov
+
 logging:
   logs_path: /var/log/bc
   trigger_filepath: /etc/zabbix/backup.trigger
@@ -9,7 +11,7 @@ logging:
 actions:
   check_backup:
     type: check_backup
-  
+
   tarjob_0level_etc:
     basename: etc
     check_level_list_only: 'False'
@@ -29,25 +31,12 @@ actions:
     descr: бэкап файлов /etc 1-го уровня
     type: tar
 
-  cleaner_by_count_tarjob_0level_etc:
-    descr: очистка каталога от файлов в зависимости от их количества
-    max_files: 0
-    source: tarjob_0level_etc
-    type: by_count_cleaner
-
-  cleaner_by_count_tarjob_1level_etc:
-    descr: очистка каталога от файлов в зависимости от их количества
-    max_files: 4
-    source: tarjob_1level_etc
-    type: by_count_cleaner
-
 schedule:
   make_full_dump_cons_noregion:
     naming:
       project: cons
       region: noregion
     actions:
-        - cleaner_by_count_tarjob_0level_etc 
         - tarjob_0level_etc
     
     cron: 00 23 * * 0
@@ -59,20 +48,6 @@ schedule:
       region: noregion
     actions:
         - tarjob_1level_etc
-        - cleaner_by_count_tarjob_1level_etc 
-        
+
     cron: 00 23 * * 1-6
     descr: Бекап каталога 1-го уровня (разностный)
-
-  make_full_dump_cons_36:
-    naming:
-      project: cons
-      region: 36
-    actions:
-        - cleaner_by_count_tarjob_0level_jboss_36 
-        - cleaner_by_count_tarjob_0level_audit_36 
-        - tarjob_0level_jboss_36
-        - tarjob_0level_audit_36
-    
-    cron: 00 23 * * 0
-    descr: Бекап каталога 0-го уровня (полный)

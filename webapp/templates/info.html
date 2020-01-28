@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="left">
+
+    <div class="header">Расписания</div>
+    {% if not current_user.is_anonymous and current_user.is_admin() and not remote %}
+        <a href="/sch-add">Добавить расписание</a>
+    {% endif %}
+    {% for item in sorted_schedules %}
+    {% if schedules[item].active %}
+    <button class="collapsible"><span class="active_sched">+ {{ item }}</span></button>
+    {% else %}
+    <button class="collapsible">+ {{ item }}</button>
+    {% endif %}
+        <div class="content">
+            <table>
+                <tr><td>описание:</td><td>{{ schedules[item].descr }}</td></tr>
+                <tr><td>расписание (cron):</td><td>{{ schedules[item].cron }}</td></tr>
+                <tr><td>actions:</td><td>
+                {% for action in schedules[item].actions %}
+                <div>&nbsp;&nbsp;{{ action }}</div>
+                {% endfor %}
+                <tr><td>активно:</td><td>
+                    {% if schedules[item].active %}
+                        <div class="active_sched">да</div>
+                    {% else %}
+                        нет
+                    {% endif %}
+                </td></tr>
+            </table>
+            {% if not current_user.is_anonymous and current_user.is_admin() and not remote %}
+                <a href="/sch-ed/{{item}}">Изменить</a>
+                {% if schedules[item].active %}
+                    <a href="/sch-dis/{{item}}">Отключить</a>
+                {% else %}
+                    <a href="/sch-en/{{item}}">Включить</a>
+                {% endif %}
+                    <a href="/sch-confirm/{{item}}">Удалить</a>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+    <br>
+
+    <div class="header">Actions</div>
+    {% for item in sorted_actions %}
+        <button class="collapsible">+ {{ item }}</button>
+        <div class="content">
+            <table>
+            {% for prop in actions[item] %}
+                <tr><td>{{ prop }}:</td><td>{{ actions[item][prop] }}</td></tr>
+            {% endfor %}
+            </table>
+        </div>
+    {% endfor %}
+
+</div>
+
+<script src="{{ url_for('static', filename='control.js') }}"></script>
+
+<div class="right">
+
+    <div class="header">Логи</div>
+
+    {% for dir in logs.keys() %}
+
+        <div class="header2">{{ dir }}</div>
+
+        {% for log in logs[dir] %}
+
+        <table>
+                <tr><td {% if log.error %} class="error" {% elif log.warning %} class="warning" {% else %} class="log" {% endif %}>
+                <div>{{ log.name }}
+                &nbsp;
+                    <a href="{{url_for('get_log', dir=dir, name=log.name) }}">
+                        <img src="{{ url_for('static', filename='eye_icn.png') }}"
+                             width="24" height="24" alt="Открыть"></a>
+                    <a href="{{url_for('get_logp', dir=dir, name=log.name) }}">
+                        <img src="{{ url_for('static', filename='dwnld_icn.png') }}"
+                             width="24" height="24" alt="Скачать"></a>
+                </div>
+                </td><td {% if log.error %} class="error" {% elif log.warning %} class="warning" {% else %} class="log" {% endif %}>
+                <div text-align="right">   {% if not log.debugname=='' %}
+                        debug
+                        <a href="{{url_for('get_log', dir='debug', name=log.debugname) }}">
+                            <img src="{{ url_for('static', filename='eye_icn.png') }}"
+                                 width="24" height="24" alt="Открыть"></a>
+                        <a href="{{url_for('get_logp', dir='debug', name=log.debugname) }}">
+                            <img src="{{ url_for('static', filename='dwnld_icn.png') }}"
+                                 width="24" height="24" alt="Скачать"></a>
+                        {% endif %}
+                </div>
+                </td></tr>
+        </table>
+        {% endfor %}
+
+    {% endfor %}
+
+</div>
+
+
+{% endblock %}

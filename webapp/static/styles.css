@@ -1,0 +1,141 @@
+body {
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  font-size: 90%;
+}
+
+table {
+    width: 100%;
+}
+
+th, td {
+    border: #11557C;
+    border-style: solid;
+    border-width: thin;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+
+.header {
+    text-align: left;
+    font-size: 140%;
+    font-weight: bold;
+    margin-top: 12px;
+    margin-bottom: 10px;
+}
+
+.header2 {
+    text-align: left;
+    font-size: 120%;
+    font-weight: bold;
+    background-color: #ccc;
+}
+
+.backgr {
+    background-color: lightsteelblue;
+}
+
+.menu {
+    overflow: auto;
+    background-color: #ccc;
+}
+
+.left, .right {
+    display: block;
+    position: relative;
+    float: left;
+    width: 45%;
+    padding: 10px;
+}
+
+.right {
+    text-align: right;
+}
+
+a, .link-style {
+    font-size: 100%;
+    font-family: Verdana, Helvetica, Arial, sans-serif;
+    font-weight: bolder;
+    font-style: normal;
+    text-decoration: underline;
+    color: midnightblue;
+    margin-top: 5px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 5px;
+    border: none;
+}
+
+a:hover, .link-style:hover {
+    color: cornflowerblue;
+}
+
+pre {
+    font-size: 120%;
+}
+
+.log {
+    background-color: white;
+    color: #000;
+}
+
+.error {
+    background-color: #dc3545;
+    color: #000;
+}
+
+.warning {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.active_sched {
+    background-color: lightgreen;
+    color: #000;
+}
+
+.show {
+    text-align: right;
+    font-size: 80%;
+    font-style: italic;
+    font-weight: normal;
+    float: right;
+}
+
+/* Style the button that is used to open and close the collapsible content */
+.collapsible {
+    text-align: left;
+    font-size: 120%;
+    font-weight: bold;
+    color: #444;
+    cursor: pointer;
+    margin: 5px;
+    width: 100%;
+    border: none;
+    outline: none;
+}
+
+.collapsible-active {
+    text-align: left;
+    font-size: 120%;
+    font-weight: bold;
+    color: #367737;
+    cursor: pointer;
+    margin: 5px;
+    width: 100%;
+    border: none;
+    outline: none;
+}
+
+.active, .collapsible:hover {
+    background-color: #ccc;
+}
+
+.content {
+    padding: 0 18px;
+    display: none;
+    overflow: hidden;
+    background-color: #f1f1f1;
+}
