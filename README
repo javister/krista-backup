@@ -22,7 +22,7 @@ AltLinux 8, Astra Linux 1.6 Для запуска требуется *python3.5*
 потребоваться права sudo.
 
    cd /opt
-   git clone ...
+   git clone https://github.com/javister/krista-backup
 
 2. Установить зависимости для базовой системы (без веб-интерфейса) из
 файла requirements.system. Зависимости устанавливаются из репозиториев

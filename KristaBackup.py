@@ -3,15 +3,10 @@
 
 import argparse
 import os
-import time
 
 from model.Logging import configure_generic_logger
 from model.YamlConfig import AppConfig
 
-
-def check_and_create_files():
-
-    pass
 
 def parse_args():
     """Обработчик параметров командной строки."""
@@ -43,66 +38,77 @@ def get_entrypoint_path(is_packed):
     return dirpath
 
 
-class WebModule(object):
-    pass
+def webapp_handler(stop=False):
+    """Метод для запуска и остановки веб-приложения."""
+    from webapp.WebAppRunner import WebApp
+    apprun = WebApp()
+    if not stop:
+        apprun.run()
+    else:
+        apprun.stop()
+
+
+def webapi_handler(stop=False):
+    """Метод для запуска и остановки веб-api."""
+    from webapp.WebModuleRunner import WebModule
+    apprun = WebModule()
+    if not stop:
+        apprun.run()
+    else:
+        apprun.stop()
 
 
 def main(is_packed=True):
-    """
-    Точка входа программы.
+    """Точка входа в программу.
 
     Attributes:
         is_packed (bool, optional): Параметр, определяющий точку запуска:
         упакованный файл или исходные файлы. Стандартное значение True.
 
     """
-    dirpath = os.path.dirname(get_entrypoint_path(is_packed))
+    excecutable_path = get_entrypoint_path(is_packed)
+    AppConfig.excecutable_path = excecutable_path
+    AppConfig.excecutable_filename = os.path.basename(excecutable_path)
+
+    dirpath = os.path.dirname(excecutable_path)
     os.chdir(dirpath)
 
-    lgr = configure_generic_logger()
-    lgr.info('Парсим входные параметры')
     args = parse_args()
     if args.action == 'run':
         if args.entity == 'web':
             if not AppConfig.flask_on:
+                lgr = configure_generic_logger()
                 lgr.exception('Исключение при запуске веб-приложения: невозможно импортировать модуль flask')
             else:
                 try:
-                    from webapp.WebAppRunner import WebApp
-                    apprun = WebApp()
-                    apprun.run()
-                except Exception as e:
-                    lgr.exception('Исключение при запуске веб-приложения', e)
+                    webapp_handler()
+                except Exception:
+                    lgr = configure_generic_logger()
+                    lgr.exception('Исключение при запуске веб-приложения')
         elif args.entity == 'webapi':
             try:
-                from webapp.WebModuleRunner import WebModule
-                apprun = WebModule()
-                apprun.run()
-            except Exception as e:
-                lgr.exception('Исключение при запуске веб-api', e)
+                webapi_handler()
+            except Exception:
+                lgr = configure_generic_logger()
+                lgr.exception('Исключение при запуске веб-api')
         else:
             try:
                 from runner import ScheduleRunner
                 ScheduleRunner(args.entity, args.verbose).start_task()
-            except Exception as e:
-                lgr.exception('Исключение при выполнении задания', e)
+            except Exception:
+                lgr = configure_generic_logger()
     elif args.action == 'stop':
         if args.entity == 'web':
-                from webapp.WebAppRunner import WebApp
-                appstop = WebApp()
-                appstop.stop()
+            webapp_handler(stop=True)
         elif args.entity == 'webapi':
-                from webapp.WebModuleRunner import WebModule
-                appstop = WebModule()
-                appstop.stop()
+            webapi_handler(stop=True)
     else:
-        from model.Schedules import activate_schedule, deactivate_schedule
+        from model.Schedules import activate_task, deactivate_task
         if args.action in {'enable', 'en'}:
-            activate_schedule(args.entity, get_entrypoint_path(is_packed))
+            activate_task(args.entity)
         elif args.action in {'disable', 'dis'}:
-            deactivate_schedule(args.entity)
+            deactivate_task(args.entity)
 
 
 if __name__ == '__main__':
     main(is_packed=False)
-

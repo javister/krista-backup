@@ -27,3 +27,14 @@ def process_iter():
                 yield process
         except IOError:  # proc has already terminated
             pass
+
+def check_process(excecutable_filename, name=''):
+    pid = os.getpid()
+    occurrence_pattern = '{0} run {1}'.format(
+        excecutable_filename,
+        name,
+    )
+    for process in process_iter():
+        if pid != process.pid and occurrence_pattern in process.cmdline:
+            return process.pid
+    return None

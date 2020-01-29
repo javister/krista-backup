@@ -73,24 +73,35 @@
         <table>
                 <tr><td {% if log.error %} class="error" {% elif log.warning %} class="warning" {% else %} class="log" {% endif %}>
                 <div>{{ log.name }}
-                &nbsp;
+                    {% if not remote %}
                     <a href="{{url_for('get_log', dir=dir, name=log.name) }}">
                         <img src="{{ url_for('static', filename='eye_icn.png') }}"
                              width="24" height="24" alt="Открыть"></a>
                     <a href="{{url_for('get_logp', dir=dir, name=log.name) }}">
                         <img src="{{ url_for('static', filename='dwnld_icn.png') }}"
                              width="24" height="24" alt="Скачать"></a>
-                </div>
-                </td><td {% if log.error %} class="error" {% elif log.warning %} class="warning" {% else %} class="log" {% endif %}>
-                <div text-align="right">   {% if not log.debugname=='' %}
-                        debug
-                        <a href="{{url_for('get_log', dir='debug', name=log.debugname) }}">
+                    {% else %}
+                        <a href="{{url_for('get_remote_log', shash=hash, dir=dir, name=log.name) }}">
                             <img src="{{ url_for('static', filename='eye_icn.png') }}"
                                  width="24" height="24" alt="Открыть"></a>
-                        <a href="{{url_for('get_logp', dir='debug', name=log.debugname) }}">
-                            <img src="{{ url_for('static', filename='dwnld_icn.png') }}"
-                                 width="24" height="24" alt="Скачать"></a>
+                    {% endif %}
+                </div>
+                </td><td {% if log.error %} class="error" {% elif log.warning %} class="warning" {% else %} class="log" {% endif %}>
+                <div text-align="right">
+                    {% if not log.debugname=='' %}
+                        {% if not remote %}
+                            <a href="{{url_for('get_log', dir='debug', name=log.debugname) }}">
+                                <img src="{{ url_for('static', filename='eye_icn.png') }}"
+                                     width="24" height="24" alt="Открыть"></a>
+                            <a href="{{url_for('get_logp', dir='debug', name=log.debugname) }}">
+                                <img src="{{ url_for('static', filename='dwnld_icn.png') }}"
+                                     width="24" height="24" alt="Скачать"></a>
+                        {% else %}
+                            <a href="{{url_for('get_remote_log', shash=hash, dir='debug', name=log.debugname) }}">
+                                <img src="{{ url_for('static', filename='eye_icn.png') }}"
+                                    width="24" height="24" alt="Открыть"></a>
                         {% endif %}
+                    {% endif %}
                 </div>
                 </td></tr>
         </table>

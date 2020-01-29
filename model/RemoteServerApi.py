@@ -29,6 +29,6 @@ def get_server_info():
 
 
 def get_server_config():
-    result = {'full_name': AppConfig.get_server_name(), 'schedules': Schedules.get_schedules(),
-              'actions': AppConfig.conf().actions, 'logs': get_logs_list()}
+    result = {'full_name': AppConfig.get_server_name(), 'schedules': Schedules.get_tasks_with_info(),
+              'actions': AppConfig.conf().get('actions'), 'logs': get_logs_list()}
     return result

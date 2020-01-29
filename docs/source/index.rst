@@ -34,7 +34,7 @@ KristaBackup
 .. code:: bash
 
   cd /opt
-  git clone ...
+  git clone https://github.com/javister/krista-backup
 
 2. Установить зависимости для базовой системы (без веб-интерфейса) из файла requirements.system.
 Зависимости устанавливаются из репозиториев ОС. Для Debian и Ubunutu команда будет выглядеть так:

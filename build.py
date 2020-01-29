@@ -11,7 +11,7 @@ patterns = [
     'runner',
     'lib',
     'model',
-    'webmodule',
+    'webapp',
     'Krista',
 ]
 

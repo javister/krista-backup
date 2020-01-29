@@ -53,7 +53,7 @@ def get_hash(url):
 _servers_config_filename = 'servers.yaml'
 _servers_conf = YamlConfigMapper(None, _servers_config_filename)
 servers = []
-for s_conf in _servers_conf.config.servers:
+for s_conf in _servers_conf.config.get('servers'):
     s = Server()
     s.url = s_conf
     s.hash = get_hash(s.url)
@@ -112,5 +112,17 @@ def get_remote_server_config(surl):
         r = requests.get(status_url)
         if (r.ok):
             return json.loads(r.content)
+    except Exception as ex:
+        return {'state': 'Ошибка доступа: %s, %s' % (type(ex).__name__, str(ex))}
+
+
+def get_remote_server_logs(surl, dir, name):
+    url = '/'.join(map(lambda x: str(x).strip('/'), [surl, 'api', 'rl', dir, name]))
+    print('url:', surl, dir, name, url)
+    try:
+        r = requests.get(url)
+        if r.ok:
+            res = json.loads(r.content)
+            return res
     except Exception as ex:
         return {'state': 'Ошибка доступа: %s, %s' % (type(ex).__name__, str(ex))}

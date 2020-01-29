@@ -79,12 +79,12 @@ def admin_required(func):
 _users_config_filename = 'users.yaml'
 _users = YamlConfigMapper(None, _users_config_filename)
 
-for user in _users.config.users.keys():
+for user in _users.config.get('users', {}).keys():
     u = User()
     u.id = user
-    u.mail = _users.config.users[user]['email']
-    u.password_hash = _users.config.users[user]['pass']
-    u.adm = _users.config.users[user]['adm']
+    u.mail = _users.config['users'][user]['email']
+    u.password_hash = _users.config['users'][user]['pass']
+    u.adm = _users.config['users'][user]['adm']
     users[user] = u
 
 def get(id):

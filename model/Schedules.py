@@ -1,5 +1,11 @@
 #  -*- coding: UTF-8 -*-
 
+"""Модуль для работы с crontab.
+
+Данный модуль содержит методы для добавления и удаления
+заданий в crontab.
+"""
+
 import os
 
 # Если это потребуется - добавить импорт в соответствующий метод
@@ -9,37 +15,32 @@ from lib.crontab import CronSlices, CronTab
 from model.Logging import get_trigger_filepath
 from model.YamlConfig import AppConfig, ConfigError
 
-"""
-   Работа с CRON
-"""
 
 DEFAULT_CRON_USER = 'root'
 
-def get_cron_filename(name):
-    return os.path.join(AppConfig.conf().cron.get('cron_path', '/etc/cron.d'),
-                        name)
-
 
 def is_active(name):
-    user = AppConfig.conf().cron.get('cron_user', 'root')
+    user = AppConfig.conf().get('cron').get('cron_user', 'root')
     try:
         cron = CronTab(user)
         for job in cron:
             if job.comment == name:
                 return True
     except OSError as e:
-        raise ConfigError('В системе отсутствует пользователь %s или не задан crontab для этого пользователя' % (user))
+        raise ConfigError(
+            'В системе отсутствует пользователь {} или не задан crontab для этого пользователя' .format(user))
     return False
 
 
-def deactivate_schedule(name):
+def deactivate_task(name):
     if name == 'all':
-        schedules = get_schedules()
+        schedules = get_tasks_with_info()
     else:
         schedules = {name: ''}
     for name, _ in schedules.items():
         try:
-            cron = CronTab(user=AppConfig.conf().cron.get('cron_user', DEFAULT_CRON_USER))
+            cron = CronTab(user=AppConfig.conf().get(
+                'cron').get('cron_user', DEFAULT_CRON_USER))
         except Exception:
             cron = CronTab(user=DEFAULT_CRON_USER)
         for job in cron:
@@ -48,8 +49,13 @@ def deactivate_schedule(name):
                 cron.write()
 
 
-def activate_schedule(name, entrypoint):
-    """Позволяет активировать расписание/расписания.
+def activate_task(name):
+    """Позволяет активировать одно или все задания.
+
+    args:
+        name (str): имя задания, если имеет значение "all", то
+            будут задействованы все задания.
+
     """
     def generate_command(wdays=None):
         exec_list = []
@@ -68,7 +74,7 @@ def activate_schedule(name, entrypoint):
         # [путь к интерпретатору] [путь к файлу запуска] [run] [имя расписания]
         exec_list.append(
             'python3 {0} run {1} 2>&1'
-            .format(entrypoint, name))
+            .format(AppConfig.excecutable_path, name))
 
         command = ' && '.join(exec_list)
         trigger_filepath = get_trigger_filepath()
@@ -100,9 +106,9 @@ def activate_schedule(name, entrypoint):
         return numbers
 
     if name == 'all':
-        schedules = get_schedules()
+        schedules = get_tasks_with_info()
     else:
-        schedule = get_schedule(name)
+        schedule = get_task(name)
         if schedule is None:
             raise ConfigError(
                 'Ошибка при добавлении задания в cron: нет задания с именем {0}'
@@ -112,7 +118,8 @@ def activate_schedule(name, entrypoint):
 
     for name, schedule in schedules.items():
         try:
-            crontab = CronTab(user=AppConfig.conf().cron.get('cron_user', DEFAULT_CRON_USER))
+            crontab = CronTab(user=AppConfig.conf().get(
+                'cron').get('cron_user', DEFAULT_CRON_USER))
         except Exception:
             crontab = CronTab(user=DEFAULT_CRON_USER)
 
@@ -141,53 +148,40 @@ def activate_schedule(name, entrypoint):
         crontab.write()
 
 
-"""
-   Работа с заданиями
-"""
+def get_tasks_with_info():
+    """Возвращает словарь с заданиями и информацией о них.
+
+    Returns:
+        tasks (dict): содержит записи вида
+            task_name : {'is_active' : bool, **task_configuration}.
+
+    """
+    tasks = {}
+    for taskname in sorted(AppConfig.conf().get('schedule').keys()):
+        task_configuration = get_task(taskname)
+        task_configuration['active'] = is_active(taskname)
+        tasks[taskname] = task_configuration
+    return tasks
 
 
-def get_schedules():
-    schedules = {}
-    for s_name in sorted(AppConfig.conf().schedule.keys()):
-        schedule_conf = AppConfig.conf().schedule[s_name]
-        schedule_conf['active'] = is_active(s_name)
-        schedules[s_name] = schedule_conf
-    return schedules
+def get_task(name):
+    return AppConfig.conf().get('schedule').get(name, None)
 
 
-def get_schedule(name):
-    return AppConfig.conf().schedule.get(name, None)
+def update_task(name, cron, descr, actions):
+    actions = [action.strip() for action in actions.split(',')]
 
-
-def update_schedule(name, cron, descr, actions):
-    ac = []
-    for action in actions.split(','):
-        ac.append(action.strip())
-    AppConfig.conf().schedule[name] = {'descr': descr, 'cron': cron, 'actions': ac}
+    AppConfig.conf().get('schedule')[name] = {
+        'descr': descr,
+        'cron': cron,
+        'actions': actions,
+    }
     AppConfig._config.storeAll()
     if is_active(name):
-        activate_schedule(name)
+        activate_task(name)
 
 
-def delete_schedule(name):
-    deactivate_schedule(name)
-    AppConfig.conf().schedule.pop(name, None)
+def delete_task(name):
+    deactivate_task(name)
+    AppConfig.conf().get('schedule').pop(name, None)
     AppConfig._config.storeAll()
-
-
-def get_schedule_actions(schedule):
-    if AppConfig.conf().actions is None or len(AppConfig.conf().actions) <= 0:
-        raise ConfigError('Отсутствует описания actions в конфигурации задачи.')
-    res = []
-    actionslist = AppConfig.conf().schedule.get('actions', [])
-    for action in actionslist:
-        if action in AppConfig.conf().jobs.keys():
-            res.append(AppConfig.conf().jobs[action])
-        else:
-            raise ConfigError(
-                'Отсутствует описание action {} из задания {}.'.format(
-                    action,
-                    schedule,
-                )
-            )
-    return res

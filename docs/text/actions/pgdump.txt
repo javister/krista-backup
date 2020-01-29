@@ -58,4 +58,4 @@ PgDump
      exclusions: postgres.*, template.*
      format: custom
      type: pgdump
-     mode: 'single'
+     mode: 'all'

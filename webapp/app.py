@@ -9,13 +9,10 @@ from flask_login import current_user, logout_user, login_required, login_user, f
 from werkzeug.urls import url_parse
 from model import Logging, RemoteServers, Users, Schedules
 from model.RemoteServerApi import get_server_info, get_server_config
-from model.RemoteServers import get_remote_server_config
+from model.RemoteServers import get_remote_server_config, get_remote_server_logs
 from model.Users import admin_required
 from model.YamlConfig import AppConfig
 from webapp.Forms import LoginForm, ScheduleForm, RegistrationForm, ServersForm
-
-sys.path.insert(0, "/opt/KristaBackup")
-sys.path.insert(1, os.getcwd())
 
 app = Flask(__name__)
 
@@ -69,6 +66,7 @@ def servers():
     return render_template('servers.html', full_name='Зарегистрированные сервера',
                            servers=RemoteServers.get_all(), form=form)
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -97,17 +95,17 @@ def logout():
 @login_required
 def info(hash):
     if hash=='0':
-        schedules = Schedules.get_schedules()
-        return render_template('info.html', full_name=AppConfig.get_server_name(),
+        schedules = Schedules.get_tasks_with_info()
+        return render_template('info.html', full_name=AppConfig.get_server_name(), remote=False,
                                schedules=schedules, sorted_schedules=sorted(schedules),
-                               actions=AppConfig.conf().actions, sorted_actions=sorted(AppConfig.conf().actions),
+                               actions=AppConfig.conf().get('actions'), sorted_actions=sorted(AppConfig.conf().get('actions')),
                                logs=Logging.get_logs_list())
     else:
         s = RemoteServers.find_server(hash)
         if s is None or not s.state:
             return redirect(url_for('servers'))
         resp = get_remote_server_config(s.url)
-        return render_template('info.html', full_name = resp['full_name'],
+        return render_template('info.html', full_name = resp['full_name'], hash=s.hash, remote=True,
                                schedules = resp['schedules'], sorted_schedules = sorted(resp['schedules']),
                                actions = resp['actions'], sorted_actions = sorted(resp['actions']),
                                logs = resp['logs'])
@@ -131,13 +129,13 @@ def register():
 def addSchedule():
     form = ScheduleForm()
     if form.validate_on_submit():
-        Schedules.update_schedule(form.name.data, form.cron.data, form.descr.data, form.actions.data)
+        Schedules.update_task(form.name.data, form.cron.data, form.descr.data, form.actions.data)
         flash('Изменения применены')
         return redirect(url_for('servers'))
     return render_template('add_schedule.html', edit=False,
                            form=form,
-                           actions=AppConfig.conf().actions,
-                           sorted_actions=sorted(AppConfig.conf().actions))
+                           actions=AppConfig.conf().get('actions'),
+                           sorted_actions=sorted(AppConfig.conf().get('actions')))
 
 
 @app.route('/sch-ed/<name>', methods=['GET', 'POST'])
@@ -146,17 +144,17 @@ def addSchedule():
 def editSchedule(name):
     form = ScheduleForm()
     if not form.validate_on_submit():
-        sch = Schedules.get_schedule(name)
+        sch = Schedules.get_task(name)
         form['name'].data = name
         form['descr'].data = sch['descr']
         form['cron'].data = sch['cron']
         form['actions'].data = ', '.join(sch['actions'])
     else:
-        Schedules.update_schedule(form.name.data, form.cron.data, form.descr.data, form.actions.data)
+        Schedules.update_task(form.name.data, form.cron.data, form.descr.data, form.actions.data)
         flash('Изменения применены')
         return redirect(url_for('servers'))
     return render_template('add_schedule.html', edit=True, form=form,
-           actions=AppConfig.conf().actions, sorted_actions = sorted(AppConfig.conf().actions))
+           actions=AppConfig.conf().get('actions'), sorted_actions = sorted(AppConfig.conf().get('actions')))
 
 
 @app.route('/sch-confirm/<name>', methods=['GET', 'POST'])
@@ -171,7 +169,7 @@ def confirmDeleteSchedule(name):
 @login_required
 @admin_required
 def deleteSchedule(name):
-    Schedules.delete_schedule(name)
+    Schedules.delete_task(name)
     return redirect(url_for('servers'))
 
 
@@ -179,7 +177,7 @@ def deleteSchedule(name):
 @fresh_login_required
 @admin_required
 def enableSchedule(name):
-    Schedules.activate_schedule(name)
+    Schedules.activate_task(name)
     flash('Изменения применены ' + name)
     return redirect(url_for('servers'))
 
@@ -188,17 +186,26 @@ def enableSchedule(name):
 @fresh_login_required
 @admin_required
 def disableSchedule(name):
-    Schedules.deactivate_schedule(name)
+    Schedules.deactivate_task(name)
     flash('Изменения применены ' + name)
     return redirect(url_for('servers'))
 
 
 @app.route('/logs/<dir>/<name>', methods=['GET'])
-@app.route('/api/log', methods=['GET'])
 @login_required
 def get_log(dir, name):
     return render_template('log.html', full_name=AppConfig.get_server_name(),
                            dir=dir, log=Logging.get_log_content(dir, name))
+
+
+@app.route('/rlogs/<shash>/<dir>/<name>', methods=['GET'])
+@login_required
+def get_remote_log(shash, dir, name):
+    s = RemoteServers.find_server(shash)
+    if s is None or not s.state:
+        return redirect(url_for('servers'))
+    logs=get_remote_server_logs(s.url, dir, name)
+    return render_template('log.html', full_name=s.name, dir=dir, log=logs)
 
 
 @app.route('/logp/<dir>/<name>', methods=['GET'])
@@ -288,5 +295,13 @@ def trigger_status():
 def si():
     try:
         return get_server_config()
+    except Exception as e:
+        return {'status': e}
+
+
+@app.route('/api/rl', methods=['GET'])
+def get_logapi(dir, name):
+    try:
+        return Logging.get_log_content(dir, name)
     except Exception as e:
         return {'status': e}

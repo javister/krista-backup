@@ -2,14 +2,13 @@
 
 import os
 
-from model import Logging, ProcUtil
+from model import Logging
+from model.ProcUtil import check_process
 from model.YamlConfig import AppConfig
-from runner import (
-    Action, CheckInProgressTicket, CheckLastBackup, Cleaner,
-    DataSpaceChecker, Mount, MoveBkpPeriod, PgDump, Rsync,
-    SetInProgressTicket, TarArchiver, Umount,
-    UnsetInProgressTicket,
-)
+from runner import (Action, CheckInProgressTicket, CheckLastBackup, Cleaner,
+                    DataSpaceChecker, Mount, MoveBkpPeriod, PgDump, Rsync,
+                    SetInProgressTicket, TarArchiver, Umount,
+                    UnsetInProgressTicket)
 
 
 class ScheduleRunner:
@@ -34,45 +33,49 @@ class ScheduleRunner:
         ('check_in_progress_ticket', CheckInProgressTicket),
     )
 
-    def __init__(self, schedule_name, verbose):
-        self.logger = Logging.configure_task_logger(schedule_name, verbose)
+    def __init__(self, task_name, verbose):
+        self.logger = Logging.configure_task_logger(task_name, verbose)
 
-        if not AppConfig.conf().schedule:
+        if not AppConfig.conf().get('schedule'):
             self.logger.error('Отсутствует расписание в файле конфигурации')
             exit(-1)
 
-        if not AppConfig.conf().schedule.get(schedule_name, {}):
+        if not AppConfig.conf().get('schedule').get(task_name):
             self.logger.error(
-                'Отсутствует заданное задание %s',
-                schedule_name,
+                'Отсутствует требуемое задание %s',
+                task_name,
             )
             exit(-1)
 
-        self.action_configurations = AppConfig.conf(
-        ).schedule[schedule_name].get('actions')
+        task = AppConfig.conf().get('schedule').get(task_name)
+        self.action_configurations = task.get('actions')
 
         if not self.action_configurations:
             self.logger.error(
                 'Отсутствуют действия для исполнения %s',
-                schedule_name,
+                task_name,
             )
             exit(-1)
 
         # Пробегаемся по файлам конфигураций в job_configs и создаем действия
         for action_name in self.action_configurations:
-            a = self.create_action(action_name)
-            if not a is None:
-                self.actions.append(a)
+            action = self.create_action(action_name)
+            if action is not None:
+                self.actions.append(action)
 
     def create_action(self, action_name):
         """
         Создаем и конфигурируем действие
 
-        :param action_name: имя действия
-        :return: Action или None, если не удалось создать/сконфигурировать действие
+        Arguments:
+            action_name: имя действия
+        Returns:
+            Action или None, если не удалось создать/сконфигурировать
+            действие
         """
 
-        action_conf = AppConfig.conf().actions.get(action_name, None)
+        all_actions = AppConfig.conf().get('actions')
+        action_conf = all_actions.get(action_name)
         if action_conf is None:
             self.logger.warning(
                 'Отсутствует описание для действия %s',
@@ -90,7 +93,7 @@ class ScheduleRunner:
 
         while 'source' in ancestor.keys() and rec < 10:
             ancestor_name = ancestor['source']
-            ancestor = AppConfig.conf().actions.get(ancestor_name, None)
+            ancestor = all_actions.get(ancestor_name, None)
 
             if ancestor is None:
                 self.logger.error(
@@ -139,13 +142,14 @@ class ScheduleRunner:
         self.logger.debug('Конфигурирование объекта %s', action)
 
         if action_conf['type'] in {'cleaner'}:
-            source = AppConfig.conf().actions.get(action_conf['source'], None)
+            source = all_actions.get(action_conf['source'], None)
             if source:
                 action_conf['parent_type'] = source.get('type', None)
                 if not action_conf['parent_type']:
                     self.logger.info(
                         'У предка %s не указан тип, поэтому чистка будет выполняться по basename.',
-                        action)
+                        action,
+                    )
 
         for known_type in atypes.keys():
             if isinstance(action, atypes.get(known_type)):
@@ -210,25 +214,14 @@ class ScheduleRunner:
         False, то перед запуском сначала происходит проверка отсутствия
         параллельных процессов выполнения заданий и только потом запуск.
         """
-        def check_running_task(process):
-            if ('python3' in process.cmdline
-                    and 'KristaBackup' in process.cmdline
-                    and 'web_module' not in process.cmdline):
-                if pid > process.pid and 'run' in process.cmdline:
-                    return True
-            return False
-
-        if ('allow_parallel' in AppConfig.conf().__dir__()
-                and not AppConfig.conf().allow_parallel):
-            pid = os.getpid()
-            for process in ProcUtil.process_iter():
-                if check_running_task(process):
-                    self.logger.error(
-                        'Другое задание уже запущено: PID: %s, Задание: %s',
-                        process.pid,
-                        process.cmdline.split()[-1],
-                    )
-                    exit(-1)
+        if not AppConfig.conf().get('allow_parallel', True):
+            process = check_process(AppConfig.excecutable_filename)
+            if process:
+                self.logger.error(
+                    'Другое задание уже запущено: PID: %s, Задание: %s',
+                    process.pid,
+                    process.cmdline.split()[-1],
+                )
 
         for action in self.actions:
             self.logger.info('Запускается действие %s', action.name)

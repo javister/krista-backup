@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+
 import logging
 import os
 import sys
@@ -6,16 +7,14 @@ import sys
 from logging.handlers import RotatingFileHandler
 from model.YamlConfig import AppConfig
 from model.TriggerHandler import TriggerHandler
-"""
-    Вспомогательные методы для конфигурирования разных модулей из тестовых конфигураций
-"""
+
 
 DEFAULT_LOGS_PATH = '/var/log/KristaBackup'
 
 
 def get_log_path():
     try:
-        path = AppConfig.conf().logging.get(
+        path = AppConfig.conf().get('logging').get(
             'logs_path',
             os.path.abspath(DEFAULT_LOGS_PATH),
         )
@@ -28,7 +27,7 @@ def get_log_path():
 
 def get_trigger_filepath():
     try:
-        trigger_filepath = AppConfig.conf().logging.get('trigger_filepath')
+        trigger_filepath = AppConfig.conf().get('logging').get('trigger_filepath')
     except Exception:
         return ''
     if not trigger_filepath:
@@ -74,6 +73,11 @@ def get_default_handler(name):
 
     return rotating_file_handler
 
+def get_console_handler(name):
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.DEBUG)
+    console_handler.setFormatter(get_formatter(name))
+    return console_handler
 
 def configure_generic_logger(name='krista_backup'):
     logger = logging.getLogger(name)
@@ -81,12 +85,7 @@ def configure_generic_logger(name='krista_backup'):
         logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     logger.addHandler(get_default_handler(name))
-
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(get_formatter(name))
-    logger.addHandler(console_handler)
-
+    logger.addHandler(get_console_handler(name))
     return logger
 
 
@@ -101,7 +100,7 @@ def configure_task_logger(task_name, verbose=False):
 
     try:
         AppConfig.set_task_name(task_name)
-    except Exception:
+    except Exception as exc:
         full_name = 'created-with-error'
         log_filename = '.'.join([full_name, 'log'])
         log_debug_filename = '.'.join([full_name, 'log'])
@@ -117,7 +116,6 @@ def configure_task_logger(task_name, verbose=False):
                       AppConfig.get_starttime_str(), "debug"]), "log"
         ])
 
-
     logs_path = get_log_path()
     trigger_filepath = get_trigger_filepath()
 
@@ -131,7 +129,6 @@ def configure_task_logger(task_name, verbose=False):
     log_path_debug = os.path.join(logs_path, 'debug')
     if not os.path.exists(log_path_debug):
         os.makedirs(log_path_debug)
-
 
     handlers_config = [
         {
@@ -150,7 +147,7 @@ def configure_task_logger(task_name, verbose=False):
         },
     ]
 
-    if verbose or AppConfig.conf().logging.get("use_console", False):
+    if verbose or AppConfig.conf().get('logging').get('use_console', False):
         handlers_config.append({
             'handler_type': logging.StreamHandler,
             'path': sys.stdout,
@@ -188,10 +185,11 @@ def get_logs_list():
         for filename in sorted(os.listdir(os.path.join(get_log_path(), dir)), reverse=True):
             log = {}
             log["name"] = filename
-            if dir=='krista_backup' or dir=='error':
+            if dir=='krista_backup' or dir=='web_api':
                 log['debugname'] = ''
             else:
-                log['debugname'] = filename
+                # Файл для дебаг лога имеет суффикс debug
+                log['debugname'] = '{0}-debug{1}'.format(filename[:-4], filename[-4:])
             file_exists, error, warning, msg = analyze_log_file(dir, filename)
             log['exist'] = file_exists
             log['error'] = error
@@ -234,7 +232,6 @@ def get_log_content(dir, filename):
         return True
 
     content = {}
-    lines = []
 
     if check_path():
         filepath = os.path.join(get_log_path(), dir, filename)
@@ -248,6 +245,7 @@ def get_log_content(dir, filename):
     if len(lines) == 0:
         content["lines"] = "файл отсутствует в файловой системе или нет прав на чтение"
     content["lines"] = lines
+
     return content
 
 
@@ -270,5 +268,6 @@ def handle_unexpected_exception(exception):
     from model.Logging import configure_task_logger
     logger = configure_generic_logger(name='error')
 
-    logger.error('Ошибка во время импорта зависимостей: %s', exception, exc_info=True)
+    logger.error('Ошибка во время импорта зависимостей: %s',
+                 exception, exc_info=True)
     exit(2)
