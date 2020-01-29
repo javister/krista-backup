@@ -108,7 +108,7 @@ def add(name, email, password, admin=False):
 
 def storeUser(name, u):
     users[name] = u
-    _users.config.users[name] = {
+    _users.config['users'][name] = {
         'email': u.mail,
         'pass': u.password_hash,
         'adm': u.adm
@@ -118,7 +118,7 @@ def storeUser(name, u):
 
 def setAdmin(name, adm):
     users[name].adm = adm
-    _users.config.users[name] = {
+    _users.config['users'][name] = {
         'email': users[name].mail,
         'pass': users[name].password_hash,
         'adm': adm
@@ -128,5 +128,5 @@ def setAdmin(name, adm):
 
 def delete(name):
     users.pop(name, None)
-    _users.config.users.pop(name, None)
+    _users.config['users'].pop(name, None)
     _users.storeAll()

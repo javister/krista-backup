@@ -2,13 +2,23 @@
 
 import os
 import shutil
-from collections import namedtuple
 from datetime import datetime
 
 from lib import yaml
 
 
-class AppConfig:
+class AppConfigInitType(type):
+
+    def __setattr__(cls, name, value):
+        super(AppConfigInitType, cls).__setattr__(name, value)
+        if name == 'excecutable_path' and isinstance(value, str):
+            super(AppConfigInitType, cls).__setattr__(
+                'excecutable_filename',
+                os.path.basename(value),
+            )
+
+
+class AppConfig(metaclass=AppConfigInitType):
     """Синглетон для хранения конфигурации приложения."""
 
     _config_filename = 'config.yaml'
@@ -202,8 +212,8 @@ class YamlConfigMapper:
             self.config = conf_dict
         else:
             raise ConfigError(
-                'Невозможно загрузить конфигурацию %s - проверте форматирование файла!',
-                self.config_file_name,
+                'Невозможно загрузить конфигурацию %s - проверте форматирование файла!'.format(
+                    self.config_file_name,)
             )
 
     def storeAll(self):
@@ -216,7 +226,7 @@ class YamlConfigMapper:
             ]))
         shutil.copy(self.config_file_name, bk_filename)
         with open(self.config_file_name, 'w') as stream:
-            yaml.dump(dict(self.config._asdict()),
+            yaml.dump(self.config,
                       stream=stream,
                       allow_unicode=True,
                       default_flow_style=False)

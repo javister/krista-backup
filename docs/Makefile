@@ -3,7 +3,7 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = python3 -msphinx
+SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = KristaBackup
 SOURCEDIR     = source
 BUILDDIR      = .
@@ -12,7 +12,9 @@ BUILDDIR      = .
 all:
 	@$(SPHINXBUILD) -M text "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-	cp text/index.txt ../README
+	@$(SPHINXBUILD) -M markdown "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O) "$(SOURCEDIR)/index.rst"
+	mv markdown/index.md ../README.md
+	rm -rf markdown
 	rm -rf doctrees
 	rm -rf html/_sources
 

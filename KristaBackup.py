@@ -68,7 +68,6 @@ def main(is_packed=True):
     """
     excecutable_path = get_entrypoint_path(is_packed)
     AppConfig.excecutable_path = excecutable_path
-    AppConfig.excecutable_filename = os.path.basename(excecutable_path)
 
     dirpath = os.path.dirname(excecutable_path)
     os.chdir(dirpath)

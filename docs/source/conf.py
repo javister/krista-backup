@@ -39,8 +39,8 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
 
-    # Used to include .md files:
-    'm2r',
+    # Used to create .md files:
+    'recommonmark',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
