@@ -8,27 +8,24 @@
 
 import os
 
-# Если это потребуется - добавить импорт в соответствующий метод
-# from flask import logging
-
 from lib.crontab import CronSlices, CronTab
 from model.Logging import get_trigger_filepath
 from model.YamlConfig import AppConfig, ConfigError
 
 
-DEFAULT_CRON_USER = 'root'
+CURRENT_CRON_USER = os.getlogin()
 
 
 def is_active(name):
-    user = AppConfig.conf().get('cron').get('cron_user', 'root')
+    user = AppConfig.conf().get('cron', {}).get('cron_user', CURRENT_CRON_USER)
+
     try:
         cron = CronTab(user)
         for job in cron:
             if job.comment == name:
                 return True
-    except OSError as e:
-        raise ConfigError(
-            'В системе отсутствует пользователь {} или не задан crontab для этого пользователя' .format(user))
+    except OSError as exc:
+        raise ConfigError(exc)
     return False
 
 
@@ -40,9 +37,9 @@ def deactivate_task(name):
     for name, _ in schedules.items():
         try:
             cron = CronTab(user=AppConfig.conf().get(
-                'cron').get('cron_user', DEFAULT_CRON_USER))
+                'cron').get('cron_user', CURRENT_CRON_USER))
         except Exception:
-            cron = CronTab(user=DEFAULT_CRON_USER)
+            cron = CronTab(user=CURRENT_CRON_USER)
         for job in cron:
             if job.comment == name:
                 cron.remove(job)
@@ -119,9 +116,9 @@ def activate_task(name):
     for name, schedule in schedules.items():
         try:
             crontab = CronTab(user=AppConfig.conf().get(
-                'cron').get('cron_user', DEFAULT_CRON_USER))
+                'cron').get('cron_user', CURRENT_CRON_USER))
         except Exception:
-            crontab = CronTab(user=DEFAULT_CRON_USER)
+            crontab = CronTab(user=CURRENT_CRON_USER)
 
         clean_crontab_by_comment(name)
 

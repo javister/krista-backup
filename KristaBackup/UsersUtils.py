@@ -2,7 +2,14 @@
 #  -*- coding: UTF-8 -*-
 import argparse
 
-from model import Users
+try:
+    from model import Users
+except Exception:
+    import zipimport
+    importer = zipimport.zipimporter('KristaBackup')
+    lib = importer.load_module('lib')
+    webapp = importer.load_module('webapp')
+    Users = importer.load_module('model')
 
 if __name__ == '__main__':
 

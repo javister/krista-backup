@@ -3,11 +3,12 @@
 import logging
 import os
 import sys
-
+from collections import OrderedDict
 from logging.handlers import RotatingFileHandler
-from model.YamlConfig import AppConfig
-from model.TriggerHandler import TriggerHandler
+from operator import itemgetter
 
+from model.TriggerHandler import TriggerHandler
+from model.YamlConfig import AppConfig
 
 DEFAULT_LOGS_PATH = '/var/log/KristaBackup'
 
@@ -73,16 +74,18 @@ def get_default_handler(name):
 
     return rotating_file_handler
 
+
 def get_console_handler(name):
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.DEBUG)
     console_handler.setFormatter(get_formatter(name))
     return console_handler
 
-def configure_generic_logger(name='krista_backup'):
+
+def get_generic_logger(name='krista_backup'):
     logger = logging.getLogger(name)
     if logger is None:
-        logger = logging.getLogger()
+        logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
     logger.addHandler(get_default_handler(name))
     logger.addHandler(get_console_handler(name))
@@ -185,17 +188,20 @@ def get_logs_list():
         for filename in sorted(os.listdir(os.path.join(get_log_path(), dir)), reverse=True):
             log = {}
             log["name"] = filename
-            if dir=='krista_backup' or dir=='web_api':
+            if dir == 'krista_backup' or dir == 'web_api':
                 log['debugname'] = ''
             else:
                 # Файл для дебаг лога имеет суффикс debug
-                log['debugname'] = '{0}-debug{1}'.format(filename[:-4], filename[-4:])
+                log['debugname'] = '{0}-debug{1}'.format(
+                    filename[:-4], filename[-4:])
             file_exists, error, warning, msg = analyze_log_file(dir, filename)
             log['exist'] = file_exists
             log['error'] = error
             log['warning'] = warning
             log['msg'] = msg
             res[dir].append(log)
+
+    res = OrderedDict(sorted(res.items(), key=itemgetter(0), reverse=True))
     return res
 
 
@@ -223,12 +229,9 @@ def get_log_content(dir, filename):
         dir_path = os.path.join(get_log_path(), dir)
         if not os.path.isdir(dir_path) or not dir in os.listdir(get_log_path()):
             return False
-
         file_path = os.path.join(dir_path, filename)
-        if not os.path.isfile(file_path) or not filename in os.listdir(
-                dir_path):
+        if not os.path.isfile(file_path) or not filename in os.listdir(dir_path):
             return False
-
         return True
 
     content = {}
@@ -266,7 +269,7 @@ def handle_unexpected_exception(exception):
     максимально быстро, вывести ошибку и завершить выполнение.
     """
     from model.Logging import configure_task_logger
-    logger = configure_generic_logger(name='error')
+    logger = get_generic_logger(name='error')
 
     logger.error('Ошибка во время импорта зависимостей: %s',
                  exception, exc_info=True)

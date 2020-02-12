@@ -58,32 +58,29 @@
 
 </div>
 
-<script src="{{ url_for('static', filename='control.js') }}"></script>
-
 <div class="right">
 
     <div class="header">Логи</div>
 
     {% for dir in logs.keys() %}
 
-        <div class="header2">{{ dir }}</div>
-
+        <button class="collapsible active">- {{ dir }}</button>
+        <div style='display:block'>
         {% for log in logs[dir] %}
-
-        <table>
+            <table>
                 <tr><td {% if log.error %} class="error" {% elif log.warning %} class="warning" {% else %} class="log" {% endif %}>
                 <div>{{ log.name }}
                     {% if not remote %}
                     <a href="{{url_for('get_log', dir=dir, name=log.name) }}">
                         <img src="{{ url_for('static', filename='eye_icn.png') }}"
-                             width="24" height="24" alt="Открыть"></a>
+                                width="24" height="24" alt="Открыть"></a>
                     <a href="{{url_for('get_logp', dir=dir, name=log.name) }}">
                         <img src="{{ url_for('static', filename='dwnld_icn.png') }}"
-                             width="24" height="24" alt="Скачать"></a>
+                                width="24" height="24" alt="Скачать"></a>
                     {% else %}
                         <a href="{{url_for('get_remote_log', shash=hash, dir=dir, name=log.name) }}">
                             <img src="{{ url_for('static', filename='eye_icn.png') }}"
-                                 width="24" height="24" alt="Открыть"></a>
+                                    width="24" height="24" alt="Открыть"></a>
                     {% endif %}
                 </div>
                 </td><td {% if log.error %} class="error" {% elif log.warning %} class="warning" {% else %} class="log" {% endif %}>
@@ -92,10 +89,10 @@
                         {% if not remote %}
                             <a href="{{url_for('get_log', dir='debug', name=log.debugname) }}">
                                 <img src="{{ url_for('static', filename='eye_icn.png') }}"
-                                     width="24" height="24" alt="Открыть"></a>
+                                        width="24" height="24" alt="Открыть"></a>
                             <a href="{{url_for('get_logp', dir='debug', name=log.debugname) }}">
                                 <img src="{{ url_for('static', filename='dwnld_icn.png') }}"
-                                     width="24" height="24" alt="Скачать"></a>
+                                        width="24" height="24" alt="Скачать"></a>
                         {% else %}
                             <a href="{{url_for('get_remote_log', shash=hash, dir='debug', name=log.debugname) }}">
                                 <img src="{{ url_for('static', filename='eye_icn.png') }}"
@@ -104,12 +101,12 @@
                     {% endif %}
                 </div>
                 </td></tr>
-        </table>
+            </table>
         {% endfor %}
-
+        </div>
     {% endfor %}
 
 </div>
 
-
+<script src="{{ url_for('static', filename='control.js') }}"></script>
 {% endblock %}

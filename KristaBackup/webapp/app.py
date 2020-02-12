@@ -14,32 +14,44 @@ from model.Users import admin_required
 from model.YamlConfig import AppConfig
 from webapp.Forms import LoginForm, ScheduleForm, RegistrationForm, ServersForm
 
-app = Flask(__name__)
+
+path = os.path.join(
+    os.path.dirname(AppConfig.excecutable_path),
+    'webapp',
+)
+
+app = Flask(
+    __name__,
+    root_path=path,
+)
 
 login = LoginManager(app)
 login.login_view = 'login'
+
 
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'eye_icn.png')
 
+
 @app.after_request
 def after_request(response):
     if response.status_code != 500:
         app.logger.info('%s %s %s %s %s',
-                      request.remote_addr,
-                      request.method,
-                      request.scheme,
-                      request.full_path,
-                      response.status)
+                        request.remote_addr,
+                        request.method,
+                        request.scheme,
+                        request.full_path,
+                        response.status)
     return response
+
 
 @app.errorhandler(Exception)
 def exceptions(e):
     tb = traceback.format_exc()
     app.logger.error('%s %s %s %s 5xx INTERNAL SERVER ERROR\n%s',
-                  request.remote_addr, request.method, request.scheme, request.full_path,
-                  tb)
+                     request.remote_addr, request.method, request.scheme, request.full_path,
+                     tb)
     return "Internal Server Error", 500
 
 
@@ -47,9 +59,11 @@ def exceptions(e):
 def load_user(id):
     return Users.get(id)
 
+
 """
     Раутинг веб-приложения, функции возвращают веб-страницы
 """
+
 
 @app.route('/', methods=['GET', 'POST'])
 @login_required
@@ -94,10 +108,16 @@ def logout():
 @app.route('/info/<hash>', methods=['GET'])
 @login_required
 def info(hash):
-    if hash=='0':
-        schedules = Schedules.get_tasks_with_info()
+    if hash == '0':
+        try:
+            schedules = Schedules.get_tasks_with_info()
+        except Exception as exc:
+            app.logger.error('Ошибка при получении crontab: %s', exc)
+            flash(str(exc))
+            schedules = []
         return render_template('info.html', full_name=AppConfig.get_server_name(), remote=False,
-                               schedules=schedules, sorted_schedules=sorted(schedules),
+                               schedules=schedules, sorted_schedules=sorted(
+                                   schedules),
                                actions=AppConfig.conf().get('actions'), sorted_actions=sorted(AppConfig.conf().get('actions')),
                                logs=Logging.get_logs_list())
     else:
@@ -105,10 +125,16 @@ def info(hash):
         if s is None or not s.state:
             return redirect(url_for('servers'))
         resp = get_remote_server_config(s.url)
-        return render_template('info.html', full_name = resp['full_name'], hash=s.hash, remote=True,
-                               schedules = resp['schedules'], sorted_schedules = sorted(resp['schedules']),
-                               actions = resp['actions'], sorted_actions = sorted(resp['actions']),
-                               logs = resp['logs'])
+        if len(resp) < 2:
+            from collections import defaultdict
+            flash(resp.get('status', 'Возникла неизвестная ошибка'))
+            resp = defaultdict(dict)
+        return render_template('info.html', full_name=resp['full_name'], hash=s.hash, remote=True,
+                               schedules=resp['schedules'], sorted_schedules=sorted(
+                                   resp['schedules']),
+                               actions=resp['actions'], sorted_actions=sorted(
+                                   resp['actions']),
+                               logs=resp['logs'])
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -129,8 +155,13 @@ def register():
 def addSchedule():
     form = ScheduleForm()
     if form.validate_on_submit():
-        Schedules.update_task(form.name.data, form.cron.data, form.descr.data, form.actions.data)
-        flash('Изменения применены')
+        try:
+            Schedules.update_task(form.name.data, form.cron.data,
+                                form.descr.data, form.actions.data)
+        except Exception as exc:
+            flash('Произошла ошибка:'.format(exc))
+        else:
+            flash('Изменения применены')
         return redirect(url_for('servers'))
     return render_template('add_schedule.html', edit=False,
                            form=form,
@@ -150,11 +181,12 @@ def editSchedule(name):
         form['cron'].data = sch['cron']
         form['actions'].data = ', '.join(sch['actions'])
     else:
-        Schedules.update_task(form.name.data, form.cron.data, form.descr.data, form.actions.data)
+        Schedules.update_task(form.name.data, form.cron.data,
+                              form.descr.data, form.actions.data)
         flash('Изменения применены')
         return redirect(url_for('servers'))
     return render_template('add_schedule.html', edit=True, form=form,
-           actions=AppConfig.conf().get('actions'), sorted_actions = sorted(AppConfig.conf().get('actions')))
+                           actions=AppConfig.conf().get('actions'), sorted_actions=sorted(AppConfig.conf().get('actions')))
 
 
 @app.route('/sch-confirm/<name>', methods=['GET', 'POST'])
@@ -162,7 +194,7 @@ def editSchedule(name):
 @admin_required
 def confirmDeleteSchedule(name):
     return render_template('del_confirm.html', obj_type='"расписание"', obj_name=name,
-                           return_link=url_for('servers'), del_link=url_for('sch-del',  name=name.strip()))
+                           return_link=url_for('servers'), del_link=url_for('sch-del', name=name.strip()))
 
 
 @app.route('/sch-del/<name>', methods=['GET', 'POST'])
@@ -204,7 +236,7 @@ def get_remote_log(shash, dir, name):
     s = RemoteServers.find_server(shash)
     if s is None or not s.state:
         return redirect(url_for('servers'))
-    logs=get_remote_server_logs(s.url, dir, name)
+    logs = get_remote_server_logs(s.url, dir, name)
     return render_template('log.html', full_name=s.name, dir=dir, log=logs)
 
 
@@ -232,7 +264,7 @@ def confirmDeleteServer(hash):
 def deleteServers(hash):
     s = RemoteServers.find_server(hash)
     RemoteServers.delete(hash)
-    flash('Сервер ' + s.url +' удален')
+    flash('Сервер ' + s.url + ' удален')
     return redirect(url_for('servers'))
 
 
@@ -257,7 +289,7 @@ def confirmDeleteUser(name):
 @admin_required
 def deleteUser(name):
     Users.delete(name)
-    flash('Пользователь ' + name +' удален')
+    flash('Пользователь ' + name + ' удален')
     return redirect(url_for('users'))
 
 
@@ -283,6 +315,7 @@ def makeGuestUser(name):
     Раутинг веб-api, функции возвращают json
 """
 
+
 @app.route('/api/si', methods=['GET'])
 def trigger_status():
     try:
@@ -296,10 +329,10 @@ def si():
     try:
         return get_server_config()
     except Exception as e:
-        return {'status': e}
+        return {'status': str(e)}
 
 
-@app.route('/api/rl', methods=['GET'])
+@app.route('/api/rl/<dir>/<name>', methods=['GET'])
 def get_logapi(dir, name):
     try:
         return Logging.get_log_content(dir, name)

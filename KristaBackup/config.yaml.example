@@ -2,7 +2,7 @@ naming:
   server_name: example-cons-app
 
 cron:
-  cron_user: postnikov
+  cron_user: user
 
 logging:
   logs_path: /var/log/bc
@@ -12,23 +12,23 @@ actions:
   check_backup:
     type: check_backup
 
-  tarjob_0level_etc:
-    basename: etc
+  tarjob_0level_opt:
+    basename: opt
     check_level_list_only: 'False'
     compression: 3
-    exclusions: '*/data/*, */attachments/*, */tmp/*, ./backup/*, ./updates/*'
+    exclusions: '*/data/*, */tmp/*, ./backup/*, ./updates/*'
     use_re_in_exclusions: false
-    src_path: /etc
+    src_path: /opt
     dest_path: /backup
     level: 0
     level_folders: 0,1,2
-    descr: бэкап файлов /etc 0-го уровня
+    descr: бэкап файлов /opt 0-го уровня
     type: tar
 
-  tarjob_1level_etc:
-    source: tarjob_0level_etc
+  tarjob_1level_opt:
+    source: tarjob_0level_opt
     level: 1
-    descr: бэкап файлов /etc 1-го уровня
+    descr: бэкап файлов /opt 1-го уровня
     type: tar
 
 schedule:
@@ -37,7 +37,7 @@ schedule:
       project: cons
       region: noregion
     actions:
-        - tarjob_0level_etc
+        - tarjob_0level_opt
     
     cron: 00 23 * * 0
     descr: Бекап каталога 0-го уровня (полный)
@@ -47,7 +47,7 @@ schedule:
       project: cons
       region: noregion
     actions:
-        - tarjob_1level_etc
+        - tarjob_1level_opt
 
     cron: 00 23 * * 1-6
     descr: Бекап каталога 1-го уровня (разностный)

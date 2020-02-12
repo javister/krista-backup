@@ -4,14 +4,14 @@ from functools import wraps
 
 from lib.bottle import Bottle, request, response
 from model import Logging
-from model.Logging import configure_generic_logger
+from model.Logging import get_generic_logger
 from model.RemoteServerApi import get_server_info, get_server_config
 from model.YamlConfig import AppConfig
 from webapp.AppRunner import AppRunner
 
 app = Bottle()
 
-logger = configure_generic_logger('web_api')
+logger = get_generic_logger()
 
 @app.route('/si', method=['GET'])
 def si():
@@ -60,7 +60,6 @@ class WebModule(AppRunner):
         return conf
 
     def run_app(self):
-
         api_app = Bottle()
         api_app.install(log_to_logger)
         app.install(log_to_logger)

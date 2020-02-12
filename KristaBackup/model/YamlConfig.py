@@ -128,10 +128,12 @@ class AppConfig(metaclass=AppConfigInitType):
         if AppConfig._config is None:
             try:
                 AppConfig._config = YamlConfigMapper(
-                    AppConfig._config_default_path, AppConfig._config_filename)
-            except ConfigError:
+                    os.path.dirname(AppConfig.excecutable_path),
+                    AppConfig._config_filename,
+                )
+            except (ConfigError, TypeError, AttributeError) as e:
                 AppConfig._config = YamlConfigMapper(
-                    os.getcwd(), AppConfig._config_filename)
+                    AppConfig._config_default_path, AppConfig._config_filename)
             AppConfig.parseConfig()
         return AppConfig._config.config
 
@@ -193,7 +195,10 @@ class YamlConfigMapper:
         else:
             apath = path
             if apath is None:
-                apath = AppConfig._config_default_path
+                if AppConfig.excecutable_path is not None:
+                    apath = os.path.dirname(AppConfig.excecutable_path)
+                else:
+                    apath = AppConfig._config_default_path
             self.config_file_name = os.path.join(apath, filename)
             if os.path.exists(self.config_file_name) and os.path.isfile(
                     self.config_file_name):
@@ -226,10 +231,13 @@ class YamlConfigMapper:
             ]))
         shutil.copy(self.config_file_name, bk_filename)
         with open(self.config_file_name, 'w') as stream:
-            yaml.dump(self.config,
-                      stream=stream,
-                      allow_unicode=True,
-                      default_flow_style=False)
+            yaml.dump(
+                self.config,
+                stream=stream,
+                allow_unicode=True,
+                default_flow_style=False,
+                sort_keys=False,
+            )
 
 
 class ConfigError(Exception):

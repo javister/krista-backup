@@ -24,7 +24,11 @@ class Server:
             print(r.content)
             if (r.ok):
                 self.state = True
-                jr = json.loads(r.content)
+                try:
+                    jr = json.loads(r.content)
+                except TypeError:
+                    # python3.5 support
+                    jr = json.loads(r.content.decode('utf-8'))
                 self.name = jr.get('name', 'неизвестно')
                 self.flask = jr.get('flask', False)
                 self.msg = jr.get('msg', '')
@@ -44,10 +48,10 @@ class Server:
 
 
 def get_hash(url):
-    if s.url is None:
+    if url is None:
         return None
     h = hashlib.md5()
-    h.update(s.url.encode('utf-8'))
+    h.update(url.encode('utf-8'))
     return h.hexdigest()
 
 _servers_config_filename = 'servers.yaml'
@@ -85,7 +89,7 @@ def add(url):
     s.hash = get_hash(s.url)
     s.update()
     servers.append(s)
-    _servers_conf.config.servers.append(url)
+    _servers_conf.config['servers'].append(url)
     _servers_conf.storeAll()
 
 
@@ -100,8 +104,8 @@ def delete(hash):
     s = find_server(hash)
     if not s is None:
         servers.remove(s)
-        for srv in _servers_conf.config.servers:
-            _servers_conf.config.servers.remove(srv)
+        for srv in _servers_conf.config['servers']:
+            _servers_conf.config['servers'].remove(srv)
         _servers_conf.storeAll()
 
 
@@ -111,9 +115,12 @@ def get_remote_server_config(surl):
     try:
         r = requests.get(status_url)
         if (r.ok):
-            return json.loads(r.content)
+            try:
+                return json.loads(r.content)
+            except TypeError:
+                return json.loads(r.content.decode('utf-8'))
     except Exception as ex:
-        return {'state': 'Ошибка доступа: %s, %s' % (type(ex).__name__, str(ex))}
+        return json.loads({'state': 'Ошибка доступа: %s, %s' % (type(ex).__name__, str(ex))})
 
 
 def get_remote_server_logs(surl, dir, name):

@@ -53,14 +53,16 @@ class TarArchiver(Action):
         Action.__init__(self, name)
 
     def findSourceListFile(self):
-
         if self.level == 0:
             return None
 
         files = []
         needed_level = self.level - 1
-        needed_filename_pattern = (self.basename + "*" + str(needed_level) +
-                                   "." + self.list_extension)
+        needed_filename_pattern = '{0}*{1}.{2}'.format(
+            self.basename,
+            str(needed_level),
+            self.list_extension,
+        )
 
         file_path = os.path.join(self.dest_path,
                                  self.level_folders[needed_level])
@@ -133,26 +135,37 @@ class TarArchiver(Action):
             try:
                 dir = tar.gettarinfo(name=dirpath_tarinfo)
                 mtime = os.path.getmtime(dirpath)
-                fsize = os.path.getsize( dirpath)
+                fsize = os.path.getsize(dirpath)
             except Exception as e:
-                self.logger.warning("Не удалось прочитать свойства каталога %s, ошибка %s",
-                                  dirpath, str(e))
+                self.logger.warning(
+                    'Не удалось прочитать свойства каталога %s, ошибка %s',
+                    dirpath, e,
+                )
                 continue
 
             if not exclude(dirpath, mtime, fsize):
                 try:
                     tar.addfile(dir)
+                except FileNotFoundError:
+                    self.logger.debug(
+                        'Следующая директория не найдена/broken link: %s',
+                        dirpath,
+                    )
                 except Exception as e:
                     # если во время добавления произошла ошибка, то
                     # повторить добавление файла через 5 секунд
                     time.sleep(5)
-                    self.logger.warning("Не удалось добавить, повторная попытка добавить каталог: %s, ошибка %s",
-                            dirpath, str(e))
+                    self.logger.warning(
+                        'Не удалось добавить, повторная попытка добавить каталог: %s, ошибка %s',
+                        dirpath, e,
+                    )
                     try:
                         tar.addfile(dir)
                     except Exception as e:
-                        self.logger.warning("Не удалось добавить каталог %s, ошибка %s",
-                                          dirpath, str(e))
+                        self.logger.warning(
+                            'Не удалось добавить каталог %s, ошибка %s',
+                            dirpath, e,
+                        )
                     continue
 
             for filename in filenames:
@@ -160,9 +173,16 @@ class TarArchiver(Action):
                 try:
                     mtime = os.path.getmtime(filepath)
                     fsize = os.path.getsize(filepath)
+                except FileNotFoundError:
+                    self.logger.debug(
+                        'Следующий файл не найден/broken link: %s',
+                        filepath,
+                    )
                 except Exception as e:
-                    self.logger.warning("Не удалось прочитать свойства файла %s, ошибка %s",
-                                      filepath, str(e))
+                    self.logger.warning(
+                        'Не удалось прочитать свойства файла %s, ошибка %s',
+                        filepath, e,
+                    )
                     continue
 
                 # используется в add_file
@@ -174,14 +194,17 @@ class TarArchiver(Action):
                         # если во время добавления произошла ошибка, то
                         # повторить добавление файла через 5 секунд
                         time.sleep(5)
-                        self.logger.warning("Не удалось добавить, повторная попытка добавить файл: %s, ошибка %s",
-                            filepath, str(e))
+                        self.logger.warning(
+                            'Не удалось добавить, повторная попытка добавить файл: %s, ошибка %s',
+                            filepath, e,
+                        )
                         try:
                             add_file(tar, filepath)
                         except Exception as e:
-                            self.logger.warning("Не удалось добавить файл: %s", str(e))
+                            self.logger.warning(
+                                'Не удалось добавить файл: %s', e,
+                            )
                         continue
-
 
     def start(self):
 

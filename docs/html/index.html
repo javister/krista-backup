@@ -37,24 +37,32 @@
 <div class="section" id="kristabackup">
 <span id="index"></span><h1>KristaBackup<a class="headerlink" href="#kristabackup" title="Ссылка на этот заголовок">¶</a></h1>
 <p>Система для автоматизации процесса создания, ротации и перемещения бэкапов.</p>
-<p>Особенности:
-1. Работает автономно
-2. Имеет кросс-платформенную конфигурацию
-3. Логирование во время выполнения: сокращённое и подробное
-4. Интегрируема с системами мониторинга (например, Zabbix)</p>
+<p>Особенности:</p>
+<ol class="arabic simple">
+<li><p>Работает автономно</p></li>
+<li><p>Имеет кросс-платформенную конфигурацию</p></li>
+<li><p>Логирование во время выполнения: сокращённое и подробное</p></li>
+<li><p>Интегрируема с системами мониторинга (например, Zabbix)</p></li>
+</ol>
 <p>Поддерживаемые OS: Ubuntu 14.04 и выше, Debian 8 и выше, CentOS 7, AltLinux 8, Astra Linux 1.6
 Для запуска требуется <cite>python3.5</cite> и выше.</p>
 <p>Документация в форматах html и текстовом расположена в папке docs.</p>
 </div>
 <div class="section" id="id1">
 <h1>Установка<a class="headerlink" href="#id1" title="Ссылка на этот заголовок">¶</a></h1>
-<p>1. Клонировать репозиторий. Место установки не имеет значения, но обычно мы ставим
-приложение в каталог /opt. Для установки в /opt могут потребоваться права sudo.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> /opt
-git clone https://github.com/javister/krista-backup
+<ol class="arabic simple">
+<li><p>Клонировать репозиторий.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/javister/krista-backup
 </pre></div>
 </div>
-<p>2. Установить зависимости для базовой системы (без веб-интерфейса) из файла requirements.system.
+<p>2. Скопировать проект в необходимую директорию. Обычно мы храним
+приложение в каталоге /opt. Для установки в /opt могут
+потребоваться права sudo.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cp KristaBackup/KristaBackup /opt/
+</pre></div>
+</div>
+<p>3. Установить зависимости для базовой системы (без веб-интерфейса) из файла requirements.system.
 Зависимости устанавливаются из репозиториев ОС. Для Debian и Ubunutu команда будет выглядеть так:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> /opt/KristaBackup
 sed <span class="s1">&#39;s/#.*//&#39;</span> requirements.system <span class="p">|</span> xargs sudo apt-get install -y

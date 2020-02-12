@@ -4,7 +4,7 @@
 import argparse
 import os
 
-from model.Logging import configure_generic_logger
+from model.Logging import get_generic_logger
 from model.YamlConfig import AppConfig
 
 
@@ -76,26 +76,26 @@ def main(is_packed=True):
     if args.action == 'run':
         if args.entity == 'web':
             if not AppConfig.flask_on:
-                lgr = configure_generic_logger()
+                lgr = get_generic_logger()
                 lgr.exception('Исключение при запуске веб-приложения: невозможно импортировать модуль flask')
             else:
                 try:
                     webapp_handler()
                 except Exception:
-                    lgr = configure_generic_logger()
+                    lgr = get_generic_logger()
                     lgr.exception('Исключение при запуске веб-приложения')
         elif args.entity == 'webapi':
             try:
                 webapi_handler()
             except Exception:
-                lgr = configure_generic_logger()
+                lgr = get_generic_logger()
                 lgr.exception('Исключение при запуске веб-api')
         else:
             try:
                 from runner import ScheduleRunner
                 ScheduleRunner(args.entity, args.verbose).start_task()
             except Exception:
-                lgr = configure_generic_logger()
+                lgr = get_generic_logger()
     elif args.action == 'stop':
         if args.entity == 'web':
             webapp_handler(stop=True)

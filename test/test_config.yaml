@@ -1,0 +1,78 @@
+naming:
+  server_name: docker_container
+  project: testing
+  region: region_sample
+
+cron:
+  cron_user: root
+
+logging:
+  logs_path: /var/log/KristaBackup
+  trigger_filepath: /etc/zabbix/backup.trigger
+
+actions:
+  tarjob_0level_etc:
+    basename: etc
+    check_level_list_only: true
+    compression: 5
+    exclusions: '*/data/*, */attachments/*, */tmp/*, ./backup/*, ./updates/*'
+    use_re_in_exclusions: false
+    src_path: /etc
+    dest_path: /backup
+    level: 0
+    level_folders: '0, 1, 2'
+    descr: бэкап файлов /etc 0-го уровня
+    type: tar
+
+  tarjob_1level_etc:
+    source: tarjob_0level_etc
+    level: 1
+    descr: бэкап файлов /etc 1-го уровня
+    type: tar
+
+  cleaner_0level_etc:
+    source: tarjob_0level_etc
+    max_files: 2
+    type: cleaner
+
+  cleaner_1level_etc:
+    source: tarjob_1level_etc
+    max_files: 3
+    type: cleaner
+
+schedule:
+  make_full_dump_default:
+    actions:
+        - cleaner_0level_etc
+        - tarjob_0level_etc
+    
+    cron: 00 23 * * 0
+    descr: Бекап каталога 0-го уровня (полный)
+
+  make_diff_dump_default:
+    actions:
+        - cleaner_1level_etc
+        - tarjob_1level_etc
+
+    cron: 00 23 * * 1-6
+    descr: Бекап каталога 1-го уровня (разностный)
+
+  make_full_dump_custom_naming:
+    naming:
+        project: custom_name_testing
+        region: custom_region_sample
+    actions:
+        - tarjob_0level_etc
+    
+    cron: 00 23 * * 0
+    descr: Бекап каталога 0-го уровня (полный)
+
+make_diff_dump_default:
+    naming:
+        project: custom_name_testing
+        region: custom_region_sample
+    actions:
+        - tarjob_1level_etc
+
+    cron: 00 23 * * 1-6
+    descr: Бекап каталога 1-го уровня (разностный)
