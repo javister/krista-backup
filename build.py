@@ -8,11 +8,12 @@ import zipapp
 
 
 PATTERNS_STARTS_WITH = [
-    'runner',
+    'common',
     'lib',
-    'model',
+    'core',
     'Krista',
-    'webapp'
+    'web',
+    '_version'
 ]
 
 FILES_SHOULD_BE_OUTSIDE = (
@@ -22,8 +23,8 @@ FILES_SHOULD_BE_OUTSIDE = (
 )
 
 DIRECTORIES_SHOULD_BE_OUTSIDE = (
-    'webapp/templates',
-    'webapp/static',
+    'web/webapp/templates',
+    'web/webapp/static',
 )
 
 
@@ -79,8 +80,8 @@ if __name__ == '__main__':
 
         for required_item in DIRECTORIES_SHOULD_BE_OUTSIDE:
             dest_path = os.path.join(
-                'out/webapp/',
-                os.path.basename(required_item),
+                'out/',
+                required_item,
             )
             if os.path.exists(dest_path):
                 shutil.rmtree(dest_path)

@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>MoveBkpPeriod &#8212; Документация KristaBackup 1.0</title>
+    <title>MoveBkpPeriod &#8212; Документация KristaBackup 1.4</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -78,22 +78,26 @@
   <span class="nt">basename_list</span><span class="p">:</span>
       <span class="p p-Indicator">-</span> <span class="s">&#39;etc&#39;</span>
       <span class="p p-Indicator">-</span> <span class="s">&#39;home_user&#39;</span>
-  <span class="nt">period</span><span class="p">:</span>
+  <span class="nt">periods</span><span class="p">:</span>
       <span class="nt">weekly</span><span class="p">:</span>
           <span class="c1"># path примет значение weekly</span>
-          <span class="l l-Scalar l-Scalar-Plain">cron&#39;</span><span class="p p-Indicator">:</span> <span class="s">&#39;40</span><span class="nv"> </span><span class="s">02</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">0&#39;</span>
+          <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;40</span><span class="nv"> </span><span class="s">02</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">0&#39;</span>
       <span class="nt">monthly</span><span class="p">:</span>
           <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">month</span>
-          <span class="l l-Scalar l-Scalar-Plain">cron&#39;</span><span class="p p-Indicator">:</span> <span class="s">&#39;40</span><span class="nv"> </span><span class="s">02</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">*&#39;</span>
+          <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;40</span><span class="nv"> </span><span class="s">02</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">*&#39;</span>
           <span class="nt">max_files</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3</span>
-      <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup/0/</span>
-      <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup/vault/</span>
-      <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">move_bkp_period</span>
+  <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup/0/</span>
+  <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup/vault/</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">move_bkp_period</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="id3">
 <h2>Примечание:<a class="headerlink" href="#id3" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Параметр <code class="docutils literal notranslate"><span class="pre">cron</span></code> в периоде не создаёт запись в <code class="docutils literal notranslate"><span class="pre">crontab</span></code>, а
+проверяет время запуска текущего задания. То есть, если период
+имеет атрибут <code class="docutils literal notranslate"><span class="pre">cron:</span> <span class="pre">'40</span> <span class="pre">02</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">0'</span></code>, то ротация этого периода будет
+выполнена, если задание запущено в воскресенье в 2:40.</p>
 <p><code class="docutils literal notranslate"><span class="pre">Cleaner</span></code> поддерживает наследование от <code class="docutils literal notranslate"><span class="pre">MoveBkpPeriod</span></code> и выполняет
 очистку отдельно для каждого периода. Параметры для очистки можно задать напрямую
 в действии (в примере: <code class="docutils literal notranslate"><span class="pre">max_files</span></code> в <code class="docutils literal notranslate"><span class="pre">monthly</span></code>), либо их можно задать в
@@ -122,16 +126,17 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../usage.html">Использование</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../usage.html#run-task">Запуск заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#run-action">Запуск действий</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../usage.html#crontab">Работа с crontab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../usage.html#api">Запуск веб-api или веб-приложения</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../usage.html#id5">Утилита для управления пользователями веб-приложения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#id6">Утилита для управления пользователями веб-приложения</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration.html">Конфигурация</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id2">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#configuration-structure">Общая стуктура</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configuration.html#id3">Расписание</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id5">Описание заданий</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id6">Пример написания конфигурации</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id6">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id9">Пример написания конфигурации</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="actions_index.html">Действия</a><ul class="current">
@@ -183,7 +188,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2019, НПО Криста.
+      &copy;2020, НПО Криста.
       
       |
       <a href="../_sources/actions/movebkpperiod.rst.txt"

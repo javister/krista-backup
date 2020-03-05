@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>Конфигурация &#8212; Документация KristaBackup 1.0</title>
+    <title>Конфигурация &#8212; Документация KristaBackup 1.4</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -37,16 +37,19 @@
 </div>
 <div class="section" id="id1">
 <h1>Конфигурация<a class="headerlink" href="#id1" title="Ссылка на этот заголовок">¶</a></h1>
-<div class="section" id="id2">
-<h2>Общая стуктура<a class="headerlink" href="#id2" title="Ссылка на этот заголовок">¶</a></h2>
+<div class="section" id="configuration-structure">
+<span id="id2"></span><h2>Общая стуктура<a class="headerlink" href="#configuration-structure" title="Ссылка на этот заголовок">¶</a></h2>
 <p>Рядом с выполняемым файлом должен находится файл конфигураций <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>.</p>
 <p>Конфигурация состоит из следующих частей:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">naming</span></code></p></li>
 </ul>
 <blockquote>
-<div><p>Содержит <code class="docutils literal notranslate"><span class="pre">server_name</span></code>, <code class="docutils literal notranslate"><span class="pre">region</span></code> и <code class="docutils literal notranslate"><span class="pre">project</span></code>. Они используются для генерации выходящих файлов и
-логов. <code class="docutils literal notranslate"><span class="pre">region</span></code> и <code class="docutils literal notranslate"><span class="pre">project</span></code>  могут быть пропущены, если их явно указать в запускаемом расписании.</p>
+<div><p>Содержит <code class="docutils literal notranslate"><span class="pre">server_name</span></code>, <code class="docutils literal notranslate"><span class="pre">region</span></code> и <code class="docutils literal notranslate"><span class="pre">project</span></code>. Они
+используются для выходных файлов и логов. Для полноценного запуска
+действий необходимо их заполнить.</p>
+<p>Для выполнения заданий поля <code class="docutils literal notranslate"><span class="pre">region</span></code> и <code class="docutils literal notranslate"><span class="pre">project</span></code> могут
+быть пропущены, если они явно указаны в описании заданий.</p>
 </div></blockquote>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">cron</span></code></p></li>
@@ -86,7 +89,7 @@
 </div>
 <div class="section" id="id3">
 <h2>Расписание<a class="headerlink" href="#id3" title="Ссылка на этот заголовок">¶</a></h2>
-<p>Расписание (<code class="docutils literal notranslate"><span class="pre">schedule</span></code>) -- список всех заданий.</p>
+<p>Расписание (schedule) -- список всех заданий.</p>
 <div class="section" id="id4">
 <h3>Терминология<a class="headerlink" href="#id4" title="Ссылка на этот заголовок">¶</a></h3>
 <ul class="simple">
@@ -94,7 +97,9 @@
 <li><p>Задание (task) содержит список действий, которые требуется выполнить.</p></li>
 <li><p>Все задания вместе явлются расписанием (schedule).</p></li>
 </ul>
-<p>Схематичный пример:</p>
+</div>
+<div class="section" id="id5">
+<h3>Пример<a class="headerlink" href="#id5" title="Ссылка на этот заголовок">¶</a></h3>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">schedule</span><span class="p">:</span> <span class="c1"># расписание</span>
   <span class="nt">full_dump</span><span class="p">:</span> <span class="c1"># задание</span>
     <span class="nt">actions</span><span class="p">:</span> <span class="c1"># действия в задании</span>
@@ -113,8 +118,8 @@
 </div>
 </div>
 </div>
-<div class="section" id="id5">
-<h2>Описание заданий<a class="headerlink" href="#id5" title="Ссылка на этот заголовок">¶</a></h2>
+<div class="section" id="id6">
+<h2>Описание заданий<a class="headerlink" href="#id6" title="Ссылка на этот заголовок">¶</a></h2>
 <p>Как было выше упомянуто, задания указаны в расписании. Каждое
 задание содержит следующие параметры:</p>
 <ul class="simple">
@@ -128,7 +133,8 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">actions</span></code></p></li>
 </ul>
 <blockquote>
-<div><p>упорядоченный список действий</p>
+<div><p>упорядоченный список действий; у действий могут быть
+параметры (подробнее в примечании)</p>
 </div></blockquote>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">cron</span></code></p></li>
@@ -146,7 +152,14 @@
 (по умолчанию в <code class="docutils literal notranslate"><span class="pre">crontab</span></code> используется отношение ИЛИ)</p>
 </div></blockquote>
 <p>Также, имя задания должно быть уникальным.</p>
-<p>Пример:</p>
+<div class="section" id="id7">
+<h3>Примечание<a class="headerlink" href="#id7" title="Ссылка на этот заголовок">¶</a></h3>
+<p>Атрибут <code class="docutils literal notranslate"><span class="pre">actions</span></code> может содержать не только имя действия, но
+и ещё параметры его вызова. Для этого существует специальная запись
+с квадратными скобками, которая показана в примере ниже.</p>
+</div>
+<div class="section" id="configuration-task-example">
+<span id="id8"></span><h3>Пример<a class="headerlink" href="#configuration-task-example" title="Ссылка на этот заголовок">¶</a></h3>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">schedule</span><span class="p">:</span>
   <span class="nt">full_dump</span><span class="p">:</span>
     <span class="nt">naming</span><span class="p">:</span>
@@ -155,13 +168,16 @@
     <span class="nt">actions</span><span class="p">:</span>
         <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cleaner_tarjob_0level_application</span>
         <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">tarjob_0level_application</span>
+        <span class="p p-Indicator">-</span> <span class="p p-Indicator">[</span><span class="nv">some_unstable_action</span><span class="p p-Indicator">,</span> <span class="nv">--dry</span><span class="p p-Indicator">]</span> <span class="c1"># данное действие будет выполняться в тестовом режиме</span>
     <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;00</span><span class="nv"> </span><span class="s">23</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1-6&#39;</span>
     <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Бекап каталога /application 0-го уровня (полный)</span>
 </pre></div>
 </div>
+<p>Подробнее о тестовом режиме в разделе <a class="reference internal" href="actions/actions_index.html#actions-index"><span class="std std-ref">Действия</span></a>.</p>
 </div>
-<div class="section" id="id6">
-<h2>Пример написания конфигурации<a class="headerlink" href="#id6" title="Ссылка на этот заголовок">¶</a></h2>
+</div>
+<div class="section" id="id9">
+<h2>Пример написания конфигурации<a class="headerlink" href="#id9" title="Ссылка на этот заголовок">¶</a></h2>
 <p>Здесь будет рассмотрен пример файла конфигураций, который будет
 содержать настройки для выполнения полного и разностного бэкапа каталога <code class="docutils literal notranslate"><span class="pre">/etc</span></code>.</p>
 <p>Ротация полного бэкапа будет выполняться раз в неделю, одновременно будут хранится
@@ -188,7 +204,7 @@
 добавим в него действие, которое будет выполнять полный бэкап:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">actions</span><span class="p">:</span>
   <span class="nt">tarjob_0level_etc</span><span class="p">:</span>
-    <span class="nt">basename</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">etc</span> <span class="c1"># уникальное имя</span>
+    <span class="nt">basename</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">etc</span> <span class="c1"># уникальное имя, не должно быть началом другого basename</span>
     <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/etc</span> <span class="c1"># исходная директория</span>
     <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup</span> <span class="c1"># результирующая директория</span>
     <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span> <span class="c1"># уровень бэкапа</span>
@@ -354,16 +370,17 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Использование</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#run-task">Запуск заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#run-action">Запуск действий</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#crontab">Работа с crontab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#api">Запуск веб-api или веб-приложения</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#id5">Утилита для управления пользователями веб-приложения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#id6">Утилита для управления пользователями веб-приложения</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Конфигурация</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id2">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-structure">Общая стуктура</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id3">Расписание</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id5">Описание заданий</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id6">Пример написания конфигурации</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">Пример написания конфигурации</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="actions/actions_index.html">Действия</a><ul>
@@ -413,7 +430,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2019, НПО Криста.
+      &copy;2020, НПО Криста.
       
       |
       <a href="_sources/configuration.rst.txt"

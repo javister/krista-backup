@@ -1,0 +1,14 @@
+[Unit]
+Description=KristaBackup webapi
+After=network.target
+
+[Service]
+Type=forking
+TimeoutSec=300
+Restart=always
+RestartSec=30
+User=root
+ExecStart=/usr/bin/python3 /opt/KristaBackup.py run webapi
+
+[Install]
+WantedBy=multi-user.target

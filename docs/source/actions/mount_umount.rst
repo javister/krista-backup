@@ -20,7 +20,6 @@ Mount
    "mnt_dev", "монтироемое устройство", ""
    "mnt_point", "точка монтирования", ""
    "fs_type", "тип подключаемой файловой системы", ""
-   "cred_file", "файл с данными для подключения", ""
    "flags", "флаги для выполнения", ""
 
 Umount
@@ -43,7 +42,7 @@ Umount
     mnt_dev: 10.0.10.2:/backup
     mnt_point: /backup_mount
     fs_type: nfs
-    flags: -v
+    flags: -o credentials="/path/to/creds/.winpwd",sec=ntlm
     type: mount
 
   umount_volume:

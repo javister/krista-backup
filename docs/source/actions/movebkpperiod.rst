@@ -28,20 +28,25 @@ MoveBkpPeriod
     basename_list:
         - 'etc'
         - 'home_user'
-    period:
+    periods:
         weekly:
             # path примет значение weekly
-            cron': '40 02 * * 0'
+            cron: '40 02 * * 0'
         monthly:
             path: month
-            cron': '40 02 * 1 *'
+            cron: '40 02 * 1 *'
             max_files: 3
-        src_path: /backup/0/
-        dest_path: /backup/vault/
-        type: move_bkp_period
+    src_path: /backup/0/
+    dest_path: /backup/vault/
+    type: move_bkp_period
 
 Примечание:
 ~~~~~~~~~~~
+
+Параметр ``cron`` в периоде не создаёт запись в ``crontab``, а
+проверяет время запуска текущего задания. То есть, если период
+имеет атрибут ``cron: '40 02 * * 0'``, то ротация этого периода будет
+выполнена, если задание запущено в воскресенье в 2:40.
 
 ``Cleaner`` поддерживает наследование от ``MoveBkpPeriod`` и выполняет
 очистку отдельно для каждого периода. Параметры для очистки можно задать напрямую

@@ -132,7 +132,7 @@ s.postnikov@krista.ru, m.adrian@krista.ru
 Лицензия
 ========
 
-Copyright 2019 ООО НПО Криста
+Copyright 2020 ООО НПО Криста
 
 Licensed under the Apache License, Version 2.0
 

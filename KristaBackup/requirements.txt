@@ -1,4 +1,4 @@
-requests
-flask
-flask-login
-flask-wtf
+requests>=2.22.0
+flask>=1.1.1
+flask-login>=0.4.1
+flask-wtf>=0.14.2

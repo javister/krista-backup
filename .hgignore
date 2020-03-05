@@ -16,3 +16,5 @@ out
 users.yaml
 servers.yaml
 config.yaml
+.coverage
+.pytest_cache
