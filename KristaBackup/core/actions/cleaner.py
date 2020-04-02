@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 import datetime
-import fnmatch
+import functools
 import os
 import re
 import shutil
@@ -9,61 +9,60 @@ import shutil
 from common.YamlConfig import AppConfig
 
 from .action import Action
-from .decorators import side_effecting
 from .pgdump import PgDump
+from .decorators import (
+    side_effecting, use_exclusions, use_levels,
+    use_patterns, use_postgres,
+)
 
 
+@use_exclusions
+@use_patterns
+@use_levels
+@use_postgres
 class Cleaner(Action):
     """Класс действия для удаления файлов.
 
-    Основные атрибуты:
-        basename: Строка с базовым именем
-        patterns: Список паттернов
-        use_re_in_patterns: Логическое значение, если True, то паттерны regexp, иначе shell
-        dest_path: Строка с путём, содержащим удаляемые файлы
-        days: Число, максимальное количество дней файлов в группе
-        max_files: Число, максимальное количество файлов в группе
-        parent_type: Строка с типом родительского действия
+    Attributes:
+        Внешние:
+            patterns: Список необработанных паттернов
+            dest_path: Строка с путём, содержащим удаляемые файлы
+            days: Число, максимальное количество дней файлов в группе
+            max_files: Число, максимальное количество файлов в группе
+            exclusions: Список паттернов для исключения файлов из удаляемых
+
+        Внутренние:
+            full_files_list: Словарь со всеми найденными файлами
+            files_to_remove: Список файлов дляя удаления
+            prepared_patterns: Список подготовленных для работы паттернов
+            prepared_exclusions: Список подготовленных исключений.
+            parent_type: Строка с типом родительского действия
+
+    По паттернам строится список файлов для удаления full_files_list с учетом
+    пути dest_path (или требуемого в действии пути), включая подкаталоги.
+
+    Список файлов - словарь, который содержит записи вида:
+        (расширение файла, паттерн): путь к файлу.
 
     Список файлов для удаления определяется явными ограничениями и неявными.
-    Явными ограничениями являются days, max_files и patterns. Пример неявных:
-    при обработке чистильщика-наследника pgdump будут наследованы имена баз данных,
-    а по ним будут построены паттерны.
-
-
-    По паттернам строится список файлов для удаления с учетом пути dest_path, включая подкаталоги.
-
-    Список файлов - словарь, который содержит ключи (расширение файла, паттерн).
+    Пример явных:
+        days, max_files и patterns.
+    Пример неявных:
+        при обработке чистильщика-наследника pgdump будут наследованы имена
+        баз данных, а по ним будут построены паттерны.
 
     """
 
-    max_files = None
-    """int: значение максимального количества файлов"""
-
-    days = None
-    """int: значение максимального количества дней"""
-
-    use_re_in_patterns = False
-    """bool: если True, то паттерны regexp, иначе shell"""
-
-    patterns = []  # необработанные паттерны
-    prepared_patterns = []  # лист с готовыми к работе паттернами
-
-    full_files_list = {}
-
-    level = -1
-    parent_type = None  # тип предка для специальной обработки
-
-    # список баз данных от pgdump
-    # определение нужно для автоматической типизации
-    # при очистке бэкапов бд
-
-    databases = []
-
     def __init__(self, name):
         super().__init__(name)
-        self._filename_dateformat = AppConfig.get_filename_dateformat()
+
+        self.max_files = None
+        self.days = None
+        self.full_files_list = {}
         self.files_to_remove = []
+        self.parent_type = None
+
+        self._filename_dateformat = AppConfig.get_filename_dateformat()
 
     def add_re_pattern(self, group):
         """Добавление re паттерна в список паттернов."""
@@ -78,19 +77,11 @@ class Cleaner(Action):
             )
         else:
             self.prepared_patterns.append(compiled_pattern)
-            self.logger.debug(
-                'Добавлена группа для удаления (re): %s',
-                pattern,
-            )
 
     def add_sh_pattern(self, pattern):
         """Добавление shell паттерна в список паттернов."""
         pattern = r'{0}*'.format(pattern)
         self.prepared_patterns.append(pattern)
-        self.logger.debug(
-            'Добавлена группа для удаления (sh): %s',
-            pattern,
-        )
 
     def retrieve_groups_from_pgdump(self):
         """Получение списка групп по данным из родительского pgdump.
@@ -106,20 +97,29 @@ class Cleaner(Action):
         """
         retrieved_groups = []
         if self.databases:
+            self.logger.debug('Список баз получен через атрибут databases.')
             databases = self.databases
         else:
+            self.logger.debug('Атрибут databases со списком баз отсутствует.')
+            self.logger.debug(
+                'Пытаюсь получить список баз напрямую из postgres.',
+            )
+            if self.password:
+                os.putenv('PGPASSWORD', self.password)
             try:
                 databases = PgDump.get_database_list(
                     self.user,
                     self.host,
                     self.port,
+                    logger=self.logger,
                 )
             except AttributeError:
-                databases = PgDump.get_database_list()
-        for db in databases:
-            dbname = db.strip()
-            if dbname:
-                retrieved_groups.append('-'.join([self.basename, dbname]))
+                databases = PgDump.get_database_list(logger=self.logger)
+
+        self.logger.debug('Получены базы: %s', databases)
+
+        for dbname in databases:
+            retrieved_groups.append('-'.join([self.basename, dbname]))
         return retrieved_groups
 
     def parse_patterns(self, groups=None):
@@ -142,58 +142,56 @@ class Cleaner(Action):
         if self.use_re_in_patterns:
             for basename_group in groups:
                 self.add_re_pattern(basename_group)
-
             for pattern in self.patterns:
                 if pattern and pattern.strip():
-                    try:
-                        compiled_pattern = re.compile(pattern)
-                    except Exception as exc:
-                        self.logger.warning(
-                            'Ошибка в регулярном выражении %s, %s',
-                            pattern,
-                            exc,
-                        )
-                    else:
-                        self.prepared_patterns.append(compiled_pattern)
-                        self.logger.debug(
-                            'Добавлена группа для удаления (re): %s',
-                            pattern,
-                        )
+                    self.add_re_pattern(pattern)
+
+            self.logger.debug(
+                'Добавлены группы для удаления (re): %s',
+                self.patterns,
+            )
         else:
             for basename_group in groups:
                 self.add_sh_pattern(basename_group)
-
             for pattern in self.patterns:
                 self.prepared_patterns.append(pattern)
-                self.logger.debug(
-                    'Добавлено имя для удаления истории (sh): %s',
-                    pattern,
-                )
 
-    @side_effecting
-    def _remove(self, filepath):
-        """Удалят определённый файл по filepath.
+            self.logger.debug(
+                'Добавлены группы для удаления (sh): %s',
+                self.prepared_patterns,
+            )
 
-        Args:
-            filepath (str): путь к файлу, директории или ссылке.
+    def parse_exclusions(self):
+        """Обработка переданных исключений.
+
+        Принцип обработки зависит от родительского действия.
 
         """
-        def onerror(function, path, excinfo):
-            self.logger.warning(
-                'Ошибка рекурсивного удаления %s, функция %s, ошибка %s',
-                path,
-                function.__name__,
-                excinfo,
-            )
-        
-        if os.path.isfile(filepath) or os.path.islink(filepath):
-            os.remove(filepath)
-        else:
-            shutil.rmtree(
-                filepath,
-                ignore_errors=False,
-                onerror=onerror,
-            )
+        if self.parent_type == 'pgdump':
+            if self.use_re_in_patterns:
+                for exclusion in self.exclusions:
+                    exclusion = r'{bs}-{ex}\S*'.format(
+                        bs=self.basename,
+                        ex=exclusion,
+                    )
+                    self.prepared_exclusions.append(exclusion)
+
+                self.logger.debug(
+                    'Добавлены исключения (re): %s',
+                    self.prepared_exclusions,
+                )
+            else:
+                for exclusion in self.exclusions:
+                    exclusion = r'{bs}-{ex}'.format(
+                        bs=self.basename,
+                        ex=exclusion,
+                    )
+                    self.prepared_exclusions.append(exclusion)
+
+                self.logger.debug(
+                    'Добавлены исключения (sh): %s',
+                    self.prepared_exclusions,
+                )
 
     def remove_matched_files(self):
         """Удаляет файлы из self.files_to_remove."""
@@ -216,67 +214,46 @@ class Cleaner(Action):
                 else:
                     self.logger.debug('Удалён: %s', filepath)
 
-    def clear_state(self):
-        """Очистка состояния.
+    def add_file_to_filelist(self, src, getkey, base_path=None):
+        """Добавляет файл в self.full_files_list.
 
-        TODO неизвестно, требуется ли она сейчас или нет
+        Args:
+            src: Строка, путь к файлу, чаще всего относительный.
+            getkey: Функция получения сигнатуры, которая используется
+            в качестве ключа в full_files_list.
+            base_path: Строка, путь до относительного пути src.
+
         """
-        self.files_to_remove.clear()
-        self.full_files_list.clear()
-        self.patterns.clear()
-        self.prepared_patterns.clear()
-        self.databases.clear()
+        key = getkey(src)
+        if key:
+            if base_path:
+                src = os.path.join(base_path, src)
+            self.full_files_list.setdefault(key, []).append(src)
 
     def fill_filelist(self, path=None):
         """Заполняет self.full_files_list файлами из директории path.
 
         Если path не указан, то файлы берутся из self.dest_path.
         """
-        if self.use_re_in_patterns:
-            match_pattern = re.match
-        else:
-            match_pattern = fnmatch.fnmatch
+        composed_filter = functools.partial(
+            self._filter_file,
+            pattern_matcher=self.get_pattern_matcher(),
+        )
 
-        def make_full_filelist(path, rec=10):
-            self.logger.debug(path)
-            if rec <= 0:
-                self.logger.warning(
-                    'Достигнут максимальный уровень глубины при заполнении списка файлов!',
-                )
-                return
-            for dirpath, dirnames, filenames in os.walk(path):
-                for dirname in dirnames:
-                    make_full_filelist(
-                        os.path.join(dirpath, dirname),
-                        rec - 1,
-                    )
-                for file in filenames:
-                    filename = os.path.splitext(file)
-
-                    if filename[1]:  # если расширение файла не пустое
-                        file_extension = filename[1]
-                    else:
-                        file_extension = ' '
-
-                    # Поиск и соотнесение соответствующему паттерну
-                    for pattern in self.prepared_patterns:
-                        if match_pattern(file, pattern):
-                            file_key = (file_extension, pattern)
-                            filepath = os.path.join(dirpath, file)
-                            if file_key in self.full_files_list.keys():
-                                self.full_files_list[file_key].append(filepath)
-                            else:
-                                fl = [filepath]
-                                self.full_files_list[file_key] = fl
-                            break
-
-        if not path:
+        if path is None:
             path = self.dest_path
+        if self.parent_type == 'tar':
+            path = os.path.join(self.dest_path, self.level_folders[self.level])
 
-        if self.level >= 0:
-            make_full_filelist(os.path.join(path, str(self.level)))
-        else:
-            make_full_filelist(path)
+        apply = functools.partial(
+            self.add_file_to_filelist,
+            getkey=composed_filter,
+            base_path=path,
+        )
+        try:
+            self.walk_apply(path, apply, recursive=False, apply_dirs=False)
+        except AttributeError:
+            self.logger.info('Указаный путь не существует')
 
     def retrieve_time_from_name(self, filepath):
         """Достаёт время создания файла по его имени.
@@ -308,11 +285,19 @@ class Cleaner(Action):
         return None
 
     def fill_files_to_remove(self, path=None, days=None, max_files=None):
+        """Собирает список файлов по группам и нужные добавляет на удаление.
+
+        Args:
+            path: Строка, путь к удаляемым файлам.
+            days: Число, максимальное количество дней.
+            max_files: Число, требуемое максимальное количество файлов в группе.
+
+        """
         self.fill_filelist(path)
 
         if self.full_files_list.keys():
             self.logger.debug(
-                'Файлы для обработки:%s',
+                'Файлы для обработки: %s',
                 self.full_files_list,
             )
 
@@ -334,6 +319,7 @@ class Cleaner(Action):
 
     def process_pgdump(self):
         """Выполнение очистки при наследовании от PgDump.
+
         В этой ветке выполняется следующий алгоритм:
 
         1. попытка явно получить список баз из pgdump или self.databases
@@ -351,6 +337,7 @@ class Cleaner(Action):
             retrieved_groups = []
         finally:
             self.parse_patterns(groups=retrieved_groups)
+            self.parse_exclusions()
 
         if self.prepared_patterns:
             self.fill_files_to_remove(max_files=self.max_files, days=self.days)
@@ -359,7 +346,6 @@ class Cleaner(Action):
 
         try:
             self.remove_matched_files()
-            self.clear_state()
         except Exception as exc:
             self.logger('Ошибка при выполнении очистки: %s', exc)
             return self.continue_on_error
@@ -373,8 +359,8 @@ class Cleaner(Action):
 
         1. подготовка всех паттернов
         2. обработка периодов в цикле
-        2.1 сбор файлов для данного периода
-        2.2 удаление файлов
+            2.1 сбор файлов для данного периода
+            2.2 удаление файлов
 
         """
         if not self.basename_list:
@@ -382,11 +368,9 @@ class Cleaner(Action):
         self.parse_patterns(groups=self.basename_list)
         if self.prepared_patterns:
             error_caught = False
-            """
-            Если во время обработки одного из периодов произошла ошибка,
-            то error_caught её записывает и, после завершения обработки
-            всех периодов, происходит её обработка.
-            """
+            # Если во время обработки одного из периодов произошла ошибка,
+            # то error_caught её записывает и, после завершения обработки
+            # всех периодов, происходит её обработка.
 
             for period_name in self.periods:
                 period_path = os.path.join(
@@ -404,9 +388,8 @@ class Cleaner(Action):
                 except Exception as exc:
                     self.logger('Ошибка при выполнении очистки: %s', exc)
                 finally:
-                    self.full_files_list.clear()
+                    self.full_files_list = {}
 
-            self.clear_state()
             if error_caught:
                 return self.continue_on_error
         else:
@@ -430,6 +413,22 @@ class Cleaner(Action):
         elif self.parent_type == 'move_bkp_period':
             self.logger.info('Начало очистки MoveBkpPeriod')
             return self.process_move_bkp_period()
+        elif self.parent_type == 'tar':
+            self.parse_patterns()
+            path = os.path.join(self.dest_path, self.level_folders[self.level])
+            if self.prepared_patterns:
+                self.fill_files_to_remove(
+                    path=path,
+                    max_files=self.max_files,
+                    days=self.days,
+                )
+            else:
+                self.logger.warning('Не заданы паттерны')
+            try:
+                self.remove_matched_files()
+            except Exception as exc:
+                self.logger('Ошибка при выполнении очистки: %s', exc)
+                return self.continue_on_error
         else:
             self.parse_patterns()
             if self.prepared_patterns:
@@ -445,9 +444,6 @@ class Cleaner(Action):
             except Exception as exc:
                 self.logger('Ошибка при выполнении очистки: %s', exc)
                 return self.continue_on_error
-            finally:
-                self.clear_state()
-
         return True
 
     def filter_files_to_remove_by_amount(self, max_files):
@@ -475,3 +471,46 @@ class Cleaner(Action):
                     if file_ctime is not None:
                         if (now_date - file_ctime).days >= days:
                             self.files_to_remove.append(file)
+
+    def _filter_file(self, filepath, pattern_matcher):
+        """Проверяет попадание файл в паттерны и отсутствие в исключениях.
+
+        Args:
+            pattern_matcher: Функция для сравнения с паттерном.
+        """
+        full_filename = os.path.basename(filepath)
+        filename, file_extension = os.path.splitext(full_filename)
+        if file_extension == '':
+            file_extension = ' '
+        for pattern in self.prepared_patterns:
+            if pattern_matcher(pattern, filename):
+                for exclusion_pattern in self.prepared_exclusions:
+                    if pattern_matcher(exclusion_pattern, filepath):
+                        return False  # файл не прошёл exclusions
+                return (file_extension, pattern)  # файл прошёл все exclusions
+        return False
+
+    @side_effecting
+    def _remove(self, filepath):
+        """Удалят определённый файл по filepath.
+
+        Args:
+            filepath (str): путь к файлу, директории или ссылке.
+
+        """
+        def onerror(function, path, excinfo):
+            self.logger.warning(
+                'Ошибка рекурсивного удаления %s, функция %s, ошибка %s',
+                path,
+                function.__name__,
+                excinfo,
+            )
+
+        if os.path.isfile(filepath) or os.path.islink(filepath):
+            os.remove(filepath)
+        else:
+            shutil.rmtree(
+                filepath,
+                ignore_errors=False,
+                onerror=onerror,
+            )

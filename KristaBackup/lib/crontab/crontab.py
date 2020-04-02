@@ -408,9 +408,9 @@ class CronTab(object):
 
         # Environment variables are attached to cron lines so order will
         # always work no matter how you add lines in the middle of the stack.
-        result = unicode(self.env) + u'\n'.join(crons)
-        if result and result[-1] not in (u'\n', u'\r'):
-            result += u'\n'
+        result = unicode(self.env) + '\n'.join(crons)
+        if result and result[-1] not in ('\n', '\r'):
+            result += '\n'
         return result
 
     def new(self, command='', comment='', user=None, pre_comment=False):
@@ -669,13 +669,13 @@ class CronItem(object):
             if not self.user:
                 raise ValueError("Job to system-cron format, no user set!")
             user = self.user + ' '
-        result = u"%s %s%s" % (unicode(self.slices), user, self.command)
+        result = "%s %s%s" % (unicode(self.slices), user, self.command)
         if self.comment:
             comment = self.comment = _unicode(self.comment)
             if self.marker:
-                comment = u"#%s: %s" % (self.marker, comment)
+                comment = "#%s: %s" % (self.marker, comment)
             else:
-                comment = u"# " + comment
+                comment = "# " + comment
 
             if SYSTEMV or self.pre_comment:
                 result = comment + "\n" + result
@@ -683,7 +683,7 @@ class CronItem(object):
                 result += ' ' + comment
 
         if not self.enabled:
-            result = u"# " + result
+            result = "# " + result
         return unicode(self.env) + result
 
     def every_reboot(self):
@@ -1201,7 +1201,7 @@ def _render(value, resolve=False):
         return value.render(resolve)
     if resolve:
         return str(int(value))
-    return unicode(u'{:02d}'.format(value) if ZERO_PAD else value)
+    return unicode('{:02d}'.format(value) if ZERO_PAD else value)
 
 
 class CronRange(object):

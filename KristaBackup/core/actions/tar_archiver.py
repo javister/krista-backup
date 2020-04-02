@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
+
 import fnmatch
+import functools
 import tarfile
 import re
 import os
@@ -8,308 +10,285 @@ import time
 import logging
 
 from .action import Action
+from .decorators import use_exclusions, use_levels, side_effecting
 
 
+@use_exclusions
+@use_levels
 class TarArchiver(Action):
-    """Обертка для tar."""
+    """Класс действия для создания архивов.
 
-    # src_path               # наследуется от Аction, каталог, откуда копировать
-    # dest_path              # наследуется от Аction, каталог, куда копировать
+    Attributes:
+        Внешние:
+            src_path: Строка, путь к исходной директории с файлами.
+            dest_path: Строка, путь к директории для файлов с результатом.
+            exclusions: Список паттернов для исключения файлов из удаляемых.
+            compression: Целое число, уровень сжатия.
+            check_level_list_only: Логическое значение, если параметр
+            установлен, то при инкрементельном бекапе проверяется только
+            наличие файла-списка, иначе проверяется наличие самого файла
+            исходного бекапа.
+            use_absolute_path: Логическое значение, использовать
+            абсолютные пути.
+            log_tar_files: Логическое значение, логировать добавление файлов.
+            overwrite: Логическое значение, перезаписывать файлы
+            с одинаковым именем.
+            level: Число, уровень бэкапа.
+            level_folders: Список с именами директорий для каждого уровня
+            бэкапа.
 
-    compression = 5  # уровень сжатия
-    exclusions = []  # Список файлов-исключений
-    # Если включить этот параметр, то паттерны будут рассматриваться как regexp,
-    use_re_in_exclusions = False
-    # иначе как паттерны sh
-    level = 0  # уровень бекапа
-    # в параметре определяется список папок для каждого уровня по 1 папке
-    level_folders = []
-    list_extension = "list"  # расширение для файла-списка архива
-    extension = "tar.gz"  # расширение архива по-умолчанию
-    # возможные: gz, bz2
+        Внутренние:
+            list_extension:
+            prepared_exclusions:
+            parent_type: Строка с типом родительского действия
 
-    use_absolute_path = False
-    """ Определяет какие пути следует использовать.
-    По умолчанию используются относительные пути.
     """
-    overwrite = False  # перезаписывать одноименные файлы,
-    # или прерывать процесс при наличии файла-получаетеля
-
-    check_level_list_only = True
-    # если параметр установлен, то при инкрементельном бекапе проверяется только наличие
-    # файла-списка, иначе проверяется наличие самого файла исходного бекапа.
-    # это параметр имеет смысл использовать только если мы жестко ограничены местом
-    # в каталоге dest_path и файлы-бекапы регулярно копируются куда-то в другое место,
-    #  причем гарантируется, что полная копия сущетсвует где-то, если в папке dest_path
-    # лежит list-файл от нее.
-
-    log_tar_files = False  # регулирует логирование добавления файлов в архив
-
-    list_file = None
-    inc_list = {}
-    excl_re = []
 
     def __init__(self, name):
-        Action.__init__(self, name)
+        super().__init__(name)
+        self.compression = 5
+        self.list_extension = 'list'  # расширение для файла-списка архива
+        self.extension = 'tar.gz'
+        self.check_level_list_only = True
+        self.log_tar_files = False
+        self.overwrite = False
 
-    def findSourceListFile(self):
-        if self.level == 0:
+        self.list_file = None
+        self.inc_list = {}
+        self.use_absolute_path = False
+
+    def generate_dirname(self):
+        return os.path.join(
+            super().generate_dirname(),
+            self.level_folders[self.level],
+        )
+
+    def generate_filename(self, name, time_suffix, extension=None):
+        """Генерирует выходное имя файла."""
+        parts = [self.basename, name, time_suffix, str(self.level)]
+        filename = '-'.join(
+            [part for part in parts if part is not None],
+        )
+        if extension and isinstance(extension, str):
+            return '.'.join([filename, extension])
+        return filename
+
+    def find_source_listfile(self, level):
+        """Находит list файл по уровню.
+
+        Args:
+            level: Целое число, необходимый уровень.
+
+        Returns:
+            str или None, если путь к файлу не найден/не существует.
+
+        """
+        if self.level <= 0:
+            return None
+
+        dirpath = os.path.join(self.dest_path, self.level_folders[level])
+        if not os.path.exists(dirpath):
             return None
 
         files = []
-        needed_level = self.level - 1
-        needed_filename_pattern = '{0}*{1}.{2}'.format(
+        required_filename_pattern = '{0}*{1}.{2}'.format(
             self.basename,
-            str(needed_level),
+            level,
             self.list_extension,
         )
 
-        file_path = os.path.join(self.dest_path,
-                                 self.level_folders[needed_level])
-        if not os.path.exists(file_path):
+        for filename in os.listdir(dirpath):
+            filepath = os.path.join(dirpath, filename)
+            if fnmatch.fnmatch(filename, required_filename_pattern):
+                if os.path.isfile(filepath):
+                    files.append(filename)
+        if not files:
             return None
 
-        for file in os.listdir(file_path):
-            fullpath = os.path.join(file_path, file)
-            if fnmatch.fnmatch(
-                    file, needed_filename_pattern) and os.path.isfile(fullpath):
-                files.append(file)
-
         prev_list_file = None
-
         if len(files) == 1:
-            prev_list_file = os.path.join(self.dest_path,
-                                          self.level_folders[needed_level],
-                                          files[0])
+            prev_list_file = os.path.join(
+                self.dest_path,
+                self.level_folders[level],
+                files[0],
+            )
         elif len(files) > 1:
             sorted_files = sorted(files, reverse=True)
-            prev_list_file = os.path.join(self.dest_path,
-                                          self.level_folders[needed_level],
-                                          sorted_files[0])
+            prev_list_file = os.path.join(
+                self.dest_path,
+                self.level_folders[level],
+                sorted_files[0],
+            )
+        self.logger.debug(
+            'Файл списка бэкапа %s уровня: %s',
+            level,
+            prev_list_file,
+        )
 
-        self.logger.debug(u"Файл списка предыдущего архива %s" %
-                          prev_list_file)
         return prev_list_file
 
-    def add_files_to_tar(self, src, tar):
+    def fill_tar_archive(self, tar=None, list_file=None):
+        """Добавление файлов в tar.
 
-        def add_file(tar, filepath):
-            if self.use_absolute_path:
-                filepath = os.path.join(self.src_path, filepath[2:])
-            tar.add(filepath)
-            # добавление записи о файле в snapshot list
-            self.list_file.write(line)
-            self.list_file.write("\n")
+        Args:
+            tar: Tarfile, файл архива.
+            list_file: Лист файл, содержит записи о содержимом tar архива.
 
-        def exclude(path, mtime, fsize):
-            if self.use_re_in_exclusions:
-                for er in self.excl_re:
-                    if er.search(path):
-                        files_logger.debug("re excluded %s" % path)
-                        return True
-            else:
-                for p in self.exclusions:
-                    if fnmatch.fnmatch(path, p):
-                        files_logger.debug("sh excluded  %s" % path)
-                        return True
+        """
+        file_logger = logging.getLogger(
+            '{0}.tar_files'.format(self.logger.name),
+        )
+        file_logger.propagate = self.log_tar_files
 
-            files_logger.debug("+ %s,%s,%s", mtime, fsize, path)
+        get_signature = functools.partial(
+            self._get_signature,
+            file_logger=file_logger,
+            matcher=self.get_pattern_matcher(),
+        )
+        add = functools.partial(
+            self._add_item,
+            tar=tar,
+            list_file=list_file,
+            repeat=True,
+        )
+        handle_file = functools.partial(
+            self._handle_item,
+            get_signature=get_signature,
+            add=add,
+        )
+        self.walk_apply(src=self.src_path, apply=handle_file, apply_dirs=True)
 
-            if (path in self.inc_list.keys() and
-                    self.inc_list[path][0] == str(mtime) and
-                    self.inc_list[path][1] == str(fsize)):
-                files_logger.debug("= %s,%s,%s", mtime, fsize, path)
-                return True
-
-            return False
-
-        files_logger = logging.getLogger("{}.tar_files".format(
-            self.logger.name))
-        files_logger.propagate = self.log_tar_files
-
-        for (dirpath, _, filenames) in os.walk(src):
-            if self.use_absolute_path:
-                dirpath_tarinfo = os.path.join(self.src_path, dirpath[2:])
-            else:
-                dirpath_tarinfo = dirpath
-            try:
-                dir = tar.gettarinfo(name=dirpath_tarinfo)
-                mtime = os.path.getmtime(dirpath)
-                fsize = os.path.getsize(dirpath)
-            except Exception as e:
-                self.logger.warning(
-                    'Не удалось прочитать свойства каталога %s, ошибка %s',
-                    dirpath, e,
-                )
-                continue
-
-            if not exclude(dirpath, mtime, fsize):
+    def parse_exclusions(self):
+        if not self.exclusions:
+            return
+        if self.use_re_in_patterns:
+            for exclusion in self.exclusions:
+                exclusion = exclusion.strip()
                 try:
-                    tar.addfile(dir)
-                except FileNotFoundError:
-                    self.logger.debug(
-                        'Следующая директория не найдена/broken link: %s',
-                        dirpath,
-                    )
-                except Exception as e:
-                    # если во время добавления произошла ошибка, то
-                    # повторить добавление файла через 5 секунд
-                    time.sleep(5)
+                    exclusion = re.compile(exclusion)
+                except Exception as exc:
                     self.logger.warning(
-                        'Не удалось добавить, повторная попытка добавить каталог: %s, ошибка %s',
-                        dirpath, e,
+                        'Ошибка в исключении %s: %s',
+                        exclusion,
+                        exc,
                     )
-                    try:
-                        tar.addfile(dir)
-                    except Exception as e:
-                        self.logger.warning(
-                            'Не удалось добавить каталог %s, ошибка %s',
-                            dirpath, e,
-                        )
-                    continue
-
-            for filename in filenames:
-                filepath = os.path.join(dirpath, filename)
-                try:
-                    mtime = os.path.getmtime(filepath)
-                    fsize = os.path.getsize(filepath)
-                except FileNotFoundError:
-                    self.logger.debug(
-                        'Следующий файл не найден/broken link: %s',
-                        filepath,
-                    )
-                except Exception as e:
-                    self.logger.warning(
-                        'Не удалось прочитать свойства файла %s, ошибка %s',
-                        filepath, e,
-                    )
-                    continue
-
-                # используется в add_file
-                line = "%s,%s,%s" % (mtime, fsize, filepath)
-                if not exclude(filepath, mtime, fsize):
-                    try:
-                        add_file(tar, filepath)
-                    except Exception as e:
-                        # если во время добавления произошла ошибка, то
-                        # повторить добавление файла через 5 секунд
-                        time.sleep(5)
-                        self.logger.warning(
-                            'Не удалось добавить, повторная попытка добавить файл: %s, ошибка %s',
-                            filepath, e,
-                        )
-                        try:
-                            add_file(tar, filepath)
-                        except Exception as e:
-                            self.logger.warning(
-                                'Не удалось добавить файл: %s', e,
-                            )
-                        continue
-
-    def start(self):
-
-        time = datetime.datetime.now()
-
-        if len(self.level_folders) < (self.level + 1):
-            self.logger.error(
-                'Неверно сконфигурированы папки уровней бекапов!'
+                else:
+                    self.prepared_exclusions.append(exclusion)
+            self.logger.debug(
+                'Добавлены исключения (re): %s',
+                self.prepared_exclusions,
             )
-            self.loggin.error(
-                'Для уровня бекапа %s отсутствует папка - level_folders= %s',
+        else:
+            for exclusion in self.exclusions:
+                exclusion = exclusion.strip()
+                if exclusion:
+                    self.prepared_exclusions.append(exclusion)
+            self.logger.debug(
+                'Добавлены исключения (sh): %s',
+                self.prepared_exclusions,
+            )
+
+    def configure_parameters(self):
+        """Выполняет конфигурацию параметров действия.
+
+        Returns:
+            True, если возникли ошибки.
+
+        """
+        if self.level > 1:
+            self.logger.warning(
+                'Уровни выше 1 не реализованы.',
+            )
+            self.logger.info('Понижаю уровень до 1')
+            self.level = 1
+
+        if len(self.level_folders) < self.level + 1:
+            self.logger.error(
+                'Неверно сконфигурированы папки уровней бекапов!',
+            )
+            self.logger.debug(
+                'Для уровня %s отсутствует имя в level_folders: %s',
                 self.level,
                 self.level_folders,
             )
-            return self.continue_on_error
-
-        # Проверяем каталоги
+            return True
         if not os.path.exists(self.src_path):
             if os.path.isfile(self.src_path):
                 self.logger.error(
-                    'Отсутствует исходный файл %s', self.src_path
+                    'Отсутствует исходный файл %s',
+                    self.src_path,
                 )
             else:
                 self.logger.error(
-                    'Отсутствует исходная папка %s.', self.src_path
+                    'Отсутствует исходная папка %s.',
+                    self.src_path,
                 )
-            return self.continue_on_error
-
-        if not os.path.exists(self.dest_path):
-            os.makedirs(self.dest_path, 0o755)
-
-        # Перевариваем исключения
-        if not self.exclusions is None and len(self.exclusions):
-            for e in self.exclusions:
-                if self.use_re_in_exclusions:
-                    try:
-                        if e and len(e.strip()):
-                            self.excl_re.append(re.compile(e))
-                            self.logger.debug(u"Добавлено исключение (re): %s" %
-                                              e)
-                    except:
-                        self.logger.warning(
-                            u"Ошибка в регулярном выражении %s в excludes." % e)
-                else:
-                    self.logger.debug(u"Добавлено исключение (sh): %s" % e)
-
-        # Компрессия
+            return True
         if self.compression < 0:
             self.compression = 0
         elif self.compression > 9:
             self.compression = 9
-        self.logger.info(u"Сжатие: %s" % self.compression)
+        return False
 
-        self.logger.info(u"Рабочий каталог: %s" % self.dest_path)
+    def adjust_backup_level(self):
+        """Поиск / проверка списка файлов и архива предыдущего уровня.
 
-        # Определяемся с уровнем бекапа
-        self.logger.info("level configured: %s" % str(self.level))
+        Уровень бэкапа понижается, если они отсутствуют.
 
-        # Для инкрементального бекапа делаем дополнительные проверки
+        """
+        while self.level > 0:
+            # Поиск list файла минимального уровня.
+            src_list_file = self.find_source_listfile(level=self.level - 1)
+            if src_list_file is not None:
+                break
+            self.level -= 1
+
+        if src_list_file is None:
+            self.logger.warning(
+                'Лист файл не найден, будет создана копия %s уровня.',
+                self.level,
+            )
+            return
+
+        with open(src_list_file, 'r') as lines:
+            src_name = lines.readline().rstrip()
+            if not self.check_level_list_only:
+                if not os.path.exists(src_name):
+                    self.logger.warning(
+                        'Архив %s указанный в list файле отсутствует.',
+                        src_name,
+                    )
+                    self.logger.warning('Будет выполнен полный бэкап.')
+                    self.level = 0
+                    return
+            for line_num, line in enumerate(lines):
+                if line.count(',') < 2:
+                    self.logger.warning(
+                        'Ошибка в строке %s файла-списка:\n%s',
+                        line_num,
+                        line,
+                    )
+                    continue
+                mtime, size, filename = line.rstrip().split(',', 2)
+                self.inc_list[filename] = (mtime, size)
+
+    def start(self):
+        start_time = datetime.datetime.now()
+        if self.configure_parameters():
+            return self.continue_on_error
+        self.parse_exclusions()
+
+        if not os.path.exists(self.dest_path):
+            os.makedirs(self.dest_path, 0o755)
+
         if self.level > 0:
-
-            # ищем файл список и файл архива предыдущего уровня, если не находим - понижаем уровень архива,
-            # пока не дойдем до полного
-            src_list_file = self.findSourceListFile()
-            while self.level > 0 and src_list_file is None:
-                self.level -= 1
-                src_list_file = self.findSourceListFile()
-
-            if src_list_file is None:
-                self.logger.warn(
-                    u"Отсутствует список полного архива, будет создана полная копия"
-                )
-                self.level = 0
-            elif not os.path.exists(src_list_file):
-                self.logger.warn(
-                    u"Отсутствует файл списка полного архива %s, будет создана полная копия"
-                    % src_list_file)
-                self.level = 0
-            else:
-                with open(src_list_file, "r") as f:
-                    src_name = f.readline().strip()
-                    if not self.check_level_list_only and not os.path.exists(
-                            src_name):
-                        self.logger.warn(
-                            u"Отсутствует указанный в листинге файл-источник инкрементального архива %s,"
-                            + u" будет создана полная копия" % src_name)
-                    else:
-                        # Читаем лист
-                        linenum = 0
-                        for l in f:
-                            linenum += 1
-                            line = l.strip().split(",")
-                            if len(line) < 3:
-                                self.logger.warn(
-                                    u"Ошибка в строке %s файла-списка %s" %
-                                    (str(linenum), l))
-                                continue
-                            mtime = line[0].strip()
-                            size = line[1].strip()
-                            file = line[2].strip()
-                            self.inc_list[file] = (mtime, size)
+            self.adjust_backup_level()
 
         # Создаем архив
-        full_filename = self.makeFilename()
-
+        full_filename = self.generate_filepath(
+            name=None,
+            extension=self.extension,
+        )
         if os.path.exists(full_filename):
             if self.overwrite:
                 os.remove(full_filename)
@@ -320,32 +299,92 @@ class TarArchiver(Action):
                 )
                 return self.continue_on_error
 
-        src = self.src_path
-        if os.path.isdir(self.src_path):
-            os.chdir(self.src_path)
-            src = "."
+        list_filename = self.generate_filepath(
+            name=None,
+            extension=self.list_extension,
+        )
+        if not os.path.exists(os.path.dirname(list_filename)):
+            os.makedirs(os.path.dirname(list_filename))
 
-        listfilename = self.makeFilename(ext=self.list_extension)
-        if not os.path.exists(os.path.dirname(listfilename)):
-            os.makedirs(os.path.dirname(listfilename))
+        self.logger.info(
+            'Исходные данные архива: %s',
+            self.src_path,
+        )
 
-        try:
-            with open(listfilename, "a") as self.list_file:
-                self.list_file.write(full_filename)
-                self.list_file.write("\n")
-                with tarfile.open(
-                        full_filename,
-                        "w:gz",
-                        compresslevel=self.compression,
-                ) as tar:
-                    self.logger.info(u"Исходные данные архива: %s", src)
-                    self.add_files_to_tar(src, tar)
+        if self.dry:
+            self.fill_tar_archive()
+        else:
+            with open(list_filename, 'a') as list_file:
+                list_file.write(full_filename)
+                list_file.write('\n')
+                tar = tarfile.open(
+                    full_filename,
+                    mode='w:gz',
+                    compresslevel=self.compression,
+                )
+                self.fill_tar_archive(tar, list_file)
 
-        except Exception as exc:
-            self.logger.error('Ошибка при выполнении архивации: %s', exc)
-            return self.continue_on_error
-
-        self.logger.info('Архив создан: % s, время обработки: % s',
-                         full_filename, str(datetime.datetime.now() - time))
+        self.logger.info(
+            'Архив создан: %s, время обработки: %s',
+            full_filename,
+            datetime.datetime.now() - start_time,
+        )
 
         return True
+
+    @side_effecting
+    def _add_item(self, path, signature, tar, list_file, repeat=False):
+        try:
+            tar.add(path, recursive=False)
+        except FileNotFoundError:
+            self.logger.debug(
+                'Файл/директория не найдена: %s',
+                path,
+            )
+        except Exception as exc:
+            self.logger.debug(
+                'Не удалось добавить %s: %s',
+                path,
+                exc,
+            )
+            if repeat:
+                self.logger.debug('Новая попытка через 5 секунд.')
+                time.sleep(5)
+                self._add_item(path, signature, tar, list_file)
+        else:
+            list_file.write('{0}\n'.format(signature))
+
+    def _get_signature(self, path, file_logger, matcher):
+        try:
+            mtime = os.path.getmtime(path)
+            fsize = os.path.getsize(path)
+        except FileNotFoundError:
+            return None
+        signature = '{0},{1},{2}'.format(mtime, fsize, path)
+        for exclusion in self.prepared_exclusions:
+            if matcher(exclusion, path):
+                file_logger.debug('ex %s', path)
+                return None
+        if path in self.inc_list.keys():
+            if mtime == float(self.inc_list[path][0]):
+                if fsize == float(self.inc_list[path][1]):
+                    file_logger.debug('eq %s', signature)
+                    return None
+        file_logger.debug('add %s', signature)
+        return signature
+
+    def _handle_item(self, path, add, get_signature):
+        """Обрабатывает файл.
+
+        Если get_signature возвращает не None, то вызывается
+        add(path, signature).
+
+        Args:
+            path: Строка, путь к файлу/директории.
+            add: Функция добавления в архив.
+            get_signature: Функция получения сигнатуры файла.
+
+        """
+        signature = get_signature(path)
+        if signature:
+            add(path, signature)

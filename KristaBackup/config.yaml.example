@@ -17,7 +17,7 @@ actions:
     check_level_list_only: 'False'
     compression: 3
     exclusions: '*/data/*, */tmp/*, ./backup/*, ./updates/*'
-    use_re_in_exclusions: false
+    use_re_in_patterns: false
     src_path: /opt
     dest_path: /backup
     level: 0

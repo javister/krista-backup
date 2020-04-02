@@ -48,7 +48,7 @@ Cleaner
     level_folders: 0,1,2
     src_path: /etc
     type: tar
-    use_re_in_exclusions: false
+    use_re_in_patterns: false
 
 Примечание:
 ~~~~~~~~~~~

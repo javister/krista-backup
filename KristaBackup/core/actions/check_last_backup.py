@@ -31,7 +31,7 @@ class CheckLastBackup(Action):
     pgdump_backup_paths = []
 
     def __init__(self, name):
-        Action.__init__(self, name)
+        super().__init__(name)
         self._filename_dateformat = AppConfig.get_filename_dateformat()
 
     def retrieve_time_from_log_filename(self, filename):

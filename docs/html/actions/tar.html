@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>Tar &#8212; Документация KristaBackup 1.4</title>
+    <title>Tar &#8212; Документация KristaBackup 1.5</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -65,7 +65,7 @@
 <td><p>файлы, которые стоит игнорировать</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>use_re_in_exclusions</p></td>
+<tr class="row-odd"><td><p>use_re_in_patterns</p></td>
 <td><p>использовать регулярные выражения (false для unix wildcard)</p></td>
 <td><p>false (стандартное значение)</p></td>
 </tr>
@@ -113,8 +113,8 @@
   <span class="nt">basename</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">etc</span>
   <span class="nt">check_level_list_only</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
   <span class="nt">compression</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3</span>
-  <span class="nt">exclusions</span><span class="p">:</span> <span class="s">&#39;./*/index/*,</span><span class="nv"> </span><span class="s">*/logs/archived/.indexed&#39;</span>
-  <span class="nt">use_re_in_exclusions</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+  <span class="nt">exclusions</span><span class="p">:</span> <span class="s">&#39;*/index/*,</span><span class="nv"> </span><span class="s">*/logs/archived/.indexed&#39;</span>
+  <span class="nt">use_re_in_patterns</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
   <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/etc</span>
   <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup</span>
   <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>

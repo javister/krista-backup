@@ -6,9 +6,9 @@
 заданий в crontab.
 """
 
-from lib.crontab import CronSlices, CronTab
 from common.Logging import get_trigger_filepath
 from common.YamlConfig import AppConfig, ConfigError
+from lib.crontab import CronSlices, CronTab
 
 from . import CURRENT_USER, generate_command_line
 

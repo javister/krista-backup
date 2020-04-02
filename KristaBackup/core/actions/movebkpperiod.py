@@ -9,8 +9,10 @@ from lib.crontex import CronExpression
 from common.YamlConfig import AppConfig
 
 from .action import Action
-from .decorators import side_effecting
+from .decorators import side_effecting, use_periods
 
+
+@use_periods
 class MoveBkpPeriod(Action):
     """Выполняет перенос файлов по basename.
 
@@ -28,12 +30,9 @@ class MoveBkpPeriod(Action):
 
     """
 
-    basename_list = None
-    periods = {}
-    files_to_move = None
-
     def __init__(self, name):
         super().__init__(name)
+        self.files_to_move = []
 
     def start(self):
         for period_name in self.periods:
@@ -121,10 +120,6 @@ class MoveBkpPeriod(Action):
 
         return self.files_to_move
 
-    @side_effecting
-    def _move_backup(self, moving_file, files_dest_path):
-        shutil.copy(moving_file, files_dest_path)
-
     def move_backups(self, period_name, period):
         """Перемещает бэкапы для определённого периода.
 
@@ -174,3 +169,7 @@ class MoveBkpPeriod(Action):
                     moving_file,
                     exc,
                 )
+
+    @side_effecting
+    def _move_backup(self, moving_file, files_dest_path):
+        shutil.copy(moving_file, files_dest_path)

@@ -17,7 +17,7 @@ Tar
     "basename", "уникальное имя для связанных действий, не должно быть началом другого basename, используется для имени результата", "пример: названия последних двух папок, например home_user, var_log, etc"
     "check_level_list_only","проверять только наличие snaphot листа; имеет смысл использовать, если сервер жёстко ограничен по памяти и предыдущий уровень бэкапа хранится в другом месте", "false (стандартное значение)"
     "exclusions","файлы, которые стоит игнорировать", ""
-    "use_re_in_exclusions","использовать регулярные выражения (false для unix wildcard)", "false (стандартное значение)"
+    "use_re_in_patterns","использовать регулярные выражения (false для unix wildcard)", "false (стандартное значение)"
     "compression","уровень сжатия", "3 (стандартное значение)"
     "src_path","путь к содержимому, бэкап которого нужно выполнить", "путь к директории"
     "dest_path","уровень сжатия", "путь к директории"
@@ -38,8 +38,8 @@ Tar
     basename: etc
     check_level_list_only: false
     compression: 3
-    exclusions: './*/index/*, */logs/archived/.indexed'
-    use_re_in_exclusions: false
+    exclusions: '*/index/*, */logs/archived/.indexed'
+    use_re_in_patterns: false
     src_path: /etc
     dest_path: /backup
     level: 0

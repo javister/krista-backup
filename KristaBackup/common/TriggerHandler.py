@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 from logging import NullHandler
 import os
 import time

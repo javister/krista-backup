@@ -1,12 +1,10 @@
 # -*- coding: UTF-8 -*-
 
+import logging
 import os
 import re
-import subprocess
-from threading import Thread
 
 from .action import Action
-from .decorators import side_effecting
 
 
 class Rsync(Action):
@@ -36,39 +34,14 @@ class Rsync(Action):
     def __init__(self, name):
         super().__init__(name)
 
-    def exececute_cmdline(self, cmdline, log=True):
-        if log:
-            self.logger.info('Выполняется %s', cmdline)
-        rsync = subprocess.Popen(
-            cmdline,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,
-            shell=True,
-        )
-        if log:
-            stdo = Thread(
-                target=self.stream_watcher,
-                name='stdout-watcher',
-                args=(rsync.stdout, False),
-            )
-            stdo.start()
-            stde = Thread(
-                target=self.stream_watcher,
-                name='stderr-watcher',
-                args=(rsync.stderr, True),
-            )
-            stde.start()
-            rsync.wait()
-            stdo.join()
-            stde.join()
-        else:
-            return rsync.stdout.read()
-
     def get_filelist(self):
         """Возвращает dict с файлами и директориями из указанного источника."""
         cmdline = ' '.join(['rsync', self.opts, '--list-only', self.src_path])
-        listing = self.exececute_cmdline(cmdline, log=False).split('\n')
+
+        listing = self.unsafe_execute_cmdline(
+            cmdline,
+            return_stdout=True,
+        ).split('\n')
 
         file_listing = list(
             filter(lambda string: re.findall(r'[wr\-x]{10}', string), listing),
@@ -126,8 +99,20 @@ class Rsync(Action):
         if self.dry:
             self.logger.info('Сгенерирована команда для запуска %s', cmdline)
 
-        side_effecting(Rsync.exececute_cmdline)(self, cmdline)
-        # Вызов self.excecute_cmdline через декоратор side_effecting.
+        stdout_params = {
+            'logger': self.logger,
+            'default_level': logging.DEBUG,
+        }
+        stderr_params = {
+            'logger': self.logger,
+            'default_level': logging.ERROR,
+        }
+
+        self.execute_cmdline(
+            cmdline,
+            stdout_params=stdout_params,
+            stderr_params=stderr_params,
+        )
 
     def start(self):
         if not os.path.isdir(self.dest_path):

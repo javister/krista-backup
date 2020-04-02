@@ -1,14 +1,15 @@
 # -*- coding: UTF-8 -*-
 
-import os
-import re
-import subprocess
 import logging
-from threading import Thread
+import os
+import shutil
 
 from .action import Action
+from .decorators import use_exclusions, use_postgres
 
 
+@use_exclusions
+@use_postgres
 class PgDump(Action):
     """
         Выполняется pg_dump с некоторым набором парамеров.
@@ -24,45 +25,54 @@ class PgDump(Action):
      mode - режим работы, если all - то бекапяться все базы, если режим
             single, то бекапяться базы из списка databases
     """
-    databases = []
-    mode = "all"
-    host = ""  # параметры подключения к СУБД
-    port = 5432
-    user = ""
-    password = ""
-    format = "custom"  # формат бекапа
 
-    # исключения, которые не надо бекапить
-    exclusions = ["postgres.*", "template.*"]
-    extension = "pg_dump"  # расширение для файла бекапа
-    command_path = "pg_dump"  # путь к команде pg_dump
-    opts = ""  # опции запуска pg_dump, могут переопределяться в настройках
-
-    pgdump_log_debug = False
-
-    exclusion_patterns = []  # конкретные названия баз для исключения
-
-    debug_patterns = [
-        'reading .*',       'чтение .*',
-        'last built-in .*', 'последний системный .*',
-        'identifying .*',   'выявление .*',
-        'finding .*',       'поиск .*',
-        'flagging .*',      'пометка .*',
-        'saving .*',        'сохранение .*',
-        'dumping .*',       'выгрузка .*',
-    ]
+    stderr_filters = {
+        logging.DEBUG: {
+            'reading .*', 'чтение .*',
+            'last built-in .*', 'последний системный .*',
+            'identifying .*', 'выявление .*',
+            'finding .*', 'поиск .*',
+            'flagging .*', 'пометка .*',
+            'saving .*', 'сохранение .*',
+            'dumping .*', 'выгрузка .*',
+        },
+    }
 
     def __init__(self, name):
-        Action.__init__(self, name)
+        super().__init__(name)
+        self.format = 'custom'  # формат бекапа
+
+        self.extension = 'pg_dump'  # расширение для файла бекапа
+        self.command_path = 'pg_dump'  # путь к команде pg_dump
+        self.opts = ''  # опции запуска pg_dump, могут переопределяться в настройках
+        self.pgdump_log_debug = False
 
     def backup_database(self, database):
+        """Выполняет бэкап базы.
+
+        Args:
+            database: Строка, имя базы.
+
+        Returns:
+            True, если возникли ошибки.
+
+        """
+        filepath = self.generate_filepath(database, extension=self.extension)
+
         if not os.path.exists(self.dest_path):
-            os.makedirs(self.dest_path)
-        filename = self.makeFilename(database)
-        filepath = os.path.join(self.dest_path, filename)
-        if self.format.strip().lower() == 'directory':
-            if os.path.exists(filepath):
+            self.logger.debug(
+                'Выходная директория %s не существует.',
+                self.dest_path,
+            )
+            if not self.dry:
+                os.makedirs(self.dest_path)
+            self.logger.debug('Директория создана.')
+
+        if self.format == 'directory':
+            if not self.dry:
                 os.makedirs(filepath)
+                shutil.chown(filepath, user=self.user)
+            self.logger.debug('Директория %s создана.', filepath)
 
         cmdline = ' '.join(
             [
@@ -70,113 +80,140 @@ class PgDump(Action):
                 self.opts,
                 '-d',
                 database,
-                ' '.join(['-h', self.host]) if self.host and self.user else '',
-                ' '.join(['-p', str(self.port)]) if self.port else '',
-                ' '.join(['-U', self.user]) if self.user else '',
+                ' '.join(['--host', self.host]
+                         ) if self.host and self.user else '',
+                ' '.join(['--port', str(self.port)]) if self.port else '',
+                ' '.join(['--username', self.user]) if self.user else '',
                 '='.join(['--format', self.format]),
+                '='.join(['--file', filepath]
+                         ) if self.format == 'directory' else '',
             ],
         )
-        # запуск команды под postgres и перенаправление потока на требуемый файл
-        cmdline = "su postgres -c ' {0} ' > {1}".format(cmdline, filepath)
 
-        self.logger.debug(u"Выполнение коменды %s" % cmdline)
+        # запуск команды под postgres
+        cmdline = 'su postgres -c \'{0}\''.format(cmdline)
+        if self.format == 'custom':
+            cmdline += '> {0}'.format(filepath)
+
+        stdout_params = {
+            'logger': self.logger,
+            'remove_header': True,
+            'default_level': logging.DEBUG,
+        }
+
+        stderr_params = {
+            'logger': self.logger,
+            'filters': self.stderr_filters,
+            'remove_header': True,
+            'default_level': logging.ERROR,
+        }
+
+        self.logger.debug('Выполнение команды %s', cmdline)
         try:
-            cmd = subprocess.Popen(
+            self.execute_cmdline(
                 cmdline,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                universal_newlines=True,
-                shell=True
+                stdout_params=stdout_params,
+                stderr_params=stderr_params,
             )
-
-            stdo = Thread(
-                target=self.stream_watcher,
-                name="stdout-watcher",
-                args=(cmd.stdout, False),
-            )
-            stdo.start()
-
-            stde = Thread(
-                target=self.stream_watcher_debug_filter,
-                name="stderr-watcher",
-                args=(
-                    cmd.stderr, self.debug_patterns,
-                    True, self.pgdump_log_debug
-                ),
-            )
-            stde.start()
-
-            cmd.wait()
-
-            stdo.join()
-            stde.join()
-
         except Exception as exc:
             self.logger.error('Ошибка при выполнении: %s', exc)
-            return False
-        self.logger.info("Архивирована база %s" % database)
-        return True
+            return True
+        self.logger.info('Зархивирована база %s', database)
 
-    def isExclusion(self, dbname):
-        for ex in self.exclusion_patterns:
-            if re.match(ex, dbname):
+    def is_exclusion(self, dbname):
+        matcher = self.get_pattern_matcher()
+        for ex in self.prepared_exclusions:
+            if matcher(ex, dbname):
                 return True
         return False
 
-    # Возвращает список баз данных postgresql
-    # Требует наличия переменной PGPASSWORD в окружении
     @staticmethod
-    def get_database_list(user=None, host=None, port=None):
-        database_list = subprocess.Popen(
-            "echo \"select datname from pg_database\" | su postgres -c 'psql {} -t -d postgres'".format(
-                " ".join(
-                    [
-                        " ".join(["-U", user]) if user else "",
-                        " ".join(["-h", host]) if host and user else "",
-                        " ".join(["-p", str(port)]) if port else "",
-                    ]
-                )
-            ),
-            stdout=subprocess.PIPE,
-            universal_newlines=True,
-            shell=True,
-        ).stdout.readlines()
-        return database_list
+    def get_database_list(user=None, host=None, port=None, *, logger=None):
+        """Подключается к postgresql и получает список баз.
+
+        Требует наличия переменной PGPASSWORD в окружении.
+
+        """
+        cmdline = 'echo "select datname from pg_database" | su postgres -c "psql {} -t -d postgres"'.format(
+            ' '.join(
+                [
+                    ' '.join(['--user', user]) if user else '',
+                    ' '.join(['--host', host]) if host and user else '',
+                    ' '.join(['--port', str(port)]) if port else '',
+                ]
+            )
+        )
+        if logger:
+            logger.debug('Запускается команда %s', cmdline)
+
+        database_list = Action.unsafe_execute_cmdline(
+            cmdline,
+            return_stdout=True,
+        ).split()
+
+        return [dbname.strip() for dbname in database_list if dbname.strip()]
 
     def start(self):
         failed = False
-        for e in self.exclusions:
-            try:
-                if e and len(e.strip()):
-                    self.exclusion_patterns.append(re.compile(e))
-                    self.logger.info(u"Добавлено исключение (re): %s" % e)
-            except:
-                self.logger.warning(
-                    u"Ошибка в регулярном выражении %s в excludes." % e)
+        self.format = self.format.strip().lower()
 
         if self.user and self.password:
-            os.putenv("PGPASSWORD", self.password)
+            os.putenv('PGPASSWORD', self.password)
 
-        database_list = list()
-
-        if self.mode == "all":
+        if self.mode == 'all':
             database_list = PgDump.get_database_list(
-                self.user, self.host, self.port)
-        elif self.mode == "single":
-            database_list = self.databases
+                self.user,
+                self.host,
+                self.port,
+                logger=self.logger,
+            )
+        elif self.mode == 'single':
+            database_list = [
+                dbname.strip() for dbname in self.databases if dbname.strip()
+            ]
+
+        self.parse_exclusions()
 
         for dbname in database_list:
-            db = dbname.strip()
-            if db and len(db):
-                if self.isExclusion(db):
-                    self.logger.debug("- %s" % db)
-                    continue
-                else:
-                    self.logger.debug("+ %s" % db)
-                    res = self.backup_database(db)
-                    failed = not res and failed
+            if self.is_exclusion(dbname):
+                self.logger.debug('- %s', dbname)
+            else:
+                error = self.backup_database(dbname)
+                failed = error or failed
+                self.logger.debug('+ %s', dbname)
 
         if failed:
             return self.continue_on_error
 
         return True
+
+    def parse_exclusions(self):
+        """Обработка переданных исключений."""
+        if self.use_re_in_patterns:
+            for exclusion in self.exclusions:
+                exclusion = exclusion.strip()
+                if not exclusion:
+                    continue
+                exclusion = r'{ex}\S*'.format(
+                    ex=exclusion,
+                )
+                self.prepared_exclusions.append(exclusion)
+
+            self.logger.debug(
+                'Добавлены исключения (re): %s',
+                self.prepared_exclusions,
+            )
+        else:
+            for exclusion in self.exclusions:
+                exclusion = exclusion.strip()
+                if not exclusion:
+                    continue
+                exclusion = r'{ex}'.format(
+                    ex=exclusion,
+                )
+                self.prepared_exclusions.append(exclusion)
+
+            self.logger.debug(
+                'Добавлены исключения (sh): %s',
+                self.prepared_exclusions,
+            )

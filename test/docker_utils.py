@@ -3,21 +3,23 @@
 
 INFINITY_PROCESS = '/bin/sh -c "trap : TERM INT; sleep infinity & wait"'
 
-OS_CONFIG = {
-    'ubuntu': {
-        'docker_image': 'ubuntu:14.04',
+ENV = [
+    'PYTHONIOENCODING=utf8',
+    'LANG=ru_RU.utf8',
+]
+
+CONTAINERS_OPTS = {
+    str(version): {
+        'docker_image': 'snakepacker/python:3.{v}'.format(v=version),
         'link': '/usr/bin/KristaBackup',
         'prepared': None,
-    },
-    'debian': {
-        'docker_image': 'debian:8',
-        'link': '/usr/bin/KristaBackup',
-        'prepared': None,
-    },
+    }
+    for version in range(2, 6)
 }
 
 
 class Tools(object):
+
     @staticmethod
     def get_trigger_value_from_container(container):
         _, output = container.exec_run(

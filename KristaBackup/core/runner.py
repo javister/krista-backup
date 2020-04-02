@@ -1,6 +1,6 @@
 #  -*- coding: UTF-8 -*-
 
-import os
+import sys
 
 from common import Logging, arguments
 from common.procutil import check_process, get_executable_filename
@@ -10,9 +10,6 @@ from .actions import action_types
 
 
 class Runner:
-
-    # Здесь регистрируем типы Action, при этом нужно учитывать порядок наследования, поэтому первым идет Action
-    # Здесь используется не словарь, чтобы сохранить порядок наследования
 
     def __init__(self, unit_name, verbose, dry):
         self.logger = Logging.configure_logger(unit_name, verbose)
@@ -41,7 +38,7 @@ class Runner:
                     'Отсутствуют действия для исполнения в задании %s',
                     unit_name,
                 )
-                exit(-1)
+                sys.exit(-1)
         elif unit_name in AppConfig.conf().get('actions', {}):
             action_record = [unit_name]
             if dry:
@@ -52,13 +49,13 @@ class Runner:
                 'Отсутствует требуемое действие %s',
                 unit_name,
             )
-            exit(-1)
+            sys.exit(-1)
         else:
             self.logger.error(
                 'Отсутствует требуемое задание/действие %s',
                 unit_name,
             )
-            exit(-1)
+            sys.exit(-1)
 
     def create_actions(self):
         """Создаёт действия по описанию из self.action_records.
@@ -99,6 +96,7 @@ class Runner:
         Returns:
             Action или None, если не удалось создать/сконфигурировать
             действие
+
         """
         action_records = AppConfig.conf().setdefault('actions', {})
         action_conf = action_records.get(action_name)
@@ -194,19 +192,18 @@ class Runner:
     def configure_action(self, cls, obj, conf=None):
         """Устанавливает значение объекту actions из конфига."""
         attributes_names = conf.keys()
+        warnings = []
 
         # Проверяем наличие обязательных атрибутов в конфиге
-        if 'required_attrs' in cls.__dict__.keys():
-            warnings = []
-            for req in obj.required_attrs:
-                if req not in attributes_names:
-                    warnings.append(req)
-            if len(warnings) > 0:
-                for w in warnings:
-                    self.logger.error(
-                        'Отсутствует обязательный параметр %s в конфигурации [%s]',
-                        w, obj.name)
-                return False
+        for req in obj.required_attrs:
+            if req not in attributes_names:
+                warnings.append(req)
+        if warnings:
+            for w in warnings:
+                self.logger.error(
+                    'Отсутствует обязательный параметр %s в конфигурации [%s]',
+                    w, obj.name)
+            return False
 
         if cls != obj.__class__:
             return True
@@ -250,11 +247,17 @@ class Runner:
 
         for action in self.actions:
             self.logger.info('Запускается действие %s', action.name)
-            if action.start():
+            try:
+                success = action.start()
+            except KeyboardInterrupt:
+                self.logger.warning('Выполнение прервано нажатием Ctrl+C')
+                break
+
+            if success:
                 self.logger.info('Выполнено действие %s', action.name)
             else:
                 self.logger.error(
                     'Ошибка при выполнении действия %s, выполнение задания прервано',
                     action.name,
                 )
-                exit(-1)
+                sys.exit(-1)

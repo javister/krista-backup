@@ -16,7 +16,7 @@ actions:
     check_level_list_only: true
     compression: 5
     exclusions: '*/data/*, */attachments/*, */tmp/*, ./backup/*, ./updates/*'
-    use_re_in_exclusions: false
+    use_re_in_patterns: false
     src_path: /etc
     dest_path: /backup
     level: 0
@@ -67,7 +67,7 @@ schedule:
     cron: 00 23 * * 0
     descr: Бекап каталога 0-го уровня (полный)
 
-make_diff_dump_default:
+  make_diff_dump_custom_naming:
     naming:
         project: custom_name_testing
         region: custom_region_sample

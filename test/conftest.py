@@ -7,30 +7,30 @@ import tarfile
 import docker
 import pytest
 
-from .docker_utils import INFINITY_PROCESS, OS_CONFIG
+from .docker_utils import INFINITY_PROCESS, CONTAINERS_OPTS, ENV
 
 
 def pytest_addoption(parser):
     """Реализация дополнительных опций.
 
-    Добавляет опции для запуска определённых ОС:
-        --ubuntu (по-умолчанию), --debian и т.д.
-        --all для выбора всех.
+    Добавляет опции для выбора тестируемых версий python3,
+    подверсия передаётся цифрой:
+    -2 (3.2), -5 (3.5), -25 (3.2 и 3.5)
 
     Добавляет опцию для проверки сжатой версии:
         --wrapped (по-умолчанию false)
 
     """
-    for os_name in OS_CONFIG.keys():
+    for os_name in CONTAINERS_OPTS.keys():
         parser.addoption(
-            '--{0}'.format(os_name),
+            '-{0}'.format(os_name),
             action='store_true',
             help='run tests in {0}.'.format(os_name),
         )
     parser.addoption(
         '--all',
         action='store_true',
-        help='run test in all OS.',
+        help='run test in all versions.',
     )
     parser.addoption(
         '--wrapped',
@@ -52,20 +52,20 @@ def pytest_generate_tests(metafunc):
     if 'container' in metafunc.fixturenames:
         testing_os = set()
         if metafunc.config.getoption('all'):
-            valid_os = list(OS_CONFIG.keys())
+            chosen_versions = list(CONTAINERS_OPTS.keys())
         else:
-            for os_name in OS_CONFIG.keys():
+            for os_name in CONTAINERS_OPTS.keys():
                 if metafunc.config.getoption(os_name):
                     testing_os.add(os_name)
-            if metafunc.config.getoption('ubuntu') or not testing_os:
-                # добавлять ubuntu если множество пусто
-                testing_os.add('ubuntu')
-            valid_os = list(testing_os & set(OS_CONFIG.keys()))
+            if metafunc.config.getoption('5') or not testing_os:
+                # добавлять python3.5, если версия не выбрана
+                testing_os.add('5')
+            chosen_versions = list(testing_os & set(CONTAINERS_OPTS.keys()))
         metafunc.parametrize(
             'container',
-            valid_os,
+            chosen_versions,
             indirect=['container'],
-            ids=valid_os,
+            ids=['python3.{v}'.format(v=ver) for ver in chosen_versions],
         )
     if 'kristabackup_tar' in metafunc.fixturenames:
         if metafunc.config.getoption('wrapped'):
@@ -79,18 +79,20 @@ def pytest_generate_tests(metafunc):
             params,
             indirect=['kristabackup_tar'],
             ids=ids,
-        )        
+        )
 
-def pytest_sessionfinish(session, exitstatus):
+
+def pytest_sessionfinish(session, exitstatus):  # noqa: ignore=W0613
     """Чистит мусор после тестов.
 
     Запускается в конце сессии.
 
     """
     docker_client = docker.from_env()
-    for os_entry in OS_CONFIG.values():
+    for os_entry in CONTAINERS_OPTS.values():
         if os_entry.get('prepared'):
             docker_client.images.remove(os_entry.get('prepared').short_id)
+
 
 @pytest.fixture(scope='session')
 def kristabackup_tar(request):
@@ -110,140 +112,91 @@ def kristabackup_tar(request):
     """
     path, executable = request.param
     arch_src = 'kristabackup_{0}.tar'.format(secrets.token_hex(4))
-    tar = tarfile.open(arch_src, mode='w')
-    try:
+    with tarfile.open(arch_src, mode='w') as tar:
         tar.add(path, arcname='KristaBackup')
         tar.add(
             'test_config.yaml',
             arcname='KristaBackup/config.yaml',
         )
-    finally:
-        tar.close()
     with open(arch_src, 'rb') as tar_archive:
         yield (tar_archive.read(), executable)
     os.remove(arch_src)
 
 
 @pytest.fixture(scope='class')
-def container(request, kristabackup_tar):
+def container(request, kristabackup_tar):   # noqa: ignore=W0621, WPS442
     """Фикстура для создания докер контейнера.
 
-    Название требуемой OS берётся из request.params, а соответствующая
-    конфигурация хранится в docker_utils.OS_CONFIG.
+    Название требуемой версии берётся из request.params, а соответствующая
+    конфигурация хранится в docker_utils.CONTAINERS_OPTS.
 
     После выполнения теста контейнер уничтожается.
 
     Args:
-        request: содержит параметр param имеющий значение требуемой OS
+        request: содержит параметр param имеющий значение требуемого окружения
         kristabackup_tar: результат фикстуры kristabackup_tar
 
     Yields:
         container: докер контейнер
 
     """
-    os_name = request.param
+    py3version = request.param
     created_containers = []
 
-    if os_name == 'ubuntu':
-        yield lambda: _ubuntu_container(
-            kristabackup_tar,
-            created_containers,
-        )
+    yield lambda: _container(
+        py3version,
+        kristabackup_tar,
+        created_containers,
+    )
 
-    elif os_name == 'debian':
-        yield lambda: _debian_container(
-            kristabackup_tar,
-            created_containers,
-        )
-
-    for container in created_containers:
-        container.stop()
-        container.remove()
+    for xcontainer in created_containers:
+        xcontainer.stop()
+        xcontainer.remove()
 
 
-def _ubuntu_container(
-    kristabackup_tar,
+def _container(
+    py3version,
+    kristabackup_tar,    # noqa: W0621, WPS442
     created_containers=None,
 ):
+    config = CONTAINERS_OPTS[py3version]
     docker_client = docker.from_env()
-    if OS_CONFIG['ubuntu'].get('prepared'):
-        container = docker_client.containers.run(
-            OS_CONFIG['ubuntu'].get('prepared'),
-            INFINITY_PROCESS, detach=True,
-            environment=['PYTHONIOENCODING=utf8', 'LANG=ru_RU.utf8'],
+
+    if config.get('prepared', None):
+        # если образ контейнера был использован ранее и сохранён,
+        # то он переиспользуется
+        xcontainer = docker_client.containers.run(
+            config.get('prepared'),
+            INFINITY_PROCESS,
+            detach=True,
+            environment=ENV,
         )
     else:
-        image = docker_client.images.pull(
-            OS_CONFIG['ubuntu']['docker_image'],
+        image = docker_client.images.pull(config['docker_image'])
+        xcontainer = docker_client.containers.run(
+            image,
+            INFINITY_PROCESS,
+            detach=True,
+            environment=ENV,
         )
-        container = docker_client.containers.run(
-            image, INFINITY_PROCESS, detach=True,
-            environment=['PYTHONIOENCODING=utf8', 'LANG=ru_RU.utf8'],
-        )
-        container.exec_run('locale-gen ru_RU')
-        container.exec_run('locale-gen ru_RU.UTF-8')
-        container.exec_run(
+        xcontainer.put_archive('/opt/', kristabackup_tar[0])
+        xcontainer.exec_run(
             'ln -s /opt/KristaBackup/{0} {1}'.format(
                 kristabackup_tar[1],
-                OS_CONFIG['debian']['link'],
+                config['link'],
             ),
         )
-        container.put_archive('/opt/', kristabackup_tar[0])
-        OS_CONFIG['ubuntu']['prepared'] = container.commit()
-
-    if created_containers is not None:
-        created_containers.append(container)
-    return container
-
-
-def _debian_container(
-    kristabackup_tar,
-    created_containers=None,
-):
-    docker_client = docker.from_env()
-    if OS_CONFIG['debian'].get('prepared'):
-        container = docker_client.containers.run(
-            OS_CONFIG['debian'].get('prepared'), INFINITY_PROCESS, detach=True,
-            environment=['PYTHONIOENCODING=utf8', 'LANG=C.UTF-8'],
-        )
-    else:
-        image = docker_client.images.pull(
-            OS_CONFIG['debian']['docker_image'],
-        )
-        container = docker_client.containers.run(
-            image, INFINITY_PROCESS, detach=True,
-            environment=['PYTHONIOENCODING=utf8', 'LANG=C.UTF-8'],
-        )
-        container.exec_run('apt update')
-        container.exec_run('apt install python3 -y')
-        container.exec_run('apt install locales')
-        container.exec_run('locale-gen ru_RU.UTF-8')
-        container.exec_run(
-            'ln -s /opt/KristaBackup/{0} {1}'.format(
-                kristabackup_tar[1],
-                OS_CONFIG['debian']['link'],
+        xcontainer.exec_run(
+            'ln -fs /usr/bin/python3.{0} /usr/bin/python3'.format(
+                py3version,
             ),
         )
-        container.put_archive('/opt/', kristabackup_tar[0])
-        OS_CONFIG['debian']['prepared'] = container.commit()
+        config['prepared'] = xcontainer.commit()
 
     if created_containers is not None:
-        created_containers.append(container)
-    return container
+        created_containers.append(xcontainer)
+    return xcontainer
 
 
-
-
-class State:
-    """Класс для сохранения состояния"""
-    
-@pytest.fixture(scope='class')
-def state():
-    """Фикстура для сохранения состояния между тестами.
-
-    Используется для случаев, когда следующий тест основывается
-    на окружении текущего.
-    """
-    state = State()
-    yield state
-    del state
+def pytest_configure():
+    pytest.shared = {}

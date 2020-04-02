@@ -1,26 +1,22 @@
 # -*- coding: UTF-8 -*-
 
-import os
-import subprocess
-from threading import Thread
 import logging
+import os
 
 from common import sysutil
 
 from .action import Action
-from .decorators import side_effecting
 
 
 class Mount(Action):
     """Оболочка над mount."""
 
-    mnt_dev = ''  # монтироемое устройство
-    mnt_point = ''  # точка монтирования
-    fs_type = ''  # тип подключаемой файловой системы
-    flags = ''    # дополнительные флаги для вызова
-
     def __init__(self, name):
         super().__init__(name)
+        self.mnt_dev = ''  # монтироемое устройство
+        self.mnt_point = ''  # точка монтирования
+        self.fs_type = ''  # тип подключаемой файловой системы
+        self.flags = ''    # дополнительные флаги для вызова
 
     def generate_fs_args(self):
         """Возвращает строку для выбора типа файловой системы."""
@@ -37,83 +33,76 @@ class Mount(Action):
             mnt_point=self.mnt_point,
         )
 
-    @side_effecting
-    def exececute_cmdline(self, cmdline):
-        """Выполняет командную строку.
+    def process_busy_mnt_point(self):
+        """Обработка случая, когда точка уже смонтирована.
 
-        Args:
-            cmdline (str): командная строка для выполнения
+        Returns:
+            True, если используется требуемое устройство.
 
         """
-        rsync = subprocess.Popen(
-            cmdline,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,
-            shell=True,
+        self.logger.info(
+            'Точка монтирования %s уже используется',
+            self.mnt_point,
         )
+        current_mount_dev = sysutil.get_mount_dev(self.mnt_point)
+        if current_mount_dev == self.mnt_dev:
+            # если требуемое устройство смонтировано в требуемую точку
+            self.logger.info(
+                'Требуемое устройство %s уже смонтировано',
+                self.mnt_dev,
+            )
+            return True
 
-        stdo = Thread(
-            target=self.stream_watcher_filtered,
-            name='stdout-watcher',
-            kwargs={
-                'stream': rsync.stdout,
-                'default_level': logging.INFO,
-            },
+        self.logger.error(
+            'Смонтировано устройство %s, вместо требуемого %s',
+            current_mount_dev,
+            self.mnt_dev,
         )
-        stdo.start()
-
-        stde = Thread(
-            target=self.stream_watcher_filtered,
-            name='stderr-watcher',
-            kwargs={
-                'stream': rsync.stderr,
-                'default_level': logging.ERROR,
-            },
-        )
-        stde.start()
-
-        rsync.wait()
-        stdo.join()
-        stde.join()
+        return False
 
     def start(self):
-        if not self.mnt_dev or not self.mnt_point:
+        if not self.mnt_dev:
             self.logger.error(
-                'Ошибка при выполнении mount: не указан mnt_dev и/или mnt_point',
+                'Ошибка при выполнении mount: не указан mnt_dev',
+            )
+            return self.continue_on_error
+
+        if not self.mnt_point:
+            self.logger.error(
+                'Ошибка при выполнении mount: не указан mnt_point',
             )
             return self.continue_on_error
 
         if os.path.ismount(self.mnt_point):
-            # проверка доступности монтирования
-            self.logger.info(
-                'Точка монтирования %s уже используется',
-                self.mnt_point,
-            )
-            current_mount_dev = sysutil.get_mount_dev(self.mnt_point)
-            if current_mount_dev == self.mnt_dev:
-                # если требуемое устройство смонтировано в требуемую точку
-                self.logger.info(
-                    'Требуемое устройство %s уже смонтировано',
-                    self.mnt_dev,
-                )
-                return True
-            self.logger.error(
-                'Смонтировано устройство %s, вместо требуемого %s',
-                current_mount_dev,
-                self.mnt_dev,
-            )
-            return self.continue_on_error
+            return self.process_busy_mnt_point() or self.continue_on_error
 
         # создать точку монтирования, если она не существует
         if not os.path.isdir(self.mnt_point):
-            os.makedirs(self.mnt_point)
+            self.logger.debug(
+                'Создаю отсутствующую точку монтирования %s',
+                self.mnt_point,
+            )
+            if not self.dry:
+                os.makedirs(self.mnt_point)
+            self.logger.debug('Точка монтирования успешно создана.')
 
         cmdline = self.generate_cmdline()
-        self.logger.info('Выполняется %s', cmdline)
+        stdout_params = {
+            'logger': self.logger,
+            'default_level': logging.INFO,
+        }
+        stderr_params = {
+            'logger': self.logger,
+            'default_level': logging.ERROR,
+        }
 
+        self.logger.info('Выполняется %s', cmdline)
         try:
-            self.exececute_cmdline(cmdline)
+            self.execute_cmdline(
+                cmdline,
+                stdout_params=stdout_params,
+                stderr_params=stderr_params,
+            )
         except Exception as exc:
             self.logger.error('Ошибка при выполнении mount: %s', exc)
             return self.continue_on_error

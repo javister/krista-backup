@@ -3,10 +3,7 @@
 import os
 import errno
 import time
-import subprocess
-from threading import Thread
 
-from common.YamlConfig import AppConfig
 from .action import Action
 
 
@@ -35,7 +32,7 @@ class SetInProgressTicket(InProgressTicket):
     """
 
     def __init__(self, name):
-        Action.__init__(self, name)
+        super().__init__(name)
 
     def start(self):
         try:
@@ -88,7 +85,7 @@ class UnsetInProgressTicket(InProgressTicket):
     """
 
     def __init__(self, name):
-        Action.__init__(self, name)
+        super().__init__(name)
 
     def start(self):
         try:
@@ -142,7 +139,7 @@ class CheckInProgressTicket(InProgressTicket):
     """int: количество циклов ожидания"""
 
     def __init__(self, name):
-        Action.__init__(self, name)
+        super().__init__(name)
         self.__cmdline_ticket = None
         self.__cmdline_file_doesnt_exists = None
 
@@ -182,7 +179,7 @@ class CheckInProgressTicket(InProgressTicket):
         будет осуществляться на указанном ssh-сервере.
 
         """
-        full_src_path = ":".join([self.ssh_servername, self.src_path])
+        full_src_path = ':'.join([self.ssh_servername, self.src_path])
         cmdline = " ".join([
             "rsync",
             self.rsync_opts,
@@ -208,40 +205,17 @@ class CheckInProgressTicket(InProgressTicket):
             self.__cmdline_file_doesnt_exists = self.build_cmdline_for_file(
                 "this_filename_doesnt_exist")
 
-        ticket_output = self.run_cmdline(self.__cmdline_ticket,
-                                         log=False).split("\n")
-        nofile_output = self.run_cmdline(self.__cmdline_file_doesnt_exists,
-                                         log=False).split("\n")
+        ticket_output = self.unsafe_execute_cmdline(
+            self.__cmdline_ticket,
+            return_stdout=True,
+        ).split('\n')
+
+        nofile_output = self.unsafe_execute_cmdline(
+            self.__cmdline_file_doesnt_exists,
+            return_stdout=True,
+        ).split('\n')
 
         if len(ticket_output) - len(nofile_output) == 1:
             return True
 
         return False
-
-    def run_cmdline(self, cmdline, log=True):
-        self.logger.debug(u"Выполняется %s" % cmdline)
-        rsync = subprocess.Popen(
-            cmdline,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,
-            shell=True,
-        )
-        if log:
-            stdo = Thread(
-                target=self.stream_watcher,
-                name="stdout-watcher",
-                args=(rsync.stdout, False),
-            )
-            stdo.start()
-            stde = Thread(
-                target=self.stream_watcher,
-                name="stderr-watcher",
-                args=(rsync.stderr, True),
-            )
-            stde.start()
-            rsync.wait()
-            stdo.join()
-            stde.join()
-        else:
-            return rsync.stdout.read()

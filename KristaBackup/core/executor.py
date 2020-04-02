@@ -58,11 +58,8 @@ def executor(args):
             except Exception:
                 logger.exception('Исключение при запуске веб-api')
         else:
-            try:
-                from core import Runner
-                Runner(args.unit, args.verbose, args.dry).start_task()
-            except Exception:
-                logger.exception('Исключение при запуске задания')
+            from core import Runner
+            Runner(args.unit, args.verbose, args.dry).start_task()
     elif args.command in STOP_OPTS:
         if args.unit == 'web':
             webapp_handler(stop=True)

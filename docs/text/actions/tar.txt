@@ -27,8 +27,8 @@ Tar
 | exclusions      | файлы, которые стоит           |                      |
 |                 | игнорировать                   |                      |
 +-----------------+--------------------------------+----------------------+
-| use_re_in_excl  | использовать регулярные        | false (стандартное   |
-| usions          | выражения (false для unix      | значение)            |
+| use_re_in_patt  | использовать регулярные        | false (стандартное   |
+| erns            | выражения (false для unix      | значение)            |
 |                 | wildcard)                      |                      |
 +-----------------+--------------------------------+----------------------+
 | compression     | уровень сжатия                 | 3 (стандартное       |
@@ -67,8 +67,8 @@ Tar
      basename: etc
      check_level_list_only: false
      compression: 3
-     exclusions: './*/index/*, */logs/archived/.indexed'
-     use_re_in_exclusions: false
+     exclusions: '*/index/*, */logs/archived/.indexed'
+     use_re_in_patterns: false
      src_path: /etc
      dest_path: /backup
      level: 0

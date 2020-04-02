@@ -15,9 +15,9 @@ from .rsync import Rsync
 action_types = (
     ('action', Action),
     ('tar', TarArchiver),
+    ('pgdump', PgDump),
     ('cleaner', Cleaner),
     ('rsync', Rsync),
-    ('pgdump', PgDump),
     ('dschecker', DataSpaceChecker),
     ('check_backup', CheckLastBackup),
     ('mount', Mount),

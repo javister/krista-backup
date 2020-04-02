@@ -4,6 +4,7 @@ from test.docker_utils import Strategies, Tools
 
 import pytest
 
+
 @pytest.mark.tar
 class TestFullDump(object):
     def test_full_dump_default(self, container):
@@ -11,17 +12,22 @@ class TestFullDump(object):
         assert Strategies.run_full_dump_default(container)
         assert Tools.check_trigger_success(container)
 
+
 @pytest.mark.tar
 class TestDiffDump(object):
-    def test_diff_dump_create_full(self, container, state):
+
+    test_key = 'test_diff_dump'
+
+    def test_diff_dump_create_full(self, container):
         container = container()
         # создание 0 уровня, из-за его отсутствия
         assert Strategies.run_inc_dump_default(container)
         assert Tools.check_trigger_warning(container)
-        state.container = container
+        pytest.shared[self.test_key] = container
 
-    def test_diff_dump_check_warning(self, container, state):
-        container = state.container
+    def test_diff_dump_check_warning(self, container):
+        container = pytest.shared[self.test_key]
+
         # создание 1 уровня
         assert Strategies.run_inc_dump_default(container)
         # значение осталось WARNING, так как прошло недостаточно времени
@@ -30,7 +36,7 @@ class TestDiffDump(object):
         # очистка триггера
         Tools.clear_trigger(container)
 
-    def test_diff_dump_create_diff(self, container, state):
-        container = state.container
+    def test_diff_dump_create_diff(self, container):
+        container = pytest.shared[self.test_key]
         assert Strategies.run_inc_dump_default(container)
         assert Tools.check_trigger_success(container)
