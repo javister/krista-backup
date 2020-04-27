@@ -45,7 +45,7 @@ def use_levels(cls):
     @functools.wraps(method)
     def wrapper(self, *args, **kwargs):
         self.level = 0
-        self.level_folders = ['0', '1']
+        self.level_folders = []
         return method(self, *args, **kwargs)
     cls.__init__ = wrapper
     return cls
@@ -94,6 +94,7 @@ def use_postgres(cls):
         self.user = None
         self.password = None
         self.databases = []
+        self.mode = 'single'
         return method(self, *args, **kwargs)
     cls.__init__ = wrapper
     return cls

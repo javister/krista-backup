@@ -3,6 +3,7 @@
 
 import sys
 
+import core
 from common import Logging, arguments
 
 
@@ -14,15 +15,16 @@ def main(is_packed=True):
         упакованный файл или исходные файлы. Стандартное значение True.
 
     """
-    logger = Logging.get_generic_logger()
-    args = arguments.ArgsManager(is_packed).process_args()
+    args = arguments.ArgsManager().parse_args()
 
     try:
-        import core
-        core.executor(args)
+        core.run(args, is_packed)
     except Exception:
-        logger.exception('Ошибка во время выполнения')
+        logger = Logging.get_generic_logger()
+        logger.exception('Ошибка во время выполнения:')
+    except BaseException:
+        pass
 
 
 if __name__ == '__main__':
-    main(is_packed=False)
+    sys.exit(main(is_packed=False))

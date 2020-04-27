@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>Rsync &#8212; Документация KristaBackup 1.5</title>
+    <title>Rsync &#8212; Документация KristaBackup 1.6</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -50,21 +50,25 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>exclusions</p></td>
-<td><p>файлы, которые стоит игнорировать</p></td>
-<td></td>
+<tr class="row-even"><td><p>bwlimit</p></td>
+<td><p>Максимальная скорость передачи, килобайт/с.</p></td>
+<td><p>0 (стандартное значение, не ограничено)</p></td>
 </tr>
-<tr class="row-odd"><td><p>opts</p></td>
-<td><p>параметры подключения</p></td>
-<td><p>-e \&quot;ssh -p 22\&quot;</p></td>
+<tr class="row-odd"><td><p>exclusions</p></td>
+<td><p>Файлы, которые стоит игнорировать.</p></td>
+<td><p>[ ]</p></td>
 </tr>
-<tr class="row-even"><td><p>other_opts</p></td>
-<td><p>параметры для конкретного расписания</p></td>
-<td><p>-ahv \-\-delete-after \-\-delete-excluded</p></td>
+<tr class="row-even"><td><p>opts</p></td>
+<td><p>Параметры подключения.</p></td>
+<td><p>'-e &quot;ssh -p 22&quot;'</p></td>
 </tr>
-<tr class="row-odd"><td><p>bwlimit</p></td>
-<td><p>максимальная скорость передачи</p></td>
-<td><p>если 0 и меньше - не ограничено</p></td>
+<tr class="row-odd"><td><p>other_opts</p></td>
+<td><p>Дополнительны параметры для действия.</p></td>
+<td><p>'-ahv --delete-after --delete-excluded'</p></td>
+</tr>
+<tr class="row-even"><td><p>dry</p></td>
+<td><p>Не выполнять синхронизацию (dryrun). Во время выполнения будет выполнен запрос на src_path для получения списка файлов.</p></td>
+<td><p>false (стандартное значение)</p></td>
 </tr>
 </tbody>
 </table>
@@ -115,6 +119,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../usage.html#id6">Утилита для управления пользователями веб-приложения</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Установка</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration.html">Конфигурация</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../configuration.html#configuration-structure">Общая стуктура</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configuration.html#id3">Расписание</a></li>
@@ -124,12 +129,13 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="actions_index.html">Действия</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="action.html">Action (основной)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tar.html">Tar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="archiver.html">Tar и Zip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cleaner.html">Cleaner</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Rsync</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pgdump.html">PgDump</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mount_umount.html">Mount/Umount</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mount_umount.html">Mount и Umount</a></li>
 <li class="toctree-l2"><a class="reference internal" href="movebkpperiod.html">MoveBkpPeriod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="command.html">Command и Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="progress_ticket.html">InProgressTicket</a></li>
 <li class="toctree-l2"><a class="reference internal" href="check_backup.html">Check backup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dschecker.html">DataSpaceChecker</a></li>

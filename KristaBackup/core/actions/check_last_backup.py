@@ -5,7 +5,7 @@ import os
 import re
 import subprocess
 
-from common.Logging import get_log_path
+from common.Logging import get_log_dirpath
 from common.YamlConfig import AppConfig
 from .action import Action
 
@@ -51,7 +51,7 @@ class CheckLastBackup(Action):
         return False
 
     def get_last_backup_log(self):
-        log_path = get_log_path()
+        log_path = get_log_dirpath()
         log_path_debug = os.path.join(log_path, "debug")
         if not os.path.exists(log_path_debug):
             return None

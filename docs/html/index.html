@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>KristaBackup &#8212; Документация KristaBackup 1.5</title>
+    <title>KristaBackup &#8212; Документация KristaBackup 1.6</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -36,104 +36,107 @@
 </div>
 <div class="section" id="kristabackup">
 <span id="index"></span><h1>KristaBackup<a class="headerlink" href="#kristabackup" title="Ссылка на этот заголовок">¶</a></h1>
-<p>Система для автоматизации процесса создания, ротации и перемещения бэкапов.</p>
-<p>Особенности:</p>
-<ol class="arabic simple">
-<li><p>Работает автономно</p></li>
-<li><p>Имеет кросс-платформенную конфигурацию</p></li>
-<li><p>Логирование во время выполнения: сокращённое и подробное</p></li>
-<li><p>Интегрируема с системами мониторинга (например, Zabbix)</p></li>
-</ol>
-<p>Поддерживаемые OS: Ubuntu 14.04 и выше, Debian 8 и выше, CentOS 7, AltLinux 8, Astra Linux 1.6
-Для запуска требуется <cite>python3.5</cite> и выше.</p>
-<p>Документация в форматах html и текстовом расположена в папке docs.</p>
+<p>Система автоматизации процесса создания, ротации и перемещения бэкапов.</p>
+<ul class="simple">
+<li><p>Работает автономно.</p></li>
+<li><p>Имеет кросс-платформенную конфигурацию.</p></li>
+<li><p>Содержит логирование процесса выполнения.</p></li>
+<li><p>Интегрируема с системами мониторинга (например, Zabbix).</p></li>
+</ul>
 </div>
 <div class="section" id="id1">
-<h1>Установка<a class="headerlink" href="#id1" title="Ссылка на этот заголовок">¶</a></h1>
-<ol class="arabic simple">
-<li><p>Клонировать репозиторий.</p></li>
-</ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/javister/krista-backup
-</pre></div>
-</div>
-<p>2. Скопировать проект в необходимую директорию. Обычно мы храним
-приложение в каталоге /opt. Для установки в /opt могут
-потребоваться права sudo.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cp KristaBackup/KristaBackup /opt/
-</pre></div>
-</div>
-<p>3. Установить зависимости для базовой системы (без веб-интерфейса) из файла requirements.system.
-Зависимости устанавливаются из репозиториев ОС. Для Debian и Ubunutu команда будет выглядеть так:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> /opt/KristaBackup
-sed <span class="s1">&#39;s/#.*//&#39;</span> requirements.system <span class="p">|</span> xargs sudo apt-get install -y
-</pre></div>
-</div>
-<p>3. Установить python-зависимости для веб-интерфейса с помощью утилиты pip.
-Для того чтобы не менять окружение системы и соблюсти требуемую версионность,
-лучше установить зависимости в тот же каталог, что и приложение,
-использюя опцию --target.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> /opt/KristaBackup
-python3 -m pip install -r requirements.txt --target .
-</pre></div>
-</div>
-<p>Назначаем владельца и права, если копировали/ставили зависимости не под root:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chown -R root:root /opt/KristaBackup
-chmod -R <span class="m">0755</span> /opt/KristaBackup/KristaBackup.py
-chmod -R <span class="m">0755</span> /opt/KristaBackup/UsersUtils.py
-</pre></div>
-</div>
+<h1>Системные требования<a class="headerlink" href="#id1" title="Ссылка на этот заголовок">¶</a></h1>
+<ul class="simple">
+<li><p>Ubuntu 14.04 и выше, Debian 8 и выше, CentOS 7, AltLinux 8, Astra Linux 1.6.</p></li>
+<li><p>Python3 (&gt;=3.2).</p></li>
+</ul>
 </div>
 <div class="section" id="id2">
-<h1>Использование<a class="headerlink" href="#id2" title="Ссылка на этот заголовок">¶</a></h1>
-<p>Из командной строки можно:</p>
-<ul class="simple">
-<li><p>запустить сконфигурированное задание,</p></li>
-<li><p>добавить/удалить задание из cron,</p></li>
-<li><p>запустить веб-интерфейс или веб-api,</p></li>
-<li><p>отредактировать список пользователей веб-интерфейса.</p></li>
-</ul>
-<p>Подробнее смотрите <a class="reference internal" href="usage.html#usage"><span class="std std-ref">раздел &quot;Использование&quot;</span></a> или docs/text/usage.txt</p>
+<h1>Установка<a class="headerlink" href="#id2" title="Ссылка на этот заголовок">¶</a></h1>
+<p>Установить систему можно следующим образом:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/javister/krista-backup
+<span class="nb">cd</span> krista-backup
+
+<span class="c1"># установка зависимостей веб-сервера</span>
+pip install -r requirements.txt
+</pre></div>
+</div>
+<p>Подробнее про установку можно найти в разделе <a class="reference internal" href="installation.html#installation"><span class="std std-ref">Установка</span></a> или docs/text/installation.txt</p>
 </div>
 <div class="section" id="id3">
-<h1>Конфигурирование<a class="headerlink" href="#id3" title="Ссылка на этот заголовок">¶</a></h1>
-<dl>
-<dt>Используемая терминология:</dt><dd><ul class="simple">
-<li><p>Действие (action) - выполнение какой-то конкретной команды, например, pg_dump или rsync.</p></li>
-<li><p>Задание (task) содержит список действий, которые требуется выполнить в определенное время.</p></li>
-<li><p>Конфгурации заданий сохраняются в разделе расписания (schedule).</p></li>
+<h1>Использование<a class="headerlink" href="#id3" title="Ссылка на этот заголовок">¶</a></h1>
+<p>Из командной строки можно:</p>
+<ul class="simple">
+<li><p>Запустить сконфигурированное задание или действие.</p></li>
+<li><p>Добавить/удалить задание из crontab.</p></li>
+<li><p>Запустить веб-интерфейс или веб-api.</p></li>
+<li><p>Редактировать список пользователей веб-интерфейса.</p></li>
 </ul>
-<p>Задания могут быть активными или неактивными, активные задания прописаны в cron.
-Статус задания можно посмотреть в crontab или в веб-интерфейсе.</p>
-</dd>
-</dl>
-<p>Конфигурации описываюстя в формате yaml, можно использовтать традиционный синтаксис с отступами
-или json-нотацию со скобками. Примеры нотация в файлах config.yaml.example и config.yaml.example2.</p>
-<p>Подробнее о конфигурировании можно прочитать в <a class="reference internal" href="configuration.html#configuration"><span class="std std-ref">разделе &quot;Конфигурация&quot;</span></a>
+<div class="section" id="id4">
+<h2>Пример запуска<a class="headerlink" href="#id4" title="Ссылка на этот заголовок">¶</a></h2>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">KristaBackup</span><span class="o">.</span><span class="n">py</span> <span class="n">run</span> <span class="n">make_dump</span>
+</pre></div>
+</div>
+<p>Подробнее об использовании можно найти в разделе <a class="reference internal" href="usage.html#usage"><span class="std std-ref">Использование</span></a> или docs/text/usage.txt</p>
+</div>
+<div class="section" id="id5">
+<h2>Примечание<a class="headerlink" href="#id5" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Чтобы уменьшить вероятность возникновений ошибок с правами доступа рекомендуется
+запускать задания под root пользователем.</p>
+</div>
+</div>
+<div class="section" id="id6">
+<h1>Конфигурирование<a class="headerlink" href="#id6" title="Ссылка на этот заголовок">¶</a></h1>
+<div class="section" id="id7">
+<h2>Терминология<a class="headerlink" href="#id7" title="Ссылка на этот заголовок">¶</a></h2>
+<div class="section" id="action">
+<h3>Действие (action)<a class="headerlink" href="#action" title="Ссылка на этот заголовок">¶</a></h3>
+<p>Выполняет некоторую конкретную инструкцию. Например, pg_dump или rsync.</p>
+</div>
+<div class="section" id="task">
+<h3>Задание (task)<a class="headerlink" href="#task" title="Ссылка на этот заголовок">¶</a></h3>
+<p>Содержит список действий, которые требуется выполнить в определенное время.</p>
+<p>Задания могут быть активными или неактивными: активные задания содержться в crontab. Статус заданий можно посмотреть напрямую в crontab или через веб-интерфейс.</p>
+</div>
+<div class="section" id="schedule">
+<h3>Расписание (schedule)<a class="headerlink" href="#schedule" title="Ссылка на этот заголовок">¶</a></h3>
+<p>Конфигурации заданий хранятся в расписании.</p>
+</div>
+</div>
+<div class="section" id="id8">
+<h2>Описание<a class="headerlink" href="#id8" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Конфигурация описываются в формате yaml. Примеры можно найти в файлах
+config.yaml.example, servers.yaml.example и users.yaml.example.</p>
+<p>Подробнее о конфигурировании можно прочитать в разделе <a class="reference internal" href="configuration.html#configuration"><span class="std std-ref">Конфигурация</span></a>
 или docs/text/configuration.txt</p>
 <p>Схематичный пример конфигурации:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">schedule</span><span class="p">:</span> <span class="c1"># расписание</span>
-  <span class="nt">full_dump</span><span class="p">:</span> <span class="c1"># задание</span>
-    <span class="nt">actions</span><span class="p">:</span> <span class="c1"># действия в задании</span>
+  <span class="nt">full_dump</span><span class="p">:</span> <span class="c1"># описание задания</span>
+    <span class="nt">actions</span><span class="p">:</span>
       <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">some_action_1</span> <span class="c1"># действие 1</span>
       <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">some_action_2</span> <span class="c1"># действие 2</span>
+
     <span class="nt">cron</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">00 23 * * 1-6</span>
     <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">вечером по будням выполняются some_action_1 и some_action_2</span>
 
-<span class="nt">actions</span><span class="p">:</span> <span class="c1">#  список всех атомарных действий</span>
-  <span class="nt">some_action_1</span><span class="p">:</span> <span class="c1">#  конфигурация действия 1</span>
+<span class="nt">actions</span><span class="p">:</span>
+  <span class="nt">some_action_1</span><span class="p">:</span> <span class="c1">#  описание действия 1</span>
+    <span class="nt">param</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">a</span>
     <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">type1</span>
 
-  <span class="nt">some_action_2</span><span class="p">:</span> <span class="c1">#  конфигурация действия 2</span>
+  <span class="nt">some_action_2</span><span class="p">:</span> <span class="c1">#  описание действия 2</span>
+    <span class="nt">option</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">b</span>
     <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">type2</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="id4">
-<h1>Разработчики<a class="headerlink" href="#id4" title="Ссылка на этот заголовок">¶</a></h1>
+</div>
+<div class="section" id="id9">
+<h1>Разработчики<a class="headerlink" href="#id9" title="Ссылка на этот заголовок">¶</a></h1>
 <p><a class="reference external" href="mailto:s&#46;postnikov&#37;&#52;&#48;krista&#46;ru">s<span>&#46;</span>postnikov<span>&#64;</span>krista<span>&#46;</span>ru</a>, <a class="reference external" href="mailto:m&#46;adrian&#37;&#52;&#48;krista&#46;ru">m<span>&#46;</span>adrian<span>&#64;</span>krista<span>&#46;</span>ru</a></p>
 </div>
-<div class="section" id="id5">
-<h1>Лицензия<a class="headerlink" href="#id5" title="Ссылка на этот заголовок">¶</a></h1>
+<div class="section" id="id10">
+<h1>Лицензия<a class="headerlink" href="#id10" title="Ссылка на этот заголовок">¶</a></h1>
 <p>Copyright 2020 ООО НПО Криста</p>
 <p>Licensed under the Apache License, Version 2.0</p>
 </div>
@@ -165,6 +168,7 @@ chmod -R <span class="m">0755</span> /opt/KristaBackup/UsersUtils.py
 <li class="toctree-l2"><a class="reference internal" href="usage.html#id6">Утилита для управления пользователями веб-приложения</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Конфигурация</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#configuration-structure">Общая стуктура</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#id3">Расписание</a></li>
@@ -174,12 +178,13 @@ chmod -R <span class="m">0755</span> /opt/KristaBackup/UsersUtils.py
 </li>
 <li class="toctree-l1"><a class="reference internal" href="actions/actions_index.html">Действия</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="actions/action.html">Action (основной)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="actions/tar.html">Tar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/archiver.html">Tar и Zip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="actions/cleaner.html">Cleaner</a></li>
 <li class="toctree-l2"><a class="reference internal" href="actions/rsync.html">Rsync</a></li>
 <li class="toctree-l2"><a class="reference internal" href="actions/pgdump.html">PgDump</a></li>
-<li class="toctree-l2"><a class="reference internal" href="actions/mount_umount.html">Mount/Umount</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/mount_umount.html">Mount и Umount</a></li>
 <li class="toctree-l2"><a class="reference internal" href="actions/movebkpperiod.html">MoveBkpPeriod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/command.html">Command и Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="actions/progress_ticket.html">InProgressTicket</a></li>
 <li class="toctree-l2"><a class="reference internal" href="actions/check_backup.html">Check backup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="actions/dschecker.html">DataSpaceChecker</a></li>

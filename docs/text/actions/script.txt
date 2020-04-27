@@ -1,0 +1,38 @@
+Command/Script
+**************
+
+
+Command
+*******
+
+Выполняет команду в "cmd".
+
+Имеет атрибут "src_path" - путь к исходной директории.
+
+
+Пример:
+=======
+
+   test_command:
+     type: command
+     src_path: /home
+     cmd: ls -l
+
+
+Script
+******
+
+Выполняет список команд из "cmds".
+
+Имеет атрибут "src_path" - путь к исходной директории.
+
+
+Пример:
+=======
+
+   test_script:
+     type: script
+     src_path: /opt
+     cmds:
+      - ls -l
+      - echo 'test'

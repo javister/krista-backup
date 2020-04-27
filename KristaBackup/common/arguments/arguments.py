@@ -10,16 +10,7 @@ from .constants import ALL, ARGS_ACTION_OPTS, DISABLE_OPTS, ENABLE_OPTS
 
 class ArgsManager(object):
 
-    def __init__(self, is_packed):
-        self.is_packed = is_packed
-
-    def process_args(self):
-        """Обработка аргументов командной строки и инициализация AppConfing."""
-        AppConfig.is_packed = self.is_packed
-
-        return self._parse_args()
-
-    def _parse_args(self):
+    def parse_args(self):
         """Обработка параметров командной строки."""
         parser = argparse.ArgumentParser(
             description='Централизованная система бэкапа',

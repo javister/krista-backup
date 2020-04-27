@@ -35,6 +35,7 @@ class MoveBkpPeriod(Action):
         self.files_to_move = []
 
     def start(self):
+        self.fill_files_to_move()
         for period_name in self.periods:
             period = self.periods[period_name]
             if self.validate_time(period_name, period):
@@ -81,28 +82,22 @@ class MoveBkpPeriod(Action):
 
         self.logger.error('Date mark not found in %s', filepath)
 
-    def get_files_to_move(self):
+
+    def fill_files_to_move(self):
+        """Ищет и добавляет файлы для перемещения.
+
+        1. Группирует все файлы с одинаковым basename
+        2. Ищет самую новую временную метку в группе
+        3. Ищет файлы по паттерну {basename}-{временная метка}*
+
         """
-        Если files_to_move не None, то возвращает его значение.
-
-        В противном случае вызывает собирает файлы и добавляет их
-        в files_to_move.
-
-        """
-
-        def select_files():
-            """
-            Собирает все файлы с basename, ищет самую новую временную метку в
-            найденных названиях, и ищет файлы по паттерну {basename}-{временная метка}*
-
-            """
-            for basename in self.basename_list:
-                files = glob.glob(os.path.join(self.src_path, basename) + '*')
-                time_stamps = [
-                    self.retrieve_time_from_filepath(current_file) for current_file in files
-                ]
+        for basename in self.basename_list:
+            files = glob.glob(os.path.join(self.src_path, basename) + '*')
+            time_stamps = [
+                self.retrieve_time_from_filepath(current_file) for current_file in files
+            ]
+            if time_stamps:
                 time_stamps = sorted(time_stamps)
-
                 path_with_basename = os.path.join(self.src_path, basename)
                 file_pattern = '{}*'.format(
                     '-'.join([path_with_basename, time_stamps[-1]]),
@@ -110,15 +105,9 @@ class MoveBkpPeriod(Action):
                 result_files = glob.glob(file_pattern)
 
                 self.files_to_move.extend(result_files)
-            self.logger.debug(
-                'Найденные файлы для перемещения: %s', self.files_to_move,
-            )
-
-        if self.files_to_move is None:
-            self.files_to_move = []
-            select_files()
-
-        return self.files_to_move
+        self.logger.debug(
+            'Найденные файлы для перемещения: %s', self.files_to_move,
+        )
 
     def move_backups(self, period_name, period):
         """Перемещает бэкапы для определённого периода.
@@ -131,31 +120,36 @@ class MoveBkpPeriod(Action):
             period (dict): конфигурация периода
 
         """
-        files_to_move = self.get_files_to_move()
         sub_path = period.get('path', period_name)
         files_dest_path = os.path.join(self.dest_path, sub_path)
 
         self.logger.debug(
-            'Папка назначения для %s: %s',
+            'Каталог назначения для %s: %s',
             period_name,
             files_dest_path,
         )
 
         if not os.path.exists(files_dest_path):
             self.logger.debug(
-                'Папка %s не существует, попытка создать',
+                'Каталог %s не существует, попытка создать',
                 files_dest_path,
             )
-            try:
-                os.makedirs(files_dest_path)
-            except Exception as exc:
-                self.logger.error(
-                    'Невозможно создать папку по следующему пути: %s, %s',
-                    files_dest_path,
-                    exc,
-                )
+            if not self.dry:
+                try:
+                    os.makedirs(files_dest_path)
+                except Exception as exc:
+                    self.logger.error(
+                        'Невозможно создать каталог по следующему пути: %s, %s',
+                        files_dest_path,
+                        exc,
+                    )
+                    return self.continue_on_error
+            self.logger.debug(
+                'Каталог %s создан',
+                files_dest_path,
+            )
 
-        for moving_file in files_to_move:
+        for moving_file in self.files_to_move:
             self.logger.debug(
                 'Копирование файла %s в %s',
                 moving_file,

@@ -10,29 +10,58 @@ from logging.handlers import RotatingFileHandler
 from operator import itemgetter
 
 from common.TriggerHandler import TriggerHandler
-from common.YamlConfig import AppConfig
+from common.YamlConfig import AppConfig, ConfigError
 
 DEFAULT_LOGS_PATH = '/var/log/KristaBackup'
 
 
-def get_log_path():
+def get_log_dirpath(subdir=None):
+    """Возвращает путь к директории логирования.
+
+    Если директория не сущестувет, то она создаётся.
+
+    Args:
+        subdir: Строка или None, требуемая поддиректория.
+
+    Returns:
+        Строку, путь к существующей директории.
+
+    """
     try:
-        path = AppConfig.conf().get('logging').get(
+        conf = AppConfig.conf()
+    except (FileNotFoundError, ConfigError):
+        path = os.path.abspath(DEFAULT_LOGS_PATH)
+    else:
+        path = conf.get('logging', {}).get(
             'logs_path',
             os.path.abspath(DEFAULT_LOGS_PATH),
         )
-    except Exception:
-        path = os.path.abspath(DEFAULT_LOGS_PATH)
+    if subdir:
+        path = os.path.join(path, subdir)
     if not os.path.exists(path):
         os.makedirs(path)
     return path
 
 
 def get_trigger_filepath():
+    """Возвращает путь к триггеру.
+
+    Рекурсивно создаёт директорию необходимую, если на момент
+    инициализации её не существовало.
+    Если в конфигурации отстутствует параметр logging.trigger_filepath,
+    то возвращает None.
+
+    Returns:
+        Строка, путь к триггеру, или None.
+
+    """
     try:
-        trigger_filepath = AppConfig.conf().get('logging').get('trigger_filepath')
-    except Exception:
-        return ''
+        conf = AppConfig.conf()
+    except (FileNotFoundError, ConfigError):
+        trigger_filepath = None
+    else:
+        trigger_filepath = conf.get('logging', {}).get('trigger_filepath')
+
     if not trigger_filepath:
         return trigger_filepath
     trigger_dirpath = os.path.dirname(trigger_filepath)
@@ -42,144 +71,187 @@ def get_trigger_filepath():
 
 
 def get_formatter(full_name):
-    rec_format = ' '.join(
-        [
-            '%(asctime)s.%(msecs)-3d',
-            full_name,
-            '%(levelname)s',
-            '%(name)s',
-            '%(message)s',
-        ],
-    )
+    """Возвращает logging.Formatter для логов."""
+    rec_pattern = '%(asctime)s.%(msecs)-3d {full_name} %(levelname)s %(name)s %(message)s'
+    rec_format = rec_pattern.format(full_name=full_name)
     date_format = AppConfig.get_log_dateformat()
     return logging.Formatter(rec_format, date_format)
 
 
-def get_default_handler(name):
+def get_default_file_handler(name, path):
+    """Возвращает стандартный хэндлер для файла.
 
-    full_name = AppConfig.get_server_name()
-    log_filename = ".".join(["-".join([full_name, name]), "log"])
-    web_log_path = os.path.join(get_log_path(), name)
+    Returns:
+        handler
 
-    if not os.path.exists(web_log_path):
-        os.mkdir(web_log_path)
-
-    rotating_file_handler = RotatingFileHandler(
-        os.path.join(web_log_path, log_filename),
-        mode="a",
-        maxBytes=10240000,
-        backupCount=10,
+    """
+    return get_handler(
+        name,
+        logging.INFO,
+        path=path,
+        handler_type=logging.FileHandler,
     )
 
-    rotating_file_handler.setLevel(logging.DEBUG)
-    rotating_file_handler.setFormatter(get_formatter(full_name))
 
-    return rotating_file_handler
+def get_debug_file_handler(name, path):
+    """Возвращает хэндлер для файла с дебагом.
+
+    Returns:
+        handler
+
+    """
+    return get_handler(
+        name,
+        logging.DEBUG,
+        path=path,
+        handler_type=logging.FileHandler,
+    )
 
 
 def get_console_handler(name):
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(get_formatter(name))
-    return console_handler
+    """Возвращает хэндлер для консоли.
+
+    Returns:
+        handler
+
+    """
+    return get_handler(name, logging.DEBUG)
 
 
-def get_generic_logger(name='krista_backup'):
+def get_trigger_handler():
+    """Возвращает хэндлер для консоли.
+
+    Returns:
+        handler
+
+    """
+    return get_handler(
+        'trigger',
+        logging.WARNING,
+        path=get_trigger_filepath(),
+        handler_type=TriggerHandler,
+    )
+
+
+def get_handler(
+    name,
+    level,
+    path=sys.stdout,
+    handler_type=logging.StreamHandler,
+):
+    """Инициализирует хэндлеры для логирования.
+
+    По умолчанию возвращает хэндлер для консоли.
+
+    """
+    if handler_type is RotatingFileHandler:
+        log_handler = handler_type(
+            path,
+            maxBytes=10240000,
+            backupCount=10,
+        )
+    else:
+        log_handler = handler_type(path)
+
+    if handler_type is not TriggerHandler:
+        log_handler.setFormatter(get_formatter(name))
+
+    log_handler.setLevel(level)
+    return log_handler
+
+
+def get_generic_logger(name='krista_backup.log'):
+    """Инициализиуерт и возвращает общий логгер.
+
+    Логгеру добавляются два хэндлера:
+        - терминал
+        - файл
+
+    Args:
+        name: Имя логгера
+
+    Returns:
+        logger
+
+    """
     logger = logging.getLogger(name)
-    if logger is None:
-        logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
-    logger.addHandler(get_default_handler(name))
-    logger.addHandler(get_console_handler(name))
+    if not logger.handlers:
+        logger.addHandler(get_console_handler(name))
+        try:
+            handler = get_debug_file_handler(
+                name,
+                path=os.path.join(get_log_dirpath('krista_backup'), name),
+            )
+        except PermissionError as exc:
+            message = 'Ошибка при логировании в файл: {0}'.format(exc)
+            logger.error(message)
+        else:
+            logger.addHandler(handler)
     return logger
 
 
-def configure_logger(unit_name, verbose=False):
+def configure_logging(verbose=False):
+    """Конфигурирует логирование для выполнения заданий/действий.
 
-    def configure_handler(handler_type, path, level, formatter=None):
-        log_handler = handler_type(path)
-        log_handler.setLevel(level)
-        if formatter:
-            log_handler.setFormatter(formatter)
-        return log_handler
+    Инициализирует и добавляет хэндлеры для логирования.
+    Следующие хэндлеры создаются:
+        - log_default - INFO, в файл.
+        - log_debug - DEBUG, в файл.
+        - trigger - >=WARNING, в триггер файл, если он указан в конфиге.
+        - stdout - DEBUG, в консоль, если указан параметр verbose.
 
+    Args:
+        verbose: Логическое значение, логировать в stdout.
+
+    """
     try:
-        AppConfig.set_unit_name(unit_name)
-    except Exception as exc:
-        print(exc)
+        full_name = '{region}-{project}-{servername}'.format(
+            region=AppConfig._region,
+            project=AppConfig._project,
+            servername=AppConfig.get_server_name(),
+        )
+    except AttributeError:
         full_name = 'created-with-error'
-        log_filename = '.'.join([full_name, 'log'])
-        log_debug_filename = '.'.join([full_name, 'log'])
-    else:
-        full_name = '-'.join([
-            AppConfig._region, AppConfig._project,
-            AppConfig.get_server_name()
-        ])
-        log_filename = ".".join(
-            ["-".join([full_name, AppConfig.get_starttime_str()]), "log"])
-        log_debug_filename = ".".join([
-            "-".join([full_name,
-                      AppConfig.get_starttime_str(), "debug"]), "log"
-        ])
 
-    logs_path = get_log_path()
-    trigger_filepath = get_trigger_filepath()
-
-    log_path_info = os.path.join(
-        logs_path,
-        AppConfig.get_starttime().strftime('%Y'),
+    log_filename = '{full_name}-{time}.log'.format(
+        full_name=full_name,
+        time=AppConfig.get_starttime_str(),
     )
-    if not os.path.exists(log_path_info):
-        os.makedirs(log_path_info)
+    log_debug_filename = '{full_name}-{time}-debug.log'.format(
+        full_name=full_name,
+        time=AppConfig.get_starttime_str(),
+    )
 
-    log_path_debug = os.path.join(logs_path, 'debug')
-    if not os.path.exists(log_path_debug):
-        os.makedirs(log_path_debug)
+    log_path_info = get_log_dirpath(
+        subdir=AppConfig.get_starttime().strftime('%Y'),
+    )
+    log_path_debug = get_log_dirpath(subdir='debug')
 
-    handlers_config = [
-        {
-            # INFO
-            'handler_type': logging.FileHandler,
-            'path': os.path.join(log_path_info, log_filename),
-            'level': logging.INFO,
-            'formatter': get_formatter(full_name),
-        },
-        {
-            # DEBUG
-            'handler_type': logging.FileHandler,
-            'path': os.path.join(log_path_debug, log_debug_filename),
-            'level': logging.DEBUG,
-            'formatter': get_formatter(full_name),
-        },
+    handlers = [
+        get_default_file_handler(
+            full_name,
+            os.path.join(log_path_info, log_filename),
+        ),
+        get_debug_file_handler(
+            full_name,
+            os.path.join(log_path_debug, log_debug_filename),
+        ),
     ]
 
-    if verbose or AppConfig.conf().get('logging').get('use_console', False):
-        handlers_config.append({
-            'handler_type': logging.StreamHandler,
-            'path': sys.stdout,
-            'level': logging.DEBUG,
-            'formatter': get_formatter(full_name),
-        })
+    if verbose or AppConfig.conf().get('logging', {}).get('use_console', False):
+        # Инициализация хэндлера консоли, если стоит verbose или use_console.
+        handlers.append(get_console_handler(full_name))
 
-    if trigger_filepath:  # Инициализация триггера, если к нему указан путь.
-        trigger_directory = os.path.dirname(trigger_filepath)
-        if not os.path.exists(trigger_directory):
-            os.makedirs(trigger_directory)
-        handlers_config.append({
-            'handler_type': TriggerHandler,
-            'path': trigger_filepath,
-            'level': logging.WARNING,
-        })
-
-    handlers = [configure_handler(**conf) for conf in handlers_config]
+    if get_trigger_filepath():
+        # Инициализация хэндлера триггера, если к нему указан путь.
+        handlers.append(get_trigger_handler())
 
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
 
     for log_handler in handlers:
         logger.addHandler(log_handler)
-
-    return logger
 
 
 def retrieve_seconds_from_name(filename):
@@ -212,11 +284,11 @@ def retrieve_seconds_from_name(filename):
 
 def get_logs_list():
     res = {}
-    for dir in os.listdir(get_log_path()):
-        if dir == "debug" or os.path.isfile(os.path.join(get_log_path(), dir)):
+    for dir in os.listdir(get_log_dirpath()):
+        if dir == "debug" or os.path.isfile(os.path.join(get_log_dirpath(), dir)):
             continue
         res[dir] = []
-        for filename in sorted(os.listdir(os.path.join(get_log_path(), dir)), reverse=True):
+        for filename in sorted(os.listdir(os.path.join(get_log_dirpath(), dir)), reverse=True):
             log = {}
             log["name"] = filename
             if dir == 'krista_backup' or dir == 'web_api':
@@ -248,7 +320,7 @@ def get_logs_list():
 def analyze_log_file(dir, name):
     file_exists, error, warning = False, False, False
     msg = ""
-    filepath = os.path.join(get_log_path(), dir, name)
+    filepath = os.path.join(get_log_dirpath(), dir, name)
     file_exists = os.path.exists(filepath) and os.path.isfile(filepath)
     if file_exists:
         with open(filepath, "r") as log:
@@ -266,8 +338,8 @@ def analyze_log_file(dir, name):
 def get_log_content(dir, filename):
     # Проверяет существование файла в указанной директории
     def check_path():
-        dir_path = os.path.join(get_log_path(), dir)
-        if not os.path.isdir(dir_path) or not dir in os.listdir(get_log_path()):
+        dir_path = os.path.join(get_log_dirpath(), dir)
+        if not os.path.isdir(dir_path) or not dir in os.listdir(get_log_dirpath()):
             return False
         file_path = os.path.join(dir_path, filename)
         if not os.path.isfile(file_path) or not filename in os.listdir(dir_path):
@@ -277,7 +349,7 @@ def get_log_content(dir, filename):
     content = {}
 
     if check_path():
-        filepath = os.path.join(get_log_path(), dir, filename)
+        filepath = os.path.join(get_log_dirpath(), dir, filename)
         content["filename"] = filepath
         with open(filepath, "r") as log:
             lines = log.readlines()
@@ -290,27 +362,3 @@ def get_log_content(dir, filename):
     content["lines"] = lines
 
     return content
-
-
-def analyze_logs():
-    logs = get_logs_list()
-    for dir in logs:
-        for log in logs[dir]:
-            ex, err, warn, msg = analyze_log_file(dir, log["name"])
-            if err:
-                return True
-    return False
-
-
-def handle_unexpected_exception(exception):
-    """
-    Обработчик ошибок на этапе инициализации.
-    Нужен для того, чтобы инициализировать логгирование
-    максимально быстро, вывести ошибку и завершить выполнение.
-    """
-    from common.Logging import configure_task_logger
-    logger = get_generic_logger(name='error')
-
-    logger.error('Ошибка во время импорта зависимостей: %s',
-                 exception, exc_info=True)
-    exit(2)

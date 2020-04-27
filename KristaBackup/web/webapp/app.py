@@ -199,8 +199,10 @@ def editSchedule(name):
 @fresh_login_required
 @admin_required
 def confirmDeleteSchedule(name):
-    return render_template('del_confirm.html', obj_type='"расписание"', obj_name=name,
-                           return_link=url_for('servers'), del_link=url_for('sch-del', name=name.strip()))
+    return render_template(
+        'del_confirm.html', obj_type='"расписание"', obj_name=name,
+        return_link=url_for('servers'), del_link=url_for('sch-del', name=name.strip()),
+        )
 
 
 @app.route('/sch-del/<name>', methods=['GET', 'POST'])
@@ -249,7 +251,7 @@ def get_remote_log(shash, dir, name):
 @app.route('/logp/<dir>/<name>', methods=['GET'])
 @login_required
 def get_logp(dir, name):
-    return send_from_directory(directory=os.path.join(Logging.get_log_path(), dir), filename=name)
+    return send_from_directory(directory=os.path.join(Logging.get_log_dirpath(), dir), filename=name)
 
 
 @app.route('/s-confirm/<hash>', methods=['GET'])

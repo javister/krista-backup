@@ -21,6 +21,7 @@ class AppConfig:
     _config_filename = 'config.yaml'
     _config_default_dirpath = '/opt/KristaBackup'
     _config = None
+    _server_name = 'current_server'
 
     _start_time = datetime.now()
 
@@ -35,43 +36,37 @@ class AppConfig:
 
     try:
         from flask import app
-    except ImportError:
+    except (ImportError, SyntaxError):
         flask_on = False
     else:
         flask_on = True
 
     @classmethod
     def get_log_dateformat(cls):
-        if cls._config is None:
-            cls.conf()
         return cls._log_dateformat
 
     @classmethod
     def get_filename_dateformat(cls):
-        if cls._config is None:
-            cls.conf()
         return cls._filename_dateformat
 
     @classmethod
     def get_starttime(cls):
-        if cls._config is None:
-            cls.conf()
         return cls._start_time
 
     @classmethod
     def get_starttime_str(cls):
-        if cls._config is None:
-            cls.conf()
         return cls._start_time_str
 
     @classmethod
     def get_server_name(cls):
         if cls._config is None:
-            cls.conf()
+            cls.load()
         return cls._server_name
 
     @classmethod
     def set_unit_name(cls, unit_name):
+        if unit_name == 'all':
+            return
         schedule = cls.conf().setdefault('schedule', {})
         if unit_name in schedule:
             # попытка достать название проекта и региона
@@ -82,44 +77,65 @@ class AppConfig:
             if 'region' in naming:
                 cls._region = str(naming.get('region'))
 
-        if cls._project is None:
-            raise ConfigError(
-                'Не задан проект для задания в расписании файла конфигураций {0}'
+        try:
+            cls._project
+        except AttributeError:
+            exc = ConfigError(
+                'Не задан проект в файле конфигурации {0}'
                 .format(cls._config_filename),
             )
+            exc.__cause__ = None
+            raise exc
 
-        if cls._region is None:
-            raise ConfigError(
-                'Не задан регион для задания в расписании файла конфигураций {0}'
+        try:
+            cls._region
+        except AttributeError:
+            exc = ConfigError(
+                'Не задан регион в файле конфигурации {0}'
                 .format(cls._config_filename),
             )
+            exc.__cause__ = None
+            raise exc
+
+    @classmethod
+    def load(cls):
+        paths = [
+            ('.', cls._config_filename),
+            (os.path.dirname(get_entrypoint_path()), cls._config_filename),
+            (cls._config_default_dirpath, cls._config_filename),
+        ]
+        for dirname, filename in paths:
+            config_path = os.path.join(dirname, filename)
+            try:
+                cls._config = YamlConfigMapper(config_path)
+            except ConfigError:
+                raise
+            except (FileNotFoundError, TypeError) as exc:
+                pass
+            else:
+                cls._config_filename = os.path.abspath(config_path)
+                break
+        else:
+            exc = FileNotFoundError('Конфигурация не найдена!')
+            exc.__cause__ = None
+            raise exc
+        cls.parse_config()
 
     @classmethod
     def conf(cls):
+        """Возвращает конфигурацию приложения.
+
+        Raises:
+            FileNotFoundError: Если файл конфигурации не найден
+            ConfigError: Если есть ошибки в содержимом конфигурации  
+        """
         if cls._config is None:
-            paths = [
-                ('.', cls._config_filename),
-                (os.path.dirname(get_entrypoint_path()),
-                 cls._config_filename),
-                (cls._config_default_dirpath,
-                 cls._config_filename,)
-            ]
-            for dirname, filename in paths:
-                config_path = os.path.join(dirname, filename)
-                try:
-                    cls._config = YamlConfigMapper(config_path)
-                except (OSError, ConfigError, TypeError, AttributeError):
-                    pass
-                else:
-                    break
-            else:
-                raise ConfigError('Конфигурация не найдена!')
-            cls.parse_config()
+            cls.load()
         return cls._config.config
 
     @classmethod
     def parse_config(cls):
-        if 'server_name' not in cls.conf().get('naming').keys():
+        if 'server_name' not in cls.conf().get('naming', {}).keys():
             raise ConfigError(
                 'Не задано имя сервера в файле конфигурации {0}'.format(
                     cls._config_filename,
@@ -158,11 +174,12 @@ class YamlConfigMapper:
         self.filepath = filepath
         self.config = None
 
-        if os.path.exists(self.filepath) and os.path.isfile(self.filepath):
+        try:
             self.load_all()
-        else:
-            raise OSError(
-                'Отсутствует файл конфигурации {0}'.format(self.filepath))
+        except yaml.scanner.ScannerError as exc:
+            exc.__cause__ = None
+            exc = ConfigError(str(exc))
+            raise exc
 
     def load_all(self):
         with open(self.filepath, 'r') as stream:

@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>Mount/Umount &#8212; Документация KristaBackup 1.5</title>
+    <title>Mount и Umount &#8212; Документация KristaBackup 1.6</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -34,7 +34,7 @@
           <div class="body" role="main">
             
   <div class="section" id="umount">
-<span id="mount"></span><span id="mount-umount"></span><span id="id1"></span><h1>Mount/Umount<a class="headerlink" href="#umount" title="Ссылка на этот заголовок">¶</a></h1>
+<span id="mount"></span><span id="mount-umount"></span><span id="id1"></span><h1>Mount и Umount<a class="headerlink" href="#umount" title="Ссылка на этот заголовок">¶</a></h1>
 <p>Обёрка над <code class="docutils literal notranslate"><span class="pre">mount</span></code> и <code class="docutils literal notranslate"><span class="pre">umount</span></code>.</p>
 <div class="section" id="id2">
 <h2>Параметры:<a class="headerlink" href="#id2" title="Ссылка на этот заголовок">¶</a></h2>
@@ -54,20 +54,24 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p>mnt_dev</p></td>
-<td><p>монтироемое устройство</p></td>
+<td><p>Монтируемое устройство.</p></td>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p>mnt_point</p></td>
-<td><p>точка монтирования</p></td>
+<td><p>Точка монтирования.</p></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><p>fs_type</p></td>
-<td><p>тип подключаемой файловой системы</p></td>
+<td><p>Тип подключаемой файловой системы.</p></td>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p>flags</p></td>
-<td><p>флаги для выполнения</p></td>
+<td><p>Параметры запуска.</p></td>
 <td></td>
+</tr>
+<tr class="row-even"><td><p>dry</p></td>
+<td><p>Не выполнять mount (dryrun).</p></td>
+<td><p>false (стандартное значение).</p></td>
 </tr>
 </tbody>
 </table>
@@ -88,12 +92,16 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p>mnt_point</p></td>
-<td><p>точка монтирования, которую требуется отмонтировать</p></td>
+<td><p>Точка монтирования.</p></td>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p>flags</p></td>
-<td><p>флаги для выполнения</p></td>
+<td><p>Параметры запуска.</p></td>
 <td></td>
+</tr>
+<tr class="row-even"><td><p>dry</p></td>
+<td><p>Не выполнять umount (dryrun).</p></td>
+<td><p>false (стандартное значение).</p></td>
 </tr>
 </tbody>
 </table>
@@ -145,6 +153,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../usage.html#id6">Утилита для управления пользователями веб-приложения</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Установка</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration.html">Конфигурация</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../configuration.html#configuration-structure">Общая стуктура</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configuration.html#id3">Расписание</a></li>
@@ -154,12 +163,13 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="actions_index.html">Действия</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="action.html">Action (основной)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tar.html">Tar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="archiver.html">Tar и Zip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cleaner.html">Cleaner</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rsync.html">Rsync</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pgdump.html">PgDump</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Mount/Umount</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Mount и Umount</a></li>
 <li class="toctree-l2"><a class="reference internal" href="movebkpperiod.html">MoveBkpPeriod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="command.html">Command и Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="progress_ticket.html">InProgressTicket</a></li>
 <li class="toctree-l2"><a class="reference internal" href="check_backup.html">Check backup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dschecker.html">DataSpaceChecker</a></li>

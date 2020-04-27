@@ -1,21 +1,22 @@
 # -*- coding: UTF-8 -*-
 
+import datetime
 import fnmatch
 import functools
-import tarfile
-import re
-import os
-import datetime
-import time
 import logging
+import os
+import re
+import tarfile
+import time
+import zipfile
 
 from .action import Action
-from .decorators import use_exclusions, use_levels, side_effecting
+from .decorators import side_effecting, use_exclusions, use_levels
 
 
 @use_exclusions
 @use_levels
-class TarArchiver(Action):
+class Archiver(Action):
     """Класс действия для создания архивов.
 
     Attributes:
@@ -23,45 +24,64 @@ class TarArchiver(Action):
             src_path: Строка, путь к исходной директории с файлами.
             dest_path: Строка, путь к директории для файлов с результатом.
             exclusions: Список паттернов для исключения файлов из удаляемых.
-            compression: Целое число, уровень сжатия.
             check_level_list_only: Логическое значение, если параметр
             установлен, то при инкрементельном бекапе проверяется только
             наличие файла-списка, иначе проверяется наличие самого файла
             исходного бекапа.
             use_absolute_path: Логическое значение, использовать
             абсолютные пути.
-            log_tar_files: Логическое значение, логировать добавление файлов.
+            log_files: Логическое значение, логировать добавление файлов.
             overwrite: Логическое значение, перезаписывать файлы
             с одинаковым именем.
             level: Число, уровень бэкапа.
             level_folders: Список с именами директорий для каждого уровня
             бэкапа.
-
+            list_extension: Расширение лист-файла.
+            hash_extension: Расширение файла с хэш-суммой.
         Внутренние:
-            list_extension:
-            prepared_exclusions:
+            prepared_exclusions
             parent_type: Строка с типом родительского действия
-
+            open_mode
     """
 
     def __init__(self, name):
         super().__init__(name)
         self.compression = 5
         self.list_extension = 'list'  # расширение для файла-списка архива
-        self.extension = 'tar.gz'
+        self.hash_extension = 'hash'
         self.check_level_list_only = True
-        self.log_tar_files = False
+        self.log_files = False
         self.overwrite = False
-
-        self.list_file = None
+        self.checksum_file = False
         self.inc_list = {}
         self.use_absolute_path = False
 
-    def generate_dirname(self):
-        return os.path.join(
-            super().generate_dirname(),
-            self.level_folders[self.level],
-        )
+        self.compression_lib = None
+        self.open_mode = None
+        self.extension = None
+
+    def configure_archiver(self):
+        self.compression = 5
+        if self.compression < 0:
+            self.compression = 0
+        elif self.compression > 9:
+            self.compression = 9
+
+    def open_file(self):
+        raise NotImplementedError('open_file - should have implemented this')
+
+    def append(self, archive, file):
+        raise NotImplementedError('append - should have implemented this')
+
+    def generate_dirname(self, level=None):
+        if level is None:
+            level = self.level
+        if self.level_folders:
+            return os.path.join(
+                super().generate_dirname(),
+                self.level_folders[level],
+            )
+        return super().generate_dirname()
 
     def generate_filename(self, name, time_suffix, extension=None):
         """Генерирует выходное имя файла."""
@@ -83,62 +103,51 @@ class TarArchiver(Action):
             str или None, если путь к файлу не найден/не существует.
 
         """
-        if self.level <= 0:
+        if level < 0:
             return None
-
-        dirpath = os.path.join(self.dest_path, self.level_folders[level])
+        dirpath = self.dest_path
+        if self.level_folders:
+            dirpath = os.path.join(dirpath, self.level_folders[level])
         if not os.path.exists(dirpath):
             return None
 
-        files = []
-        required_filename_pattern = '{0}*{1}.{2}'.format(
+        required_filename_pattern = '{0}*-{1}.{2}'.format(
             self.basename,
             level,
             self.list_extension,
         )
+        listfiles_candidates = []
 
         for filename in os.listdir(dirpath):
             filepath = os.path.join(dirpath, filename)
             if fnmatch.fnmatch(filename, required_filename_pattern):
                 if os.path.isfile(filepath):
-                    files.append(filename)
-        if not files:
+                    listfiles_candidates.append(filepath)
+        if not listfiles_candidates:
             return None
 
-        prev_list_file = None
-        if len(files) == 1:
-            prev_list_file = os.path.join(
-                self.dest_path,
-                self.level_folders[level],
-                files[0],
+        prev_list_file = max(listfiles_candidates)
+        if os.path.isfile(prev_list_file):
+            self.logger.debug(
+                'Файл списка бэкапа %s уровня: %s',
+                level,
+                prev_list_file,
             )
-        elif len(files) > 1:
-            sorted_files = sorted(files, reverse=True)
-            prev_list_file = os.path.join(
-                self.dest_path,
-                self.level_folders[level],
-                sorted_files[0],
-            )
-        self.logger.debug(
-            'Файл списка бэкапа %s уровня: %s',
-            level,
-            prev_list_file,
-        )
+            return prev_list_file
+        return None
 
-        return prev_list_file
-
-    def fill_tar_archive(self, tar=None, list_file=None):
+    def fill_archive(self, archive_file=None, list_file=None):
         """Добавление файлов в tar.
 
         Args:
-            tar: Tarfile, файл архива.
+            archive_file: Tarfile, файл архива.
             list_file: Лист файл, содержит записи о содержимом tar архива.
 
         """
         file_logger = logging.getLogger(
-            '{0}.tar_files'.format(self.logger.name),
+            '{0}.archiver_files'.format(self.logger.name),
         )
-        file_logger.propagate = self.log_tar_files
+        file_logger.propagate = self.log_files
 
         get_signature = functools.partial(
             self._get_signature,
@@ -147,7 +156,7 @@ class TarArchiver(Action):
         )
         add = functools.partial(
             self._add_item,
-            tar=tar,
+            archive=archive_file,
             list_file=list_file,
             repeat=True,
         )
@@ -202,7 +211,7 @@ class TarArchiver(Action):
             self.logger.info('Понижаю уровень до 1')
             self.level = 1
 
-        if len(self.level_folders) < self.level + 1:
+        if self.level_folders and len(self.level_folders) < self.level + 1:
             self.logger.error(
                 'Неверно сконфигурированы папки уровней бекапов!',
             )
@@ -212,6 +221,7 @@ class TarArchiver(Action):
                 self.level_folders,
             )
             return True
+
         if not os.path.exists(self.src_path):
             if os.path.isfile(self.src_path):
                 self.logger.error(
@@ -224,11 +234,6 @@ class TarArchiver(Action):
                     self.src_path,
                 )
             return True
-        if self.compression < 0:
-            self.compression = 0
-        elif self.compression > 9:
-            self.compression = 9
-        return False
 
     def adjust_backup_level(self):
         """Поиск / проверка списка файлов и архива предыдущего уровня.
@@ -236,12 +241,12 @@ class TarArchiver(Action):
         Уровень бэкапа понижается, если они отсутствуют.
 
         """
-        while self.level > 0:
+        src_list_file = None
+        while self.level > 0 and src_list_file is None:
             # Поиск list файла минимального уровня.
             src_list_file = self.find_source_listfile(level=self.level - 1)
-            if src_list_file is not None:
-                break
-            self.level -= 1
+            if src_list_file is None:
+                self.level -= 1
 
         if src_list_file is None:
             self.logger.warning(
@@ -255,16 +260,16 @@ class TarArchiver(Action):
             if not self.check_level_list_only:
                 if not os.path.exists(src_name):
                     self.logger.warning(
-                        'Архив %s указанный в list файле отсутствует.',
+                        'Архив %s указанный в list файле отсутствует, '
+                        'будет выполнен полный бэкап.',
                         src_name,
                     )
-                    self.logger.warning('Будет выполнен полный бэкап.')
                     self.level = 0
                     return
             for line_num, line in enumerate(lines):
                 if line.count(',') < 2:
                     self.logger.warning(
-                        'Ошибка в строке %s файла-списка:\n%s',
+                        'Ошибка в строке %s, файл будет пропущен:\n%s',
                         line_num,
                         line,
                     )
@@ -274,8 +279,13 @@ class TarArchiver(Action):
 
     def start(self):
         start_time = datetime.datetime.now()
+
         if self.configure_parameters():
             return self.continue_on_error
+
+        if self.configure_archiver():
+            return self.continue_on_error
+
         self.parse_exclusions()
 
         if not os.path.exists(self.dest_path):
@@ -285,17 +295,18 @@ class TarArchiver(Action):
             self.adjust_backup_level()
 
         # Создаем архив
-        full_filename = self.generate_filepath(
+        archive_filepath = self.generate_filepath(
             name=None,
             extension=self.extension,
         )
-        if os.path.exists(full_filename):
+
+        if os.path.exists(archive_filepath):
             if self.overwrite:
-                os.remove(full_filename)
+                os.remove(archive_filepath)
             else:
                 self.logger.error(
                     'Получатель уже существует: %s, архив не будет создан',
-                    full_filename,
+                    archive_filepath,
                 )
                 return self.continue_on_error
 
@@ -312,30 +323,35 @@ class TarArchiver(Action):
         )
 
         if self.dry:
-            self.fill_tar_archive()
+            self.fill_archive()
         else:
             with open(list_filename, 'a') as list_file:
-                list_file.write(full_filename)
+                list_file.write(archive_filepath)
                 list_file.write('\n')
-                tar = tarfile.open(
-                    full_filename,
-                    mode='w:gz',
-                    compresslevel=self.compression,
-                )
-                self.fill_tar_archive(tar, list_file)
+
+                arhive = self.open_file(archive_filepath)
+                self.fill_archive(arhive, list_file)
+                arhive.close()
 
         self.logger.info(
             'Архив создан: %s, время обработки: %s',
-            full_filename,
+            archive_filepath,
             datetime.datetime.now() - start_time,
         )
+
+        if self.checksum_file:
+            hash_filepath = self.generate_filepath(
+                name=None,
+                extension=self.hash_extension,
+            )
+            self.create_checksum_file(archive_filepath, hash_filepath)
 
         return True
 
     @side_effecting
-    def _add_item(self, path, signature, tar, list_file, repeat=False):
+    def _add_item(self, path, signature, archive, list_file, repeat=False):
         try:
-            tar.add(path, recursive=False)
+            self.append(archive, path)
         except FileNotFoundError:
             self.logger.debug(
                 'Файл/директория не найдена: %s',
@@ -350,7 +366,7 @@ class TarArchiver(Action):
             if repeat:
                 self.logger.debug('Новая попытка через 5 секунд.')
                 time.sleep(5)
-                self._add_item(path, signature, tar, list_file)
+                self._add_item(path, signature, archive, list_file)
         else:
             list_file.write('{0}\n'.format(signature))
 
@@ -385,6 +401,110 @@ class TarArchiver(Action):
             get_signature: Функция получения сигнатуры файла.
 
         """
+        if self.use_absolute_path:
+            path = os.path.abspath(path)
         signature = get_signature(path)
         if signature:
             add(path, signature)
+
+
+@use_exclusions
+@use_levels
+class ArchiverTar(Archiver):
+    """Класс действия для создания tar архивов.
+
+    Attributes:
+        Внешние:
+            compression: Целое число, уровень сжатия.
+            compression_lib: тип библиотеки шифрования gzip, bzip; lzma (python3.3+)
+    """
+
+    compression_types = {
+        'gzip': ['w:gz', 'tar.gz'],
+        'bzip': ['w:bz2', 'tar.bz2'],
+    }
+
+    try:
+        import lzma
+    except ImportError:
+        # Модуль lzma появился в python3.3
+        pass
+    else:
+        compression_types['lzma'] = ['w:xz', 'xz']
+
+    def __init__(self, name):
+        super().__init__(name)
+        self.compression_lib = 'gzip'
+
+    def configure_archiver(self):
+        super().configure_archiver()
+        if self.compression_lib in self.compression_types.keys():
+            self.open_mode = self.compression_types.get(
+                self.compression_lib)[0]
+            self.extension = self.compression_types.get(
+                self.compression_lib)[1]
+        else:
+            self.compression_lib = 'gzip'
+            self.open_mode = 'w:gz'
+            self.extension = 'tar.gz'
+        return False
+
+    def open_file(self, archive_filepath):
+        return tarfile.open(
+            archive_filepath,
+            mode=self.open_mode,
+            compresslevel=self.compression,
+        )
+
+    def append(self, archive, file):
+        archive.add(file, recursive=False)
+
+
+@use_exclusions
+@use_levels
+class ArchiverZip(Archiver):
+    """Класс действия для создания tar архивов.
+
+    Attributes:
+        Внешние:
+            compression: Целое число, уровень сжатия.
+            compression_lib: тип библиотеки шифрования zip; bzip, lzma (python3.3+)
+    """
+    compression_types = {
+        'zip': [zipfile.ZIP_DEFLATED, 'zip'],
+    }
+
+    try:
+        import lzma
+    except ImportError:
+        # Модуль lzma и сжатие bz2 появились в python3.3
+        pass
+    except:
+        compression_types['bzip'] = [zipfile.ZIP_BZIP2, 'bz2']
+        compression_types['lzma'] = [zipfile.ZIP_LZMA, 'xz']
+
+    def __init__(self, name):
+        super().__init__(name)
+        self.compression_lib = 'zip'
+
+    def configure_archiver(self):
+        super().configure_archiver()
+        if self.compression_lib in self.compression_types.keys():
+            self.open_mode = self.compression_types.get(
+                self.compression_lib)[0]
+            self.extension = self.compression_types.get(
+                self.compression_lib)[1]
+        else:
+            self.compression_lib = 'zip'
+            self.extension = 'zip'
+            self.open_mode = zipfile.ZIP_DEFLATED
+
+    def open_file(self, archive_filepath):
+        return zipfile.ZipFile(
+            archive_filepath,
+            mode='w',
+            compression=self.open_mode,
+        )
+
+    def append(self, archive, file):
+        archive.write(file)

@@ -55,7 +55,7 @@ def get_hash(url):
     return h.hexdigest()
 
 _servers_config_filename = 'servers.yaml'
-_servers_conf = YamlConfigMapper(None, _servers_config_filename)
+_servers_conf = YamlConfigMapper(_servers_config_filename)
 servers = []
 for s_conf in _servers_conf.config.get('servers'):
     s = Server()

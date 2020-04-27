@@ -17,27 +17,31 @@
 
 .. code:: bash
 
-  KristaBackup.py run task_name
+  python3 KristaBackup.py run task_name
 
-Для логгирования выполнения в терминал существует флаг ``-v/--verbose``:
+Для логирования выполнения в терминал существует флаг ``-v/--verbose``:
 
 .. code:: bash
 
-  KristaBackup.py run task_name --verbose
+  python3 KristaBackup.py run task_name --verbose
 
 Список доступных опций можно увидеть
-выполнив ``KristaBackup.py --help``.
+выполнив:
+
+.. code:: bash
+
+  python3 KristaBackup.py --help
 
 .. _run_action:
 
 Запуск действий
 ---------------
 
-Также доступен запуск отдельных действий:
+В приложении доступен запуск отдельных действий:
 
 .. code:: bash
 
-  KristaBackup.py run action_name
+  python3 KristaBackup.py run action_name
 
 Действия поддерживают флаги заданий и флаг ``--dry``.
 
@@ -46,7 +50,7 @@
 
 .. code:: bash
 
-  KristaBackup.py run action_name --dry --verbose
+  python3 KristaBackup.py run action_name --dry --verbose
 
 Конкретные изменения в тестовом выполнении можно прочитать в описании
 соответствующего действия.
@@ -75,8 +79,8 @@
 
 .. code:: bash
 
-  ./KristaBackup.py en task_name
-  ./KristaBackup.py enable task_name
+  python3 KristaBackup.py en task_name
+  python3 KristaBackup.py enable task_name
 
 .. _crontab_del:
 
@@ -85,14 +89,14 @@
 
 .. code:: bash
 
-  ./KristaBackup.py dis task_name
-  ./KristaBackup.py disable task_name
+  python3 KristaBackup.py dis task_name
+  python3 KristaBackup.py disable task_name
 
 Также, все задания (которые указаны в ``config.yaml``) можно одновременно
 добавить в ``crontab`` или удалить из него используя ключевое слово ``all``.
 
 cron-расписания с заданиями хранятся в ``crontab`` пользователя,
-который указан в конфигурации (по умолчанию -- ``root``).
+который указан в конфигурации (``root`` по умолчанию).
 
 .. _run_web:
 
@@ -107,23 +111,24 @@ cron-расписания с заданиями хранятся в ``crontab`` 
 
 .. code:: bash
 
-  ./KristaBackup.py run web
+  python3 KristaBackup.py run web
 
 Для запуска веб-api нужно выполнить следующую команду:
 
 .. code:: bash
 
-  ./KristaBackup.py run webapi
+  python3 KristaBackup.py run webapi
 
-По-умолчанию, приложение запускается на http://127.0.0.1:5555. Порт и хост можно поменять в config.yaml:
+По умолчанию приложение запускается на http://127.0.0.1:5555.
+Хост и порт можно поменять в config.yaml:
 
 .. code:: yaml
 
   web:
-    host: 0.0.0.0
-    port: 333333
+    host: '0.0.0.0'
+    port: 3333
 
-Опции можно посмотреть выполнив ./KristaBackup.py --help.
+Опции можно посмотреть выполнив ``python3 KristaBackup.py --help``.
 
 .. _user_utils:
 
@@ -131,8 +136,8 @@ cron-расписания с заданиями хранятся в ``crontab`` 
 
 .. code:: bash
 
-  ./KristaBackup.py stop web
-  ./KristaBackup.py stop webapi
+  python3 KristaBackup.py stop web
+  python3 KristaBackup.py stop webapi
 
 
 Утилита для управления пользователями веб-приложения

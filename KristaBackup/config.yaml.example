@@ -5,23 +5,94 @@ cron:
   cron_user: user
 
 logging:
-  logs_path: /var/log/bc
+  logs_path: /var/log/KristaBackup
   trigger_filepath: /etc/zabbix/backup.trigger
 
 actions:
   check_backup:
     type: check_backup
 
+  test_command:
+    type: command
+    src_path: /opt
+    cmd: ls -l
+
+  test_script:
+    type: script
+    src_path: /home/
+    cmds:
+     - ls -l
+     - echo 'text'
+
+  test_zip_0:
+    basename: test-one-zip
+    check_level_list_only: true
+    compression: 3
+    exclusions: '*/data/*, */tmp/*, backup/*, updates/*'
+    use_re_in_patterns: false
+    src_path: /etc/apt
+    dest_path: /backup
+    level: 0
+    level_folders: ['0', '1']
+    descr: бэкап файлов /opt 0-го уровня
+    type: zip
+
+  test_zip_1:
+    source: test_zip_0
+    level: 1
+    descr: бэкап файлов /opt 1-го уровня
+    type: zip
+
+  test_zip_lzma_0:
+    basename: test-one-lzma
+    check_level_list_only: true
+    compression: 3
+    exclusions: '*/data/*, */tmp/*, backup/*, updates/*'
+    use_re_in_patterns: false
+    src_path: /etc/apt
+    dest_path: /backup
+    level: 0
+    level_folders: ['0', '1']
+    descr: бэкап файлов /opt 0-го уровня
+    type: zip
+    compression_lib: lzma
+
+  test_zip_lzma_1:
+    source: test_zip_lzma_0
+    level: 1
+    descr: бэкап файлов /opt 1-го уровня
+    type: zip
+
+  test_tar_bzip_0:
+    basename: test-one-tar-bz2
+    check_level_list_only: true
+    compression: 3
+    exclusions: '*/data/*, */tmp/*, backup/*, updates/*'
+    use_re_in_patterns: false
+    src_path: /etc/apt
+    dest_path: /backup
+    level: 0
+    level_folders: ['0', '1']
+    descr: бэкап файлов /opt 0-го уровня
+    type: tar
+    compression_lib: bzip
+
+  test_tar_bzip_1:
+    source: test_tar_bzip_0
+    level: 1
+    descr: бэкап файлов /opt 1-го уровня
+    type: tar
+
   tarjob_0level_opt:
     basename: opt
-    check_level_list_only: 'False'
+    check_level_list_only: true
     compression: 3
-    exclusions: '*/data/*, */tmp/*, ./backup/*, ./updates/*'
+    exclusions: '*/data/*, */tmp/*, backup/*, updates/*'
     use_re_in_patterns: false
     src_path: /opt
     dest_path: /backup
     level: 0
-    level_folders: 0,1,2
+    level_folders: ['0', '1']
     descr: бэкап файлов /opt 0-го уровня
     type: tar
 
@@ -51,3 +122,27 @@ schedule:
 
     cron: 00 23 * * 1-6
     descr: Бекап каталога 1-го уровня (разностный)
+
+  tests_0:
+    naming:
+      project: cons
+      region: test
+    actions:
+        - test_command
+        - test_script
+        - test_zip_0
+        - test_zip_lzma_0
+        - test_tar_bzip_0
+
+  tests_1:
+    naming:
+      project: cons
+      region: test
+    actions:
+        - test_command
+        - test_script
+        - test_zip_1
+        - test_zip_lzma_1
+        - test_tar_bzip_1
+        -
+    cron: 00 17 * * 1-6

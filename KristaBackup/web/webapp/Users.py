@@ -80,7 +80,7 @@ def admin_required(func):
 
 
 _users_config_filename = 'users.yaml'
-_users = YamlConfigMapper(None, _users_config_filename)
+_users = YamlConfigMapper(_users_config_filename)
 
 for user in _users.config.get('users', {}).keys():
     u = User()

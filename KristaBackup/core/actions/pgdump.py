@@ -45,7 +45,9 @@ class PgDump(Action):
         self.extension = 'pg_dump'  # расширение для файла бекапа
         self.command_path = 'pg_dump'  # путь к команде pg_dump
         self.opts = ''  # опции запуска pg_dump, могут переопределяться в настройках
-        self.pgdump_log_debug = False
+        self.checksum_file = False
+        self.hash_extension = 'hash'
+
 
     def backup_database(self, database):
         """Выполняет бэкап базы.
@@ -78,7 +80,7 @@ class PgDump(Action):
             [
                 self.command_path,
                 self.opts,
-                '-d',
+                '--dbname',
                 database,
                 ' '.join(['--host', self.host]
                          ) if self.host and self.user else '',
@@ -90,8 +92,9 @@ class PgDump(Action):
             ],
         )
 
-        # запуск команды под postgres
-        cmdline = 'su postgres -c \'{0}\''.format(cmdline)
+        if not self.user:
+            # запуск команды под пользователем postgres, если user не указан
+            cmdline = 'su postgres -c \'{0}\''.format(cmdline)
         if self.format == 'custom':
             cmdline += '> {0}'.format(filepath)
 
@@ -120,6 +123,14 @@ class PgDump(Action):
             return True
         self.logger.info('Зархивирована база %s', database)
 
+        if self.checksum_file:
+            hash_filepath = self.generate_filepath(
+                name=database,
+                extension=self.hash_extension,
+            )
+            self.create_checksum_file(filepath, hash_filepath)
+
+
     def is_exclusion(self, dbname):
         matcher = self.get_pattern_matcher()
         for ex in self.prepared_exclusions:
@@ -134,7 +145,8 @@ class PgDump(Action):
         Требует наличия переменной PGPASSWORD в окружении.
 
         """
-        cmdline = 'echo "select datname from pg_database" | su postgres -c "psql {} -t -d postgres"'.format(
+        cmdline = 'echo "select datname from pg_database" | {psql_cmdline}'
+        psql_cmdline = 'psql {0} --tuples-only --dbname postgres'.format(
             ' '.join(
                 [
                     ' '.join(['--user', user]) if user else '',
@@ -143,6 +155,12 @@ class PgDump(Action):
                 ]
             )
         )
+
+        if not user:
+            # запуск команды под пользователем postgres, если user не указан
+            psql_cmdline = 'su postgres -c "{0}"'.format(psql_cmdline)
+
+        cmdline = cmdline.format(psql_cmdline=psql_cmdline)
         if logger:
             logger.debug('Запускается команда %s', cmdline)
 

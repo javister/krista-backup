@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>PgDump &#8212; Документация KristaBackup 1.5</title>
+    <title>PgDump &#8212; Документация KristaBackup 1.6</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -15,7 +15,7 @@
     <script type="text/javascript" src="../_static/translations.js"></script>
     <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
     <link rel="search" title="Поиск" href="../search.html" />
-    <link rel="next" title="Mount/Umount" href="mount_umount.html" />
+    <link rel="next" title="Mount и Umount" href="mount_umount.html" />
     <link rel="prev" title="Rsync" href="rsync.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -51,49 +51,62 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>exclusions</p></td>
-<td><p>базы, которые стоит игнорировать</p></td>
-<td></td>
+<tr class="row-even"><td><p>databases</p></td>
+<td><p>Имя баз, бэкап которых нужно выполнить.</p></td>
+<td><p>[ ] (активен, если mode = 'single')</p></td>
 </tr>
-<tr class="row-odd"><td><p>format</p></td>
-<td><p>формат бэкапа</p></td>
+<tr class="row-odd"><td><p>dest_path</p></td>
+<td><p>Каталог для файлов с результатом.</p></td>
+<td><p>путь к директории</p></td>
+</tr>
+<tr class="row-even"><td><p>exclusions</p></td>
+<td><p>Список паттернов баз, которые стоит игнорировать.</p></td>
+<td><p>[ ]</p></td>
+</tr>
+<tr class="row-odd"><td><p>use_re_in_patterns</p></td>
+<td><p>Использовать регулярные выражения (или unix wildcard).</p></td>
+<td><p>false (стандартное значение)</p></td>
+</tr>
+<tr class="row-even"><td><p>format</p></td>
+<td><p>Формат бэкапа.</p></td>
 <td><p>directory или custom (стандартное значение)</p></td>
 </tr>
-<tr class="row-even"><td><p>host</p></td>
-<td><p>адрес/ip хоста</p></td>
-<td><p>\'\' (ip, стандартное значение)</p></td>
+<tr class="row-odd"><td><p>host</p></td>
+<td><p>Имя хоста.</p></td>
+<td><p>'' (стандартное значение)</p></td>
 </tr>
-<tr class="row-odd"><td><p>port</p></td>
-<td><p>порт базы</p></td>
-<td><p>5432 (порт, стандартное значение)</p></td>
+<tr class="row-even"><td><p>port</p></td>
+<td><p>Порт БД.</p></td>
+<td><p>5432 (стандартное значение)</p></td>
 </tr>
-<tr class="row-even"><td><p>user</p></td>
-<td><p>пользователь</p></td>
-<td></td>
+<tr class="row-odd"><td><p>user</p></td>
+<td><p>Пользователь БД.</p></td>
+<td><p>'' (стандартное значение)</p></td>
 </tr>
-<tr class="row-odd"><td><p>password</p></td>
-<td><p>пароль</p></td>
-<td></td>
+<tr class="row-even"><td><p>password</p></td>
+<td><p>Пароль пользователя БД.</p></td>
+<td><p>'' (стандартное значение)</p></td>
 </tr>
-<tr class="row-even"><td><p>opts</p></td>
-<td><p>опции для pgdump</p></td>
-<td></td>
+<tr class="row-odd"><td><p>opts</p></td>
+<td><p>Опции pgdump.</p></td>
+<td><p>'' (стандартное значение, строка)</p></td>
 </tr>
-<tr class="row-odd"><td><p>extension</p></td>
-<td><p>расширение файла бэкапа</p></td>
+<tr class="row-even"><td><p>extension</p></td>
+<td><p>Расширение файла бэкапа.</p></td>
 <td><p>pg_dump (стандартное значение</p></td>
 </tr>
-<tr class="row-even"><td><p>command_path</p></td>
-<td><p>имя команды pgdump</p></td>
+<tr class="row-odd"><td><p>command_path</p></td>
+<td><p>Команда запуска pgdump.</p></td>
 <td><p>pg_dump (стандартное значение)</p></td>
 </tr>
-<tr class="row-odd"><td><p>mode</p></td>
-<td><p>режим, определяющий выбираемые базы</p></td>
-<td><p>all = бэкап всех баз, single = бэкап баз в databases</p></td>
+<tr class="row-even"><td><p>mode</p></td>
+<td><p>Режим, определяющий способ выбора баз.</p></td>
+<td><p>all (бэкап всех баз) и single (бэкап баз из databases, стандартное значение)</p></td>
 </tr>
-<tr class="row-even"><td><p>databases</p></td>
-<td><p>имя баз, бэкап которых нужно выполнить</p></td>
-<td><p>[] (лист, работает если mode = \'single\')</p></td>
+<tr class="row-odd"><td><p>dry</p></td>
+<td><p>Не создавать бэкапы (dryrun).
+Во время выполнения будет выполнен запрос к БД для получения списка баз.</p></td>
+<td><p>false (стандартное значение)</p></td>
 </tr>
 </tbody>
 </table>
@@ -101,14 +114,15 @@
 <div class="section" id="id3">
 <h2>Пример:<a class="headerlink" href="#id3" title="Ссылка на этот заголовок">¶</a></h2>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pgdump</span><span class="p">:</span>
-  <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">бекап базы postgresql</span>
   <span class="nt">basename</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">pgdump</span>
-  <span class="nt">databases</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">db_test_app</span>
+  <span class="nt">databases</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;db_test_app&#39;</span><span class="p p-Indicator">]</span>
   <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup/db/</span>
-  <span class="nt">exclusions</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">postgres.*, template.*</span>
+  <span class="nt">exclusions</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;postgres.*&#39;</span><span class="p p-Indicator">,</span> <span class="s">&#39;template.*&#39;</span><span class="p p-Indicator">]</span>
+  <span class="nt">use_re_in_patterns</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
   <span class="nt">format</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">custom</span>
+  <span class="nt">mode</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">single</span>
   <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">pgdump</span>
-  <span class="nt">mode</span><span class="p">:</span> <span class="s">&#39;all&#39;</span>
+  <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">бэкап базы postgresql</span>
 </pre></div>
 </div>
 </div>
@@ -141,6 +155,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../usage.html#id6">Утилита для управления пользователями веб-приложения</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Установка</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration.html">Конфигурация</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../configuration.html#configuration-structure">Общая стуктура</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configuration.html#id3">Расписание</a></li>
@@ -150,12 +165,13 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="actions_index.html">Действия</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="action.html">Action (основной)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tar.html">Tar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="archiver.html">Tar и Zip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cleaner.html">Cleaner</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rsync.html">Rsync</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">PgDump</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mount_umount.html">Mount/Umount</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mount_umount.html">Mount и Umount</a></li>
 <li class="toctree-l2"><a class="reference internal" href="movebkpperiod.html">MoveBkpPeriod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="command.html">Command и Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="progress_ticket.html">InProgressTicket</a></li>
 <li class="toctree-l2"><a class="reference internal" href="check_backup.html">Check backup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dschecker.html">DataSpaceChecker</a></li>
@@ -169,7 +185,7 @@
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="actions_index.html">Действия</a><ul>
       <li>Previous: <a href="rsync.html" title="предыдущая глава">Rsync</a></li>
-      <li>Next: <a href="mount_umount.html" title="следующая глава">Mount/Umount</a></li>
+      <li>Next: <a href="mount_umount.html" title="следующая глава">Mount и Umount</a></li>
   </ul></li>
   </ul></li>
 </ul>

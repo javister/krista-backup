@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>Установка &#8212; Документация KristaBackup 1.6</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Конфигурация" href="configuration.html" />
+    <link rel="prev" title="Использование" href="usage.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="installation">
+<span id="id1"></span><h1>Установка<a class="headerlink" href="#installation" title="Ссылка на этот заголовок">¶</a></h1>
+<p>Рекомендуемый способ установки системы.</p>
+<ol class="arabic simple">
+<li><p>Клонировать репозиторий.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/javister/krista-backup
+</pre></div>
+</div>
+<p>2. Скопировать проект в необходимую директорию. Обычно мы храним
+приложение в каталоге /opt. Для установки в /opt могут
+потребоваться права sudo.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cp KristaBackup/KristaBackup /opt/
+</pre></div>
+</div>
+<p>3. Установить зависимости для базовой системы (без веб-интерфейса) из файла requirements.system.
+Зависимости устанавливаются из репозиториев ОС. Для Debian и Ubunutu команда будет выглядеть так:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> /opt/KristaBackup
+sed <span class="s1">&#39;s/#.*//&#39;</span> requirements.system <span class="p">|</span> xargs sudo apt-get install -y
+</pre></div>
+</div>
+<p>3. Установить python-зависимости для веб-интерфейса с помощью утилиты pip.
+Для того чтобы не менять окружение системы и соблюсти требуемую версионность,
+лучше установить зависимости в тот же каталог, что и приложение,
+используя опцию --target.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> /opt/KristaBackup
+python3 -m pip install -r requirements.txt --target .
+</pre></div>
+</div>
+<p>Назначаем владельца и права, если копировали/ставили зависимости не под root:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chown -R root:root /opt/KristaBackup
+chmod -R <span class="m">0755</span> /opt/KristaBackup/KristaBackup.py
+chmod -R <span class="m">0755</span> /opt/KristaBackup/UsersUtils.py
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">KristaBackup</a></h1>
+
+
+
+
+
+
+
+
+<h3>Навигация</h3>
+<p class="caption"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Использование</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#run-task">Запуск заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#run-action">Запуск действий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#crontab">Работа с crontab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#api">Запуск веб-api или веб-приложения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#id6">Утилита для управления пользователями веб-приложения</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Установка</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Конфигурация</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#configuration-structure">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id3">Расписание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id6">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id9">Пример написания конфигурации</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="actions/actions_index.html">Действия</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="actions/action.html">Action (основной)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/archiver.html">Tar и Zip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/cleaner.html">Cleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/rsync.html">Rsync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/pgdump.html">PgDump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/mount_umount.html">Mount и Umount</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/movebkpperiod.html">MoveBkpPeriod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/command.html">Command и Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/progress_ticket.html">InProgressTicket</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/check_backup.html">Check backup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/dschecker.html">DataSpaceChecker</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="usage.html" title="предыдущая глава">Использование</a></li>
+      <li>Next: <a href="configuration.html" title="следующая глава">Конфигурация</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Быстрый поиск</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, НПО Криста.
+      
+      |
+      <a href="_sources/installation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

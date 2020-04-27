@@ -1,8 +1,9 @@
 #  -*- coding: UTF-8 -*-
 
+import logging
 import sys
 
-from common import Logging, arguments
+from common import arguments
 from common.procutil import check_process, get_executable_filename
 from common.YamlConfig import AppConfig
 
@@ -11,8 +12,8 @@ from .actions import action_types
 
 class Runner:
 
-    def __init__(self, unit_name, verbose, dry):
-        self.logger = Logging.configure_logger(unit_name, verbose)
+    def __init__(self, unit_name, dry):
+        self.logger = logging.getLogger()
         self.actions = []
 
         self.load(unit_name, dry)

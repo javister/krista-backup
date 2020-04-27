@@ -172,7 +172,9 @@ def _container(
             environment=ENV,
         )
     else:
-        image = docker_client.images.pull(config['docker_image'])
+        image = docker_client.images.get(config['docker_image'])
+        if image is None:
+            image = docker_client.images.pull(config['docker_image'])
         xcontainer = docker_client.containers.run(
             image,
             INFINITY_PROCESS,

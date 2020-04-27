@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>Использование &#8212; Документация KristaBackup 1.5</title>
+    <title>Использование &#8212; Документация KristaBackup 1.6</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -15,7 +15,7 @@
     <script type="text/javascript" src="_static/translations.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
-    <link rel="next" title="Конфигурация" href="configuration.html" />
+    <link rel="next" title="Установка" href="installation.html" />
     <link rel="prev" title="KristaBackup" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -40,26 +40,29 @@
 <div class="section" id="run-task">
 <span id="id2"></span><h2>Запуск заданий<a class="headerlink" href="#run-task" title="Ссылка на этот заголовок">¶</a></h2>
 <p>Для запуска заданий вручную:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>KristaBackup.py run task_name
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py run task_name
 </pre></div>
 </div>
-<p>Для логгирования выполнения в терминал существует флаг <code class="docutils literal notranslate"><span class="pre">-v/--verbose</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>KristaBackup.py run task_name --verbose
+<p>Для логирования выполнения в терминал существует флаг <code class="docutils literal notranslate"><span class="pre">-v/--verbose</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py run task_name --verbose
 </pre></div>
 </div>
 <p>Список доступных опций можно увидеть
-выполнив <code class="docutils literal notranslate"><span class="pre">KristaBackup.py</span> <span class="pre">--help</span></code>.</p>
+выполнив:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py --help
+</pre></div>
+</div>
 </div>
 <div class="section" id="run-action">
 <span id="id3"></span><h2>Запуск действий<a class="headerlink" href="#run-action" title="Ссылка на этот заголовок">¶</a></h2>
-<p>Также доступен запуск отдельных действий:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>KristaBackup.py run action_name
+<p>В приложении доступен запуск отдельных действий:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py run action_name
 </pre></div>
 </div>
 <p>Действия поддерживают флаги заданий и флаг <code class="docutils literal notranslate"><span class="pre">--dry</span></code>.</p>
 <p>При запуске с данным флагом действия будут запущены в
 тестовом режиме:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>KristaBackup.py run action_name --dry --verbose
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py run action_name --dry --verbose
 </pre></div>
 </div>
 <p>Конкретные изменения в тестовом выполнении можно прочитать в описании
@@ -76,21 +79,21 @@
 время в формате <code class="docutils literal notranslate"><span class="pre">cron</span></code>.</p>
 <div class="section" id="crontab-add">
 <span id="id4"></span><h3>Добавление заданий в crontab<a class="headerlink" href="#crontab-add" title="Ссылка на этот заголовок">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./KristaBackup.py en task_name
-./KristaBackup.py <span class="nb">enable</span> task_name
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py en task_name
+python3 KristaBackup.py <span class="nb">enable</span> task_name
 </pre></div>
 </div>
 </div>
 <div class="section" id="crontab-del">
 <span id="id5"></span><h3>Удаление задания из crontab<a class="headerlink" href="#crontab-del" title="Ссылка на этот заголовок">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./KristaBackup.py dis task_name
-./KristaBackup.py disable task_name
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py dis task_name
+python3 KristaBackup.py disable task_name
 </pre></div>
 </div>
 <p>Также, все задания (которые указаны в <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>) можно одновременно
 добавить в <code class="docutils literal notranslate"><span class="pre">crontab</span></code> или удалить из него используя ключевое слово <code class="docutils literal notranslate"><span class="pre">all</span></code>.</p>
 <p>cron-расписания с заданиями хранятся в <code class="docutils literal notranslate"><span class="pre">crontab</span></code> пользователя,
-который указан в конфигурации (по умолчанию -- <code class="docutils literal notranslate"><span class="pre">root</span></code>).</p>
+который указан в конфигурации (<code class="docutils literal notranslate"><span class="pre">root</span></code> по умолчанию).</p>
 </div>
 </div>
 <div class="section" id="api">
@@ -99,23 +102,24 @@
 можно просмотривать файлы логов и состояние триггер-файла,
 если он используется.</p>
 <p>Для запуска веб-приложения нужно выполнить следующую команду:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./KristaBackup.py run web
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py run web
 </pre></div>
 </div>
 <p>Для запуска веб-api нужно выполнить следующую команду:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./KristaBackup.py run webapi
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py run webapi
 </pre></div>
 </div>
-<p>По-умолчанию, приложение запускается на <a class="reference external" href="http://127.0.0.1:5555">http://127.0.0.1:5555</a>. Порт и хост можно поменять в config.yaml:</p>
+<p>По умолчанию приложение запускается на <a class="reference external" href="http://127.0.0.1:5555">http://127.0.0.1:5555</a>.
+Хост и порт можно поменять в config.yaml:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">web</span><span class="p">:</span>
-  <span class="nt">host</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.0.0.0</span>
-  <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">333333</span>
+  <span class="nt">host</span><span class="p">:</span> <span class="s">&#39;0.0.0.0&#39;</span>
+  <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3333</span>
 </pre></div>
 </div>
-<p>Опции можно посмотреть выполнив ./KristaBackup.py --help.</p>
+<p>Опции можно посмотреть выполнив <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">KristaBackup.py</span> <span class="pre">--help</span></code>.</p>
 <p id="user-utils">Остановить приложение или аpi можно командами</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./KristaBackup.py stop web
-./KristaBackup.py stop webapi
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py stop web
+python3 KristaBackup.py stop webapi
 </pre></div>
 </div>
 </div>
@@ -182,6 +186,7 @@ check     проверить наличие пользователя по име
 <li class="toctree-l2"><a class="reference internal" href="#id6">Утилита для управления пользователями веб-приложения</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Конфигурация</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#configuration-structure">Общая стуктура</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#id3">Расписание</a></li>
@@ -191,12 +196,13 @@ check     проверить наличие пользователя по име
 </li>
 <li class="toctree-l1"><a class="reference internal" href="actions/actions_index.html">Действия</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="actions/action.html">Action (основной)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="actions/tar.html">Tar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/archiver.html">Tar и Zip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="actions/cleaner.html">Cleaner</a></li>
 <li class="toctree-l2"><a class="reference internal" href="actions/rsync.html">Rsync</a></li>
 <li class="toctree-l2"><a class="reference internal" href="actions/pgdump.html">PgDump</a></li>
-<li class="toctree-l2"><a class="reference internal" href="actions/mount_umount.html">Mount/Umount</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/mount_umount.html">Mount и Umount</a></li>
 <li class="toctree-l2"><a class="reference internal" href="actions/movebkpperiod.html">MoveBkpPeriod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/command.html">Command и Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="actions/progress_ticket.html">InProgressTicket</a></li>
 <li class="toctree-l2"><a class="reference internal" href="actions/check_backup.html">Check backup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="actions/dschecker.html">DataSpaceChecker</a></li>
@@ -209,7 +215,7 @@ check     проверить наличие пользователя по име
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="index.html" title="предыдущая глава">KristaBackup</a></li>
-      <li>Next: <a href="configuration.html" title="следующая глава">Конфигурация</a></li>
+      <li>Next: <a href="installation.html" title="следующая глава">Установка</a></li>
   </ul></li>
 </ul>
 </div>

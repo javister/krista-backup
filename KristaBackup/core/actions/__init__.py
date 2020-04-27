@@ -1,6 +1,7 @@
 from .action import Action
 from .movebkpperiod import MoveBkpPeriod
-from .tar_archiver import TarArchiver
+from .script import Command, Script
+from .archiver import Archiver, ArchiverTar, ArchiverZip
 from .check_last_backup import CheckLastBackup
 from .pgdump import PgDump
 from .cleaner import Cleaner
@@ -14,7 +15,11 @@ from .rsync import Rsync
 
 action_types = (
     ('action', Action),
-    ('tar', TarArchiver),
+    ('command', Command),
+    ('script', Script),
+    ('arhiver', Archiver),
+    ('tar', ArchiverTar),
+    ('zip', ArchiverZip),
     ('pgdump', PgDump),
     ('cleaner', Cleaner),
     ('rsync', Rsync),

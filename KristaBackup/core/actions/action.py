@@ -12,7 +12,7 @@ from threading import Thread
 from common.YamlConfig import AppConfig
 
 from .decorators import side_effecting
-
+from .utils import create_sha1sum_file
 
 class Action:
     """Абстрактный класс действия.
@@ -257,6 +257,38 @@ class Action:
     """Unsafe версия execute_cmdline."""
 
     execute_cmdline = side_effecting(execute_cmdline)
+
+    def create_checksum_file(self, src_file, dest_file):
+        """Создаёт файл с хэшсуммой.
+
+        Метод нужен для логирования. Основная работа происходит в _create_checksum_file.
+
+        """
+        try:
+            hash_value = self._create_checksum_file(
+                src_file,
+                dest_file,
+            )
+        except PermissionError as exc:
+            self.logger.warning(
+                'Невозможно создать файл с хэшсуммой: %s',
+                exc,
+            )
+        else:
+            if self.dry:
+                hash_value = '(dryrun, хэшсумма не подсчитывается)'
+            self.logger.info(
+                'Создан файл %s с хэшсуммой %s',
+                dest_file,
+                hash_value,
+            )
+
+    @side_effecting
+    def _create_checksum_file(self, src_file, dest_file):
+        return create_sha1sum_file(
+            src_file,
+            dest_file,
+        )
 
     def __repr__(self):
         return '{name}: {attrs}'.format(
