@@ -1,19 +1,19 @@
 # -*- coding: UTF-8 -*-
 
-import datetime
-import glob
 import os
 import shutil
+import functools
+import re
 
 from lib.crontex import CronExpression
 from common.YamlConfig import AppConfig
 
 from .action import Action
-from .decorators import side_effecting, use_periods
+from .decorators import side_effecting
+from .mixins import WalkAppierMixin
 
 
-@use_periods
-class MoveBkpPeriod(Action):
+class MoveBkpPeriod(Action, WalkAppierMixin):
     """Выполняет перенос файлов по basename.
 
     Attributes:
@@ -24,7 +24,7 @@ class MoveBkpPeriod(Action):
         'yearly': {'path': 'annual'}
         }
 
-        basename_list (list): Содержит список basename.
+        action_list (list): Содержит список basename.
 
         files_to_move (list): Содержит список файлов для копирования.
 
@@ -33,15 +33,19 @@ class MoveBkpPeriod(Action):
     def __init__(self, name):
         super().__init__(name)
         self.files_to_move = []
+        self.action_list = []
+        self.periods = {}
 
     def start(self):
+        error_caught = False
         self.fill_files_to_move()
-        for period_name in self.periods:
-            period = self.periods[period_name]
-            if self.validate_time(period_name, period):
-                self.move_backups(period_name, period)
+        if self.files_to_move:
+            for period_name in self.periods:
+                period = self.periods.get(period_name)
+                if self.validate_time(period_name, period):
+                    error_caught |= self.move_backups(period_name, period)
 
-        return True
+        return not error_caught or self.continue_on_error
 
     def validate_time(self, period_name, period):
         cron_expr = period.get('cron')
@@ -63,26 +67,6 @@ class MoveBkpPeriod(Action):
             )
             return False
 
-    def retrieve_time_from_filepath(self, filepath):
-        filename = os.path.basename(filepath)
-
-        if '.' in filename:
-            dot_index = filename.index('.')
-            filepath_noext = filepath[:dot_index - len(filename)]
-        else:
-            filepath_noext = filepath
-
-        splitted = filepath_noext.split("-")
-        for part in reversed(splitted):
-            try:
-                if datetime.datetime.strptime(part, AppConfig.get_filename_dateformat()):
-                    return part
-            except Exception:
-                pass
-
-        self.logger.error('Date mark not found in %s', filepath)
-
-
     def fill_files_to_move(self):
         """Ищет и добавляет файлы для перемещения.
 
@@ -91,21 +75,51 @@ class MoveBkpPeriod(Action):
         3. Ищет файлы по паттерну {basename}-{временная метка}*
 
         """
-        for basename in self.basename_list:
-            files = glob.glob(os.path.join(self.src_path, basename) + '*')
-            time_stamps = [
-                self.retrieve_time_from_filepath(current_file) for current_file in files
-            ]
-            if time_stamps:
-                time_stamps = sorted(time_stamps)
-                path_with_basename = os.path.join(self.src_path, basename)
-                file_pattern = '{}*'.format(
-                    '-'.join([path_with_basename, time_stamps[-1]]),
-                )
-                result_files = glob.glob(file_pattern)
+        for action in self.action_list:
+            files = self._fill_files_by_action(action)
+            min_date = None
+            oldest_files = []
 
-                self.files_to_move.extend(result_files)
-        self.logger.debug(
+            for signature, group_files in files.items():
+                for filepath in group_files:
+                    date = action.scheme.retrieve_time_from_name(
+                        os.path.basename(filepath),
+                        signature[1],
+                    )
+                    if not date:
+                        continue
+                    if not min_date or date < min_date:
+                        min_date = min(date, min_date or date)
+                        oldest_files = [filepath]
+                    elif date == min_date:
+                        oldest_files.append(filepath)
+
+            if min_date:
+                if len(oldest_files) != len(files):
+                    self.logger.warning(
+                        'Количество групп не соответствует количеству найденных файлов!',
+                    )
+            else:
+                for signature, group_files in files.items():
+                    if len(group_files) != 1:
+                        self.logger.debug(
+                            'Невозможно выбрать файлы для переноса для действия %s',
+                            action
+                        )
+                        break
+                else:
+                    self.logger.debug(
+                        'В каждой группе действия %s по одному файлу',
+                        action,
+                    )
+                    oldest_files = [
+                        filepath for _, group_files in files.items()
+                        for filepath in group_files
+                    ]
+
+            self.files_to_move.extend(oldest_files)
+
+        self.logger.info(
             'Найденные файлы для перемещения: %s', self.files_to_move,
         )
 
@@ -119,6 +133,8 @@ class MoveBkpPeriod(Action):
             period_name (str): название периода
             period (dict): конфигурация периода
 
+        Returns:
+            True, если возникла ошибка
         """
         sub_path = period.get('path', period_name)
         files_dest_path = os.path.join(self.dest_path, sub_path)
@@ -143,7 +159,7 @@ class MoveBkpPeriod(Action):
                         files_dest_path,
                         exc,
                     )
-                    return self.continue_on_error
+                    return True
             self.logger.debug(
                 'Каталог %s создан',
                 files_dest_path,
@@ -151,9 +167,10 @@ class MoveBkpPeriod(Action):
 
         for moving_file in self.files_to_move:
             self.logger.debug(
-                'Копирование файла %s в %s',
-                moving_file,
+                '[%s, %s]: копирование %s',
+                period_name,
                 files_dest_path,
+                moving_file,
             )
             try:
                 self._move_backup(moving_file, files_dest_path)
@@ -164,6 +181,42 @@ class MoveBkpPeriod(Action):
                     exc,
                 )
 
+        return False
+
     @side_effecting
     def _move_backup(self, moving_file, files_dest_path):
-        shutil.copy(moving_file, files_dest_path)
+        shutil.copy2(moving_file, files_dest_path)
+
+    def _fill_files_by_action(self, action):
+        path = action.generate_dirname()
+        files = {}
+        patterns = action.get_patterns()
+        apply = functools.partial(
+            _match_and_add,
+            patterns=patterns,
+            files=files,
+            path=path,
+        )
+        try:
+            self.walk_apply(path, apply, recursive=False, apply_dirs=True)
+        except AttributeError:
+            self.logger.info('Указаный путь не существует')
+
+        return files
+
+
+def _match_and_add(filename, path, patterns, files):
+    _, file_extension = os.path.splitext(filename)
+    file_extension = file_extension or ' '
+
+    for pattern in patterns:
+        match = re.match(pattern, filename)
+        if not match:
+            continue
+        if 'ext' in match.groupdict():
+            file_extension = match.group('ext')
+
+        signature = (file_extension, pattern)
+        filepath = os.path.join(path, filename)
+        files.setdefault(signature, []).append(filepath)
+        break

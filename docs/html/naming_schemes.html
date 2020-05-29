@@ -1,0 +1,307 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>Именованные схемы &#8212; Документация KristaBackup 1.7</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Действия" href="actions/actions_index.html" />
+    <link rel="prev" title="Конфигурация" href="configuration.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="naming-schemes">
+<span id="id1"></span><h1>Именованные схемы<a class="headerlink" href="#naming-schemes" title="Ссылка на этот заголовок">¶</a></h1>
+<div class="section" id="id2">
+<h2>Введение<a class="headerlink" href="#id2" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Система именованных схем нужна для конфигурирования имён выходных файлов,
+если стандартная не подходит.</p>
+<p>Для создания схемы <strong>необходимо</strong> указать три паттерна:</p>
+<ul class="simple">
+<li><p>fsdump_fileformat</p></li>
+<li><p>fsdump_hash_fileformat</p></li>
+<li><p>pgdump_fileformat</p></li>
+<li><p>pgdump_hash_fileformat</p></li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h2>Виды переменных<a class="headerlink" href="#id3" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Существует два вида переменных: контекстные и неконтекстные:</p>
+<ul class="simple">
+<li><p>Контекстные определяются во время выполнения. Для них зарезервированы следующие имена: <cite>date</cite>, <cite>level</cite>, <cite>dbname</cite>, <cite>ext</cite>, <cite>basename</cite>.</p></li>
+<li><p>Неконтекстные можно определить в схеме:</p></li>
+</ul>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">naming_scheme</span><span class="p">:</span>
+<span class="nn">...</span>
+    <span class="nt">test_var</span><span class="p">:</span> <span class="s">&#39;test_var&#39;</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+<div class="section" id="id4">
+<h3>Примечание<a class="headerlink" href="#id4" title="Ссылка на этот заголовок">¶</a></h3>
+<p>Неконтекстные переменные не могут иметь имя из списка зарезервированных имён
+для контекстных переменных.</p>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>Применение<a class="headerlink" href="#id5" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Именную схему можно определить и применить следующим образом (приоритет в
+порядке возрастания):</p>
+<ol class="arabic simple">
+<li><p>В разделе дефолтном разделе naming:</p></li>
+</ol>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">naming</span><span class="p">:</span>
+    <span class="nt">server_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example</span>
+    <span class="nt">project</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">project</span>
+    <span class="nt">region</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">region</span>
+    <span class="nt">naming_scheme</span><span class="p">:</span>
+        <span class="nt">scheme_id</span><span class="p">:</span> <span class="s">&#39;example&#39;</span>
+        <span class="nt">test_param</span><span class="p">:</span> <span class="s">&#39;new&#39;</span>
+        <span class="nt">fsdump_fileformat</span><span class="p">:</span> <span class="s">&#39;{test_param}-{date:%d%m%Y_%S}-{level}.{ext}&#39;</span>
+        <span class="nt">fsdump_hash_fileformat</span><span class="p">:</span> <span class="s">&#39;{test_param}-{date:%d%m%Y_%S}-test.hash&#39;</span>
+        <span class="nt">pgdump_fileformat</span><span class="p">:</span> <span class="s">&#39;{test_param}-{dbname}-{date:%d%m%Y}.pgdump&#39;</span>
+        <span class="nt">pgdump_hash_fileformat</span><span class="p">:</span> <span class="s">&#39;{test_param}-{dbname}-{date:%d%m%Y_%S}-test.hash&#39;</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>В разделе naming у заданий:</p></li>
+</ol>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">schedule</span><span class="p">:</span>
+    <span class="nt">make_full_dump</span><span class="p">:</span>
+        <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Бекап каталога 0-го уровня (полный)</span>
+        <span class="nt">cron</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">00 23 * * *</span>
+        <span class="nt">actions</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">make_full</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">clean_full</span>
+        <span class="nt">naming</span><span class="p">:</span>
+            <span class="nt">project</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cons</span>
+            <span class="nt">region</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">888</span>
+            <span class="nt">naming_scheme</span><span class="p">:</span>
+                <span class="nt">fsdump_fileformat</span><span class="p">:</span> <span class="s">&#39;last_backup.{ext}&#39;</span>
+                <span class="nt">fsdump_hash_fileformat</span><span class="p">:</span> <span class="s">&#39;last_backup_hash.hash&#39;</span>
+                <span class="nt">pgdump_fileformat</span><span class="p">:</span> <span class="s">&#39;{dbname}-{date:%d%m%Y}.pgdump&#39;</span>
+                <span class="nt">pgdump_hash_fileformat</span><span class="p">:</span> <span class="s">&#39;{dbname}-{date:%d%m%Y}.hash&#39;</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>В разделе naming у действий:</p></li>
+</ol>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">actions</span><span class="p">:</span>
+    <span class="nt">make_full</span><span class="p">:</span>
+        <span class="nt">basename</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">etc</span>
+        <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/etc/</span>
+        <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+        <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+        <span class="nt">naming_scheme</span><span class="p">:</span>
+            <span class="nt">fsdump_fileformat</span><span class="p">:</span> <span class="s">&#39;{date:%d%m%Y_%S}-{basename}-{level}.{ext}&#39;</span>
+            <span class="nt">fsdump_hash_fileformat</span><span class="p">:</span> <span class="s">&#39;{name}-{date:%d%m%Y_%S}-test.hash&#39;</span>
+            <span class="nt">pgdump_fileformat</span><span class="p">:</span> <span class="s">&#39;{name}-{dbname}-{date:%d%m%Y}.pgdump&#39;</span>
+            <span class="nt">pgdump_hash_fileformat</span><span class="p">:</span> <span class="s">&#39;{name}-{dbname}-{date:%d%m%Y}.pgdump&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id6">
+<h2>Идентификатор<a class="headerlink" href="#id6" title="Ссылка на этот заголовок">¶</a></h2>
+<p>У всех схем присутсутвует атрибут <cite>scheme_id</cite>, который является уникальным.
+У стандартная схема атрибут <cite>scheme_id</cite> имеет значение <cite>default</cite>.
+Если <cite>scheme_id</cite> не указан явно, то он создаётся автоматически.</p>
+<p>Его значение можно указывать <em>вместо</em> конфигурации именованной схемы. Это бывает
+полезно, чтобы использовать уже заданные схемы.</p>
+<div class="section" id="id7">
+<h3>Пример<a class="headerlink" href="#id7" title="Ссылка на этот заголовок">¶</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">naming</span><span class="p">:</span>
+    <span class="nt">server_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example</span>
+    <span class="nt">project</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">project</span>
+    <span class="nt">region</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">region</span>
+    <span class="nt">naming_scheme</span><span class="p">:</span>
+        <span class="nt">scheme_id</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">old_scheme</span>
+        <span class="nt">fsdump_fileformat</span><span class="p">:</span> <span class="s">&#39;{date:%d%m%Y_%S}-{level}.{ext}&#39;</span>
+        <span class="nt">pgdump_fileformat</span><span class="p">:</span> <span class="s">&#39;{dbname}-{date:%d%m%Y}.pgdump&#39;</span>
+        <span class="nt">hash_fileformat</span><span class="p">:</span> <span class="s">&#39;{test_param}-{date:%d%m%Y_%S}-test.hash&#39;</span>
+
+<span class="nt">schedule</span><span class="p">:</span>
+    <span class="nt">make_full_dump</span><span class="p">:</span>
+        <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Бекап каталога 0-го уровня (полный)</span>
+        <span class="nt">cron</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">00 23 * * *</span>
+        <span class="nt">actions</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">make_full</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">clean_full</span>
+        <span class="nt">naming</span><span class="p">:</span>
+            <span class="nt">naming_scheme</span><span class="p">:</span>
+                <span class="nt">scheme_id</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">new_scheme</span>
+                <span class="nt">fsdump_fileformat</span><span class="p">:</span> <span class="s">&#39;last_backup.{ext}&#39;</span>
+                <span class="nt">pgdump_fileformat</span><span class="p">:</span> <span class="s">&#39;{dbname}-{date:%d%m%Y}.pgdump&#39;</span>
+                <span class="nt">hash_fileformat</span><span class="p">:</span> <span class="s">&#39;last_backup_hash.hash&#39;</span>
+
+<span class="nt">actions</span><span class="p">:</span>
+    <span class="nt">make_full</span><span class="p">:</span>
+        <span class="nt">basename</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">etc</span>
+        <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/etc/</span>
+        <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+        <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+        <span class="nt">naming_scheme</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">old_scheme</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id8">
+<h2>Дополнительно<a class="headerlink" href="#id8" title="Ссылка на этот заголовок">¶</a></h2>
+<div class="section" id="ext">
+<h3>Контекстная переменная ext<a class="headerlink" href="#ext" title="Ссылка на этот заголовок">¶</a></h3>
+<p>На данный момент только <cite>tar</cite> и <cite>zip</cite> могут её использовать.
+В остальных случаях её стоит пропустить</p>
+</div>
+<div class="section" id="date">
+<h3>Контекстная переменная date<a class="headerlink" href="#date" title="Ссылка на этот заголовок">¶</a></h3>
+<p>Переменная date форматирует время в формате strftime.</p>
+<p>На данный момент поддерживаются только следующие параметры: <cite>%d</cite>, <cite>%m</cite>, <cite>%Y</cite>, <cite>%H</cite>, <cite>%M</cite>, <cite>%S</cite>.
+Список расширяется по мере необходимости.</p>
+<p>Также, настоятельно рекомендуется использовать одинаковый формат времени
+для имён файлов и имён файлов с хэшсуммой, чтобы избежать проблем с ротированием и переносом.</p>
+</div>
+<div class="section" id="id9">
+<h3>Часто используемые схемы<a class="headerlink" href="#id9" title="Ссылка на этот заголовок">¶</a></h3>
+<p>Часто используемые схемы для удобства можно добавить в саму программу.
+Класс новой схемы нужно наследовать от
+<a class="reference external" href="https://github.com/javister/krista-backup/blob/master/KristaBackup/common/schemes/default_scheme.py">DefaultNamingScheme</a>.
+Подробнее можно посмотреть в модуле
+<a class="reference external" href="https://github.com/javister/krista-backup/blob/master/KristaBackup/common/schemes/schemes.py">schemes</a>.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">KristaBackup</a></h1>
+
+
+
+
+
+
+
+
+<h3>Навигация</h3>
+<p class="caption"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id2">Рекомендуемый способ установки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id3">Сборка исполняемого файла</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Использование</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#run-task">Запуск заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#run-action">Запуск действий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#crontab">Работа с crontab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#api">Запуск веб-api или веб-приложения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#user-utils">Управления пользователями веб-приложения</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Конфигурация</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id2">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id3">Расписание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id7">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id10">Пример написания конфигурации</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Именованные схемы</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Виды переменных</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">Применение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">Идентификатор</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id8">Дополнительно</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="actions/actions_index.html">Действия</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="actions/action.html">Action (основной)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/archiver.html">Tar и Zip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/cleaner.html">Cleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/rsync.html">Rsync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/pgdump.html">PgDump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/mount_umount.html">Mount и Umount</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/movebkpperiod.html">MoveBkpPeriod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/command.html">Command и Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/progress_ticket.html">InProgressTicket</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/check_backup.html">Check backup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/dschecker.html">DataSpaceChecker</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Разработка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development.html#id2">Тестирование</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#id5">Дополнительно</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="configuration.html" title="предыдущая глава">Конфигурация</a></li>
+      <li>Next: <a href="actions/actions_index.html" title="следующая глава">Действия</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Быстрый поиск</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, НПО Криста.
+      
+      |
+      <a href="_sources/naming_schemes.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

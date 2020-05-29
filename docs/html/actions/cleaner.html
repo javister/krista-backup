@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>Cleaner &#8212; Документация KristaBackup 1.6</title>
+    <title>Cleaner &#8212; Документация KristaBackup 1.7</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -36,11 +36,8 @@
   <div class="section" id="cleaner">
 <span id="id1"></span><h1>Cleaner<a class="headerlink" href="#cleaner" title="Ссылка на этот заголовок">¶</a></h1>
 <p>Выполняет ротацию бэкапов.</p>
-<p>Все <code class="docutils literal notranslate"><span class="pre">exclusions</span></code> применяются к пути относительно <code class="docutils literal notranslate"><span class="pre">src_path</span></code>.
-Например: если <code class="docutils literal notranslate"><span class="pre">src_path</span></code> имеет значение <code class="docutils literal notranslate"><span class="pre">/var/lib/app</span></code>, то путь <code class="docutils literal notranslate"><span class="pre">/var/lib/app/index/a.txt</span></code> будет
-обрабатываться как <code class="docutils literal notranslate"><span class="pre">./app/index/a.txt</span></code>.</p>
-<p>Для ротации будет достаточно указать <code class="docutils literal notranslate"><span class="pre">source</span></code> (<code class="docutils literal notranslate"><span class="pre">tar</span></code> или <code class="docutils literal notranslate"><span class="pre">pgdump</span></code>), настроить частоту ротации в (<code class="docutils literal notranslate"><span class="pre">max_files</span></code> или <code class="docutils literal notranslate"><span class="pre">days</span></code>) и файлы,
-которые требуется удалить, будут автоматически определяться по маске.</p>
+<p>Для ротации нужно указать <code class="docutils literal notranslate"><span class="pre">source</span></code> и настроить частоту ротации.</p>
+<p>В качестве <code class="docutils literal notranslate"><span class="pre">source</span></code> может быть указано действие типа <code class="docutils literal notranslate"><span class="pre">tar</span></code>, <code class="docutils literal notranslate"><span class="pre">zip</span></code>, <code class="docutils literal notranslate"><span class="pre">pgdump</span></code> и <code class="docutils literal notranslate"><span class="pre">move_bkp_period</span></code>.</p>
 <div class="section" id="id2">
 <h2>Параметры:<a class="headerlink" href="#id2" title="Ссылка на этот заголовок">¶</a></h2>
 <table class="colwidths-given docutils align-default">
@@ -63,14 +60,6 @@
 <tr class="row-odd"><td><p>days</p></td>
 <td><p>Максимальный возраст бэкапа.</p></td>
 <td><p>целочисленное, в днях</p></td>
-</tr>
-<tr class="row-even"><td><p>use_re_in_patterns</p></td>
-<td><p>Использовать регулярные выражения (или wildcard).</p></td>
-<td><p>False (стандартное значение)</p></td>
-</tr>
-<tr class="row-odd"><td><p>patterns</p></td>
-<td><p>Паттерны путей, по которым стоит также очистить файлы.</p></td>
-<td><p>[ ]</p></td>
 </tr>
 <tr class="row-even"><td><p>dry</p></td>
 <td><p>Не удалять файлы при обработке (dryrun).</p></td>
@@ -99,16 +88,34 @@
   <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/etc</span>
   <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
   <span class="nt">use_re_in_patterns</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+
+<span class="nt">clean_move_bkp_period</span><span class="p">:</span>
+  <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">copy_backup_palnning_db_reglament</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cleaner</span>
+
+<span class="nt">copy_backup_palnning_db_reglament</span><span class="p">:</span>
+  <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">копирование бэкапов БД необходимые каталоги</span>
+  <span class="nt">action_list</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="s">&#39;make_full&#39;</span>
+  <span class="nt">periods</span><span class="p">:</span>
+      <span class="nt">daily</span><span class="p">:</span>
+          <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daily</span>
+          <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;00</span><span class="nv"> </span><span class="s">21</span><span class="nv">  </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*&#39;</span>
+          <span class="nt">max_files</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
+      <span class="nt">weekly</span><span class="p">:</span>
+          <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">weekly</span>
+          <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;*</span><span class="nv"> </span><span class="s">*</span><span class="nv">  </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*&#39;</span>
+          <span class="nt">max_files</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+  <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup/0</span>
+  <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup/vault/</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">move_bkp_period</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="id4">
 <h2>Примечание:<a class="headerlink" href="#id4" title="Ссылка на этот заголовок">¶</a></h2>
-<p>При наследовании от <code class="docutils literal notranslate"><span class="pre">pgdump</span></code> все файлы будут разбиты на группы по маске, которая включает в себя название базы, то есть ротация бэкапов
-каждой базы будет осуществлятся отдельно.
-Пример: <code class="docutils literal notranslate"><span class="pre">pgdump</span></code> делает бэкап баз <code class="docutils literal notranslate"><span class="pre">A</span></code> и <code class="docutils literal notranslate"><span class="pre">B</span></code>, cleaner является наследником <code class="docutils literal notranslate"><span class="pre">pgdump</span></code> и выполняет ротацию каждые 5 файлов. Тогда максимальное
-количество файлов с бэкапами будет 10 (5 копий баз <code class="docutils literal notranslate"><span class="pre">A</span></code> и 5 копий баз <code class="docutils literal notranslate"><span class="pre">B</span></code>).</p>
-<p>При наследовании от <code class="docutils literal notranslate"><span class="pre">move_bkp_period</span></code> частота ротации для каждого периода указывается отдельно.</p>
+<p>Для удаление файлов, которые не являются результатами действий,
+можно использовать <a class="reference internal" href="command.html#command"><span class="std std-ref">command</span></a> и <a class="reference internal" href="command.html#script"><span class="std std-ref">script</span></a>.</p>
 </div>
 </div>
 
@@ -131,20 +138,32 @@
 <h3>Навигация</h3>
 <p class="caption"><span class="caption-text">Содержание:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Установка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#id2">Рекомендуемый способ установки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#id3">Сборка исполняемого файла</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../usage.html">Использование</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../usage.html#run-task">Запуск заданий</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../usage.html#run-action">Запуск действий</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../usage.html#crontab">Работа с crontab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../usage.html#api">Запуск веб-api или веб-приложения</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../usage.html#id6">Утилита для управления пользователями веб-приложения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#user-utils">Управления пользователями веб-приложения</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../installation.html">Установка</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration.html">Конфигурация</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../configuration.html#configuration-structure">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id2">Общая стуктура</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configuration.html#id3">Расписание</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id6">Описание заданий</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id9">Пример написания конфигурации</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id7">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id10">Пример написания конфигурации</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../naming_schemes.html">Именованные схемы</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../naming_schemes.html#id2">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../naming_schemes.html#id3">Виды переменных</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../naming_schemes.html#id5">Применение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../naming_schemes.html#id6">Идентификатор</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../naming_schemes.html#id8">Дополнительно</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="actions_index.html">Действия</a><ul class="current">
@@ -159,6 +178,11 @@
 <li class="toctree-l2"><a class="reference internal" href="progress_ticket.html">InProgressTicket</a></li>
 <li class="toctree-l2"><a class="reference internal" href="check_backup.html">Check backup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dschecker.html">DataSpaceChecker</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Разработка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development.html#id2">Тестирование</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development.html#id5">Дополнительно</a></li>
 </ul>
 </li>
 </ul>

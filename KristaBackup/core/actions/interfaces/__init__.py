@@ -1,0 +1,1 @@
+from .name_generation import NameGenerationInterface

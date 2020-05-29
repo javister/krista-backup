@@ -4,7 +4,9 @@ import os
 import shutil
 from datetime import datetime
 
-from .procutil import get_entrypoint_path
+from common import schemes as schemes
+
+from common.procutil import get_entrypoint_path
 
 try:
     from lib import yaml
@@ -31,8 +33,6 @@ class AppConfig:
 
     _log_dateformat = '%Y-%m-%d %H:%M:%S'
     # Формат времени в логах, совпадает с syslog: YYYY-MM-DD hh:mm:ss
-
-    is_packed = False
 
     try:
         from flask import app
@@ -76,6 +76,8 @@ class AppConfig:
                 cls._project = str(naming.get('project'))
             if 'region' in naming:
                 cls._region = str(naming.get('region'))
+            if 'naming_scheme' in naming:
+                cls._update_naming_scheme(naming.get('naming_scheme'))
 
         try:
             cls._project
@@ -135,7 +137,7 @@ class AppConfig:
 
     @classmethod
     def parse_config(cls):
-        if 'server_name' not in cls.conf().get('naming', {}).keys():
+        if 'server_name' not in cls.conf().get('naming', {}):
             raise ConfigError(
                 'Не задано имя сервера в файле конфигурации {0}'.format(
                     cls._config_filename,
@@ -145,14 +147,19 @@ class AppConfig:
             cls._server_name = cls.conf().get('naming').get('server_name')
 
         # Cтандартное значение региона
-        if 'region' in cls.conf().get('naming').keys():
+        if 'region' in cls.conf().get('naming'):
             cls._region = str(cls.conf().get('naming')['region'])
 
         # Cтандартное значение проекта
-        if 'project' in cls.conf().get('naming').keys():
+        if 'project' in cls.conf().get('naming'):
             cls._project = cls.conf().get('naming')['project']
 
-        for s_name in sorted(cls.conf().get('schedule').keys()):
+        # Настройка стандартной схемы именования
+        if 'naming_scheme' in cls.conf().get('naming'):
+            scheme = cls.conf().get('naming')['naming_scheme']
+            cls._update_naming_scheme(scheme)
+
+        for s_name in sorted(cls.conf().get('schedule')):
             sc = cls.conf().get('schedule')[s_name]
             if not isinstance(sc, dict):
                 raise ConfigError("Ошибка в списке расписаний: конфиг не является словарем."
@@ -165,6 +172,17 @@ class AppConfig:
                 raise ConfigError("Ошибка в списке расписаний: конфиг не является словарем."
                                   " Проверьте отступы и разделители в разделе actions: "
                                   " %s: %s" % (a_name, ac))
+
+    @staticmethod
+    def _update_naming_scheme(scheme):
+        if not scheme:
+            return
+        if isinstance(scheme, dict):
+            scheme = schemes.get_scheme_by_config(scheme)
+            scheme_id = scheme.scheme_id
+        else:
+            scheme_id = str(scheme)
+        schemes.set_default(scheme_id)
 
 
 class YamlConfigMapper:

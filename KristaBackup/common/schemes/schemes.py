@@ -1,4 +1,5 @@
 from .default_scheme import DefaultNamingScheme
+
 try:
     from .external import EXTERNAL_SCHEMES
 except ImportError:

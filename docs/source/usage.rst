@@ -1,9 +1,5 @@
 .. _usage:
 
-.. toctree::
-  :maxdepth: 2
-  :caption: Содержание:
-  :hidden:
 
 Использование
 =============
@@ -107,17 +103,18 @@ cron-расписания с заданиями хранятся в ``crontab`` 
 можно просмотривать файлы логов и состояние триггер-файла,
 если он используется.
 
-Для запуска веб-приложения нужно выполнить следующую команду:
+Пример работы с веб-приложением:
 
 .. code:: bash
 
-  python3 KristaBackup.py run web
+  python3 KristaBackup.py web start
+  python3 KristaBackup.py web stop  # Или Ctrl+C
 
-Для запуска веб-api нужно выполнить следующую команду:
+Для запуска веб-api (без интерфейса) нужно выполнить следующую команду:
 
 .. code:: bash
 
-  python3 KristaBackup.py run webapi
+  python3 KristaBackup.py web --webapi start
 
 По умолчанию приложение запускается на http://127.0.0.1:5555.
 Хост и порт можно поменять в config.yaml:
@@ -126,54 +123,51 @@ cron-расписания с заданиями хранятся в ``crontab`` 
 
   web:
     host: '0.0.0.0'
-    port: 3333
+    port: 5555
 
-Опции можно посмотреть выполнив ``python3 KristaBackup.py --help``.
+
+Данную информацию можно получить командой ``python3 KristaBackup.py --help``.
 
 .. _user_utils:
 
-Остановить приложение или аpi можно командами
+Управления пользователями веб-приложения
+----------------------------------------
+
+В интерфейсе web модуля существует система пользователей. Пользователи
+с правами администратора могут редактировать права других пользователей
+и управлять заданиями.
+
+Управлять списком пользователей можно также из консольного интерфейса.
 
 .. code:: bash
 
-  python3 KristaBackup.py stop web
-  python3 KristaBackup.py stop webapi
+  $ python3 KristaBackup.py web users list --help
+  usage: KristaBackup.py web users [-h] <действие> ...
 
+  positional arguments:
+    <действие>
+      list      список пользователей
+      add       добавить пользователя
+      upd       обновить пользователя
+      rm        удалить пользователя
 
-Утилита для управления пользователями веб-приложения
-----------------------------------------------------
-
-Утилита поддерживает добавление, удаление и обновления свойств пользователей,
-позволяет просматривать список пользователей, добавлять, удалять и редактировать пользователя.
-
-.. code:: bash
-
-  ./UsersUtils.py list
-  ./UsersUtils.py add -u aaa -p passWord -m abcd@mail.com -a
-  ./UsersUtils.py mod -u aaa -p passWord -m abcd@mail.com -a
-  ./UsersUtils.py del -u aaa
-  ./UsersUtils.py check -u aaa
-  ./UsersUtils.py check -m abcd@mail.com
-
-Использование:
+Пример добавления нового пользователя:
 
 .. code:: bash
 
-  UsersUtils.py действие [-h] [-u USERNAME] [-m EMAIL] [-p PASSW] [-a]
+  $ python3 KristaBackup.py web users add new_user new_user@their.mail pAs$w0rd --admin
+  Добавлен пользователь new_user
 
-  Опции:
-  -u    имя пользователя
-  -p    пароль
-  -m    abcd@mail.com
-  -a    включить флаг администратора
+  $ python3 KristaBackup.py web users add --help
+  usage: KristaBackup.py web users add [-h] [--plain | --admin]
+                                      user email password
 
-  Действия:
-  list      вывести имя пользователя
-  add       добавить пользователя (необходимо указать -u -p -m,
-            параметр -a указывается опицонально)
-  mod       изменить свойства пользователя заданного параметром -u,
-            параметры -m -p меняются только если переданы,
-            если не указать параметр -a, то флаг админа будет сброшен
-  del       удалить пользователя -u
-  check     проверить наличие пользователя по имени
-            или адресу электронной почты
+  positional arguments:
+    user        имя пользователя
+    email       почтовый адрес
+    password    пароль
+
+  optional arguments:
+    -h, --help  show this help message and exit
+    --plain     назначить стандартные права (default)
+    --admin     назначить права администратора

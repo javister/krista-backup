@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 import os
-import re
+import sys
 
 import __main__
 
@@ -32,29 +32,26 @@ def process_iter():
             pass
 
 
-def check_process(executable_filename, name=''):
+def check_process(keywords):
     pid = os.getpid()
-    occurrence_pattern = '{0} run {1}\\s'.format(
-        executable_filename,
-        name,
-    )
     for process in process_iter():
-        if pid != process.pid and re.search(
-            occurrence_pattern,
-            process.cmdline,
-        ):
-            return process.pid
+        if pid != process.pid:
+            p_words = process.cmdline.split()
+            for word in keywords:
+                if word not in p_words:
+                    break
+            else:
+                return process.pid
     return None
 
 
 def get_entrypoint_path():
     """Возвращает путь к исполняемому файлу."""
-    from .YamlConfig import AppConfig
     dirpath = os.path.realpath(__main__.__file__)
-    if AppConfig.is_packed:
-        dirpath = os.path.dirname(dirpath)
     return dirpath
 
 
 def get_executable_filename():
+    if getattr(sys, 'frozen', False):
+        return sys.executable
     return os.path.basename(get_entrypoint_path())

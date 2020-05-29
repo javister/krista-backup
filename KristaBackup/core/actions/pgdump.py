@@ -2,26 +2,22 @@
 
 import logging
 import os
+import re
 import shutil
 
 from .action import Action
-from .decorators import use_exclusions, use_postgres
+from .decorators import use_exclusions
+from .interfaces import NameGenerationInterface
 
 
 @use_exclusions
-@use_postgres
-class PgDump(Action):
+class PgDump(Action, NameGenerationInterface):
     """
         Выполняется pg_dump с некоторым набором парамеров.
         Список баз, для которых нужно делать бекап формируется следующим образом:
         - с сервера по указанным пользователь вычитывается список баз.
         - из списка вычитаются имена, которые подходят под критерии параметра exclusions (список регулярных выражений)
         - для каждой базы создается 1 файл бекапа, имя определяется как basename-имя базы-датавремя.extension
-    """
-
-    # dest_path              # наследуется от Аction, каталог, куда складываются бекапы
-    # basename               # основа для имени файла, наследуется от Action
-    """
      mode - режим работы, если all - то бекапяться все базы, если режим
             single, то бекапяться базы из списка databases
     """
@@ -35,6 +31,7 @@ class PgDump(Action):
             'flagging .*', 'пометка .*',
             'saving .*', 'сохранение .*',
             'dumping .*', 'выгрузка .*',
+            'AC MODEL: .*', 'obtained maximum .*',
         },
     }
 
@@ -42,12 +39,16 @@ class PgDump(Action):
         super().__init__(name)
         self.format = 'custom'  # формат бекапа
 
-        self.extension = 'pg_dump'  # расширение для файла бекапа
         self.command_path = 'pg_dump'  # путь к команде pg_dump
         self.opts = ''  # опции запуска pg_dump, могут переопределяться в настройках
         self.checksum_file = False
-        self.hash_extension = 'hash'
 
+        self.host = None
+        self.port = 5432
+        self.user = None
+        self.password = None
+        self.databases = []
+        self.mode = 'single'
 
     def backup_database(self, database):
         """Выполняет бэкап базы.
@@ -59,7 +60,9 @@ class PgDump(Action):
             True, если возникли ошибки.
 
         """
-        filepath = self.generate_filepath(database, extension=self.extension)
+        filepath = self.generate_filepath(
+            dbname=database,
+        )
 
         if not os.path.exists(self.dest_path):
             self.logger.debug(
@@ -121,15 +124,11 @@ class PgDump(Action):
         except Exception as exc:
             self.logger.error('Ошибка при выполнении: %s', exc)
             return True
-        self.logger.info('Зархивирована база %s', database)
-
+        self.logger.info('Заархивирована база %s', database)
+        
         if self.checksum_file:
-            hash_filepath = self.generate_filepath(
-                name=database,
-                extension=self.hash_extension,
-            )
+            hash_filepath = self.generate_hash_filepath(dbname=database)
             self.create_checksum_file(filepath, hash_filepath)
-
 
     def is_exclusion(self, dbname):
         matcher = self.get_pattern_matcher()
@@ -171,13 +170,9 @@ class PgDump(Action):
 
         return [dbname.strip() for dbname in database_list if dbname.strip()]
 
-    def start(self):
-        failed = False
-        self.format = self.format.strip().lower()
-
+    def _get_database_list(self):
         if self.user and self.password:
             os.putenv('PGPASSWORD', self.password)
-
         if self.mode == 'all':
             database_list = PgDump.get_database_list(
                 self.user,
@@ -189,9 +184,17 @@ class PgDump(Action):
             database_list = [
                 dbname.strip() for dbname in self.databases if dbname.strip()
             ]
+        return database_list
+
+    def start(self):
+        failed = False
+        self.format = self.format.strip().lower()
+        database_list = self._get_database_list()
+        if not database_list:
+            self.logger.warning('Отсутствуют базы для бэкапа')
+            return self.continue_on_error
 
         self.parse_exclusions()
-
         for dbname in database_list:
             if self.is_exclusion(dbname):
                 self.logger.debug('- %s', dbname)
@@ -207,31 +210,90 @@ class PgDump(Action):
 
     def parse_exclusions(self):
         """Обработка переданных исключений."""
-        if self.use_re_in_patterns:
-            for exclusion in self.exclusions:
-                exclusion = exclusion.strip()
-                if not exclusion:
-                    continue
-                exclusion = r'{ex}\S*'.format(
-                    ex=exclusion,
+        for exclusion in self.exclusions:
+            exclusion = self.prepare_pattern(exclusion)
+            if not exclusion:
+                continue
+            try:
+                exclusion = re.compile(exclusion)
+            except Exception as exc:
+                self.logger.warning(
+                    'Ошибка в исключении %s: %s',
+                    exclusion,
+                    exc,
                 )
+            else:
                 self.prepared_exclusions.append(exclusion)
 
-            self.logger.debug(
-                'Добавлены исключения (re): %s',
-                self.prepared_exclusions,
+        self.logger.debug(
+            'Добавлены исключения: %s',
+            [excl.pattern for excl in self.prepared_exclusions],
+        )
+
+    def generate_filename(self, *args, **kwargs):
+        """Генерирует выходное имя файла."""
+        return self.scheme.get_pgdump_name(self, **kwargs)
+
+    def get_patterns(self, *args, **kwargs):
+        patterns = []
+        dblist = self._get_database_list()
+        for dbname in dblist:
+            pattern = self.scheme.get_pgdump_pattern(
+                self,
+                dbname=dbname,
             )
+            patterns.append(pattern)
+            if self.checksum_file:
+                hash_p = self.scheme.get_pgdump_hashfile_pattern(self, dbname=dbname)
+                patterns.append(hash_p)
+        return patterns
+
+    def retrieve_groups_from_pgdump(self):
+        """Получение списка групп по данным из родительского pgdump.
+
+        Метод пытается узнать список баз данных по предоставленным
+        данным из родительского действия pgdump.
+        Если в родительском действии есть список баз, то используется он,
+        если нет - попытка получить список баз напрямую через pg_dump.
+
+        Returns:
+            Список паттернов групп, который генерируются при помощи
+                схемы именования.
+
+        """
+        retrieved_groups = []
+        if self.databases:
+            self.logger.debug('Список баз получен через атрибут databases.')
+            databases = self.databases
         else:
-            for exclusion in self.exclusions:
-                exclusion = exclusion.strip()
-                if not exclusion:
-                    continue
-                exclusion = r'{ex}'.format(
-                    ex=exclusion,
-                )
-                self.prepared_exclusions.append(exclusion)
-
+            self.logger.debug('Атрибут databases со списком баз отсутствует.')
             self.logger.debug(
-                'Добавлены исключения (sh): %s',
-                self.prepared_exclusions,
+                'Пытаюсь получить список баз напрямую из postgres.',
             )
+            if self.password:
+                os.putenv('PGPASSWORD', self.password)
+            try:
+                databases = PgDump.get_database_list(
+                    self.user,
+                    self.host,
+                    self.port,
+                    logger=self.logger,
+                )
+            except AttributeError:
+                databases = PgDump.get_database_list(logger=self.logger)
+
+        self.logger.debug('Получены базы: %s', databases)
+
+        for dbname in databases:
+            pattern = self.source.scheme.get_pgdump_pattern(
+                self,
+                dbname=dbname,
+            )
+            retrieved_groups.append(pattern)
+        return retrieved_groups
+
+    def generate_hash_filename(self, *args, **kwargs):
+        """Генерирует выходное имя файла c чексуммой."""
+        if kwargs.get('dbname'):
+            return self.scheme.get_pgdump_hashfile_name(self, dbname=kwargs.get('dbname'))
+        return self.scheme.get_pgdump_hashfile_name(self)

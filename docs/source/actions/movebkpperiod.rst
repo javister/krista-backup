@@ -3,8 +3,8 @@
 MoveBkpPeriod
 =============
 
-Выполняет копирование файлов из ``src_path`` в ``dest_path``
-по ``basename_list``.
+Выполняет копирование выходных файлов из действий в
+``action_list`` в директорию ``dest_path``.
 
 Параметры:
 ~~~~~~~~~~
@@ -13,10 +13,9 @@ MoveBkpPeriod
    :widths: 15, 30, 20
    :header: "название", "описание", "значение"
 
-   "src_path", "Каталог, в которой находятся бэкапы с basename из basename_list.", "путь к директории"
-    "dest_path","Каталог для файлов с результатом.", "путь к директории"
+   "dest_path","Каталог для файлов с результатом.", "путь к директории"
    "periods", "список с периодами", "{ } (см. пример)"
-   "basename_list", "список из basename, которые требуется скопировать", "[ ]"
+   "action_list", "список имён действий, результаты которых требуется скопировать", "[ ]"
    "dry", "Не выполнять копирование файлов (dryrun).", "false (стандартное значение)"
 
 Пример:
@@ -25,10 +24,9 @@ MoveBkpPeriod
 .. code-block:: yaml
 
   mv_backup:
-    descr: копирование бэкапов
-    basename_list:
-        - 'etc'
-        - 'home_user'
+    action_list:
+        - make_full_etc
+        - make_full_opt
     periods:
         weekly:
             # path примет значение weekly
@@ -37,9 +35,28 @@ MoveBkpPeriod
             path: month
             cron: '40 02 * 1 *'
             max_files: 3
-    src_path: /backup/0/
     dest_path: /backup/vault/
+    descr: копирование бэкапов
     type: move_bkp_period
+
+  make_full_etc:
+    basename: etc
+    src_path: /etc
+    dest_path: /backup
+    level: 0
+    descr: бэкап файлов /etc 0-го уровня
+    checksum_file: true
+    source: make
+    type: tar
+
+  make_full_opt:
+    basename: opt
+    src_path: /opt
+    dest_path: /backup
+    level: 0
+    descr: бэкап файлов /opt 0-го уровня
+    source: make
+    type: tar
 
 Примечание:
 ~~~~~~~~~~~

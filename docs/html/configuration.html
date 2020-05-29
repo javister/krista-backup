@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>Конфигурация &#8212; Документация KristaBackup 1.6</title>
+    <title>Конфигурация &#8212; Документация KristaBackup 1.7</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -15,8 +15,8 @@
     <script type="text/javascript" src="_static/translations.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
-    <link rel="next" title="Действия" href="actions/actions_index.html" />
-    <link rel="prev" title="Установка" href="installation.html" />
+    <link rel="next" title="Именованные схемы" href="naming_schemes.html" />
+    <link rel="prev" title="Использование" href="usage.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -33,12 +33,10 @@
 
           <div class="body" role="main">
             
-  <div class="toctree-wrapper compound" id="configuration">
-</div>
-<div class="section" id="id1">
-<h1>Конфигурация<a class="headerlink" href="#id1" title="Ссылка на этот заголовок">¶</a></h1>
-<div class="section" id="configuration-structure">
-<span id="id2"></span><h2>Общая стуктура<a class="headerlink" href="#configuration-structure" title="Ссылка на этот заголовок">¶</a></h2>
+  <div class="section" id="configuration">
+<span id="id1"></span><h1>Конфигурация<a class="headerlink" href="#configuration" title="Ссылка на этот заголовок">¶</a></h1>
+<div class="section" id="id2">
+<h2>Общая стуктура<a class="headerlink" href="#id2" title="Ссылка на этот заголовок">¶</a></h2>
 <p>Рядом с выполняемым файлом должен находится файл конфигураций <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>.</p>
 <p>Конфигурация состоит из следующих частей:</p>
 <ul class="simple">
@@ -50,18 +48,19 @@
 действий необходимо их заполнить.</p>
 <p>Для выполнения заданий поля <code class="docutils literal notranslate"><span class="pre">region</span></code> и <code class="docutils literal notranslate"><span class="pre">project</span></code> могут
 быть пропущены, если они явно указаны в описании заданий.</p>
+<p>Также поддерживает атрибут <a class="reference internal" href="naming_schemes.html#naming-schemes"><span class="std std-ref">naming_scheme</span></a>.</p>
 </div></blockquote>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">cron</span></code></p></li>
 </ul>
 <blockquote>
-<div><p>Содержит <code class="docutils literal notranslate"><span class="pre">cron_user</span></code> -- имя пользователя, в чей <code class="docutils literal notranslate"><span class="pre">crontab</span></code> будет добавляться расписание.</p>
+<div><p>Содержит <code class="docutils literal notranslate"><span class="pre">cron_user</span></code> - имя пользователя, в чей <code class="docutils literal notranslate"><span class="pre">crontab</span></code> будет добавляться расписание.</p>
 </div></blockquote>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">logging</span></code></p></li>
 </ul>
 <blockquote>
-<div><p>Содержит <code class="docutils literal notranslate"><span class="pre">logs_path</span></code> -- директорию для хранения логов.</p>
+<div><p>Содержит <code class="docutils literal notranslate"><span class="pre">logs_path</span></code> - директорию для хранения логов.</p>
 <p>Также имеет вариативный параметр <code class="docutils literal notranslate"><span class="pre">trigger_filepath</span></code>, который содержит
 путь к триггер-файлу. Если путь указан, то будет создан файл, который
 будет хранить состояние последнего бэкапа:
@@ -117,9 +116,21 @@
 </pre></div>
 </div>
 </div>
-</div>
 <div class="section" id="id6">
-<h2>Описание заданий<a class="headerlink" href="#id6" title="Ссылка на этот заголовок">¶</a></h2>
+<h3>Примечание<a class="headerlink" href="#id6" title="Ссылка на этот заголовок">¶</a></h3>
+<p>Существует атрибут <code class="docutils literal notranslate"><span class="pre">allow_parallel</span></code>, который запрещает
+запускать одновременно несколько заданий/действий.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">allow_parallel</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+
+<span class="nt">naming</span><span class="p">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+<p>Он имеет стандартное значение <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</div>
+</div>
+<div class="section" id="id7">
+<h2>Описание заданий<a class="headerlink" href="#id7" title="Ссылка на этот заголовок">¶</a></h2>
 <p>Как было выше упомянуто, задания указаны в расписании. Каждое
 задание содержит следующие параметры:</p>
 <ul class="simple">
@@ -127,7 +138,8 @@
 </ul>
 <blockquote>
 <div><p>содержит <code class="docutils literal notranslate"><span class="pre">project</span></code> и <code class="docutils literal notranslate"><span class="pre">region</span></code>: если они не указаны, то будут
-использованы параметры из <code class="docutils literal notranslate"><span class="pre">naming</span></code> в корне конфигурации</p>
+использованы параметры из <code class="docutils literal notranslate"><span class="pre">naming</span></code> в корне конфигурации. Также
+поддерживает атрибут <a class="reference internal" href="naming_schemes.html#naming-schemes"><span class="std std-ref">naming_scheme</span></a>.</p>
 </div></blockquote>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">actions</span></code></p></li>
@@ -152,14 +164,14 @@
 (по умолчанию в <code class="docutils literal notranslate"><span class="pre">crontab</span></code> используется отношение ИЛИ)</p>
 </div></blockquote>
 <p>Также, имя задания должно быть уникальным.</p>
-<div class="section" id="id7">
-<h3>Примечание<a class="headerlink" href="#id7" title="Ссылка на этот заголовок">¶</a></h3>
+<div class="section" id="id8">
+<h3>Примечание<a class="headerlink" href="#id8" title="Ссылка на этот заголовок">¶</a></h3>
 <p>Атрибут <code class="docutils literal notranslate"><span class="pre">actions</span></code> может содержать не только имя действия, но
 и ещё параметры его вызова. Для этого существует специальная запись
 с квадратными скобками, которая показана в примере ниже.</p>
 </div>
 <div class="section" id="configuration-task-example">
-<span id="id8"></span><h3>Пример<a class="headerlink" href="#configuration-task-example" title="Ссылка на этот заголовок">¶</a></h3>
+<span id="id9"></span><h3>Пример<a class="headerlink" href="#configuration-task-example" title="Ссылка на этот заголовок">¶</a></h3>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">schedule</span><span class="p">:</span>
   <span class="nt">full_dump</span><span class="p">:</span>
     <span class="nt">naming</span><span class="p">:</span>
@@ -176,8 +188,8 @@
 <p>Подробнее о тестовом режиме в разделе <a class="reference internal" href="actions/actions_index.html#actions-index"><span class="std std-ref">Действия</span></a>.</p>
 </div>
 </div>
-<div class="section" id="id9">
-<h2>Пример написания конфигурации<a class="headerlink" href="#id9" title="Ссылка на этот заголовок">¶</a></h2>
+<div class="section" id="id10">
+<h2>Пример написания конфигурации<a class="headerlink" href="#id10" title="Ссылка на этот заголовок">¶</a></h2>
 <p>Здесь будет рассмотрен пример файла конфигураций, который будет
 содержать настройки для выполнения полного и разностного бэкапа каталога <code class="docutils literal notranslate"><span class="pre">/etc</span></code>.</p>
 <p>Ротация полного бэкапа будет выполняться раз в неделю, одновременно будут хранится
@@ -368,20 +380,32 @@
 <h3>Навигация</h3>
 <p class="caption"><span class="caption-text">Содержание:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id2">Рекомендуемый способ установки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id3">Сборка исполняемого файла</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Использование</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#run-task">Запуск заданий</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#run-action">Запуск действий</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#crontab">Работа с crontab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#api">Запуск веб-api или веб-приложения</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#id6">Утилита для управления пользователями веб-приложения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#user-utils">Управления пользователями веб-приложения</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Конфигурация</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#configuration-structure">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Общая стуктура</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id3">Расписание</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id6">Описание заданий</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id9">Пример написания конфигурации</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id10">Пример написания конфигурации</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="naming_schemes.html">Именованные схемы</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id2">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id3">Виды переменных</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id5">Применение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id6">Идентификатор</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id8">Дополнительно</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="actions/actions_index.html">Действия</a><ul>
@@ -398,14 +422,19 @@
 <li class="toctree-l2"><a class="reference internal" href="actions/dschecker.html">DataSpaceChecker</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Разработка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development.html#id2">Тестирование</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#id5">Дополнительно</a></li>
+</ul>
+</li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="installation.html" title="предыдущая глава">Установка</a></li>
-      <li>Next: <a href="actions/actions_index.html" title="следующая глава">Действия</a></li>
+      <li>Previous: <a href="usage.html" title="предыдущая глава">Использование</a></li>
+      <li>Next: <a href="naming_schemes.html" title="следующая глава">Именованные схемы</a></li>
   </ul></li>
 </ul>
 </div>

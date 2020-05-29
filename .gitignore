@@ -4,5 +4,6 @@
 .hgsub
 .hgsubstate
 .hgtags
+.hgeol
 
 KristaBackup/common/schemes/external/*

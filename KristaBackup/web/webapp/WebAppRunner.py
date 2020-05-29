@@ -9,9 +9,9 @@ from .WebAppConfig import webappconf
 
 class WebApp(AppRunner):
 
-     name = 'web'
+    name = 'web'
 
-     def run_app(self):
+    def run_app(self):
         app.logger = get_generic_logger()
         app.config.from_object(webappconf)
         app.logger.debug('App configured')

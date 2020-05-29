@@ -3,13 +3,11 @@
 import os
 
 from common import Logging, procutil
-from common.arguments.constants import (
-    DISABLE_OPTS,
-    ENABLE_OPTS,
-    RUN_OPTS,
-    STOP_OPTS,
-)
+from common.arguments import constants
+from common.daemon_managers import crontab_manager
 from common.YamlConfig import AppConfig, ConfigError
+from .runner import Runner
+import sys
 
 
 def webapp_handler(stop=False):
@@ -38,6 +36,97 @@ def update_working_dir():
     os.chdir(dirpath)
 
 
+def _initialize_configuration(unit):
+    """Инициализация конфигурации приложения для запуска задания."""
+    try:
+        AppConfig.set_unit_name(unit)
+    except FileNotFoundError:
+        logger = Logging.get_generic_logger()
+        logger.error('Файл конфигурации не найден!')
+        raise BaseException
+    except ConfigError as exc:
+        logger = Logging.get_generic_logger()
+        logger.error('Ошибка в файле конфигураций: %s', exc)
+        raise BaseException
+
+
+def _configure_logging(verbose=False):
+    try:
+        Logging.configure_logging(verbose)
+    except PermissionError as exc:
+        logger = Logging.get_generic_logger()
+        logger.error('Ошибка при инициализации логирования: %s', exc)
+        raise BaseException
+
+
+def _handle_run_option(args):
+    _initialize_configuration(args.unit)
+    _configure_logging(args.verbose)
+    Runner(args.unit, args.dry).start_task()
+
+
+def _handle_web_option(args):
+    if args.command == constants.START_OPT_NAME:
+        if args.api:
+            webapi_handler()
+        else:
+            if AppConfig.flask_on:  # TODO исключить
+                webapp_handler()
+            else:
+                logger = Logging.get_generic_logger()
+                logger.error('Отсутствует flask.')
+                raise BaseException
+    elif args.command == constants.STOP_OPT_NAME:
+        if args.api:
+            webapi_handler(stop=True)
+        else:
+            if AppConfig.flask_on:  # TODO исключить
+                webapp_handler(stop=True)
+            else:
+                logger = Logging.get_generic_logger()
+                logger.error('Отсутствует flask.')
+                raise BaseException
+    elif args.command == 'users':
+        if not AppConfig.flask_on:  # TODO исключить
+            logger = Logging.get_generic_logger()
+            logger.error('Отсутствует flask.')
+            raise BaseException
+        from web.webapp import Users
+        if args.user_choice == 'list':
+            for user in Users.users.values():
+                print('[*]', user)
+        elif args.user_choice == 'add':
+            user = Users.get(args.user)
+            if user:
+                print('Пользователь с данным username уже существует!')
+            else:
+                Users.add(
+                    args.user,
+                    args.email,
+                    args.password,
+                    admin=args.admin,
+                )
+                print('Добавлен пользователь', args.user)
+        elif args.user_choice == 'upd':
+            user = Users.get(args.user)
+            if user is None:
+                print('Пользователь не найден.')
+                sys.exit(-1)
+            user.email = args.email
+            user.set_password(args.password)
+            if user.adm and args.no_admin:
+                user.adm = False
+                print('Права пользователя упразднены.')
+            if not user.adm and args.admin:
+                user.adm = True
+                print('Пользователю даны права администратора.')
+            Users.storeUser(user.id, user)
+        elif args.user_choice == 'rm':
+            Users.delete(args.user)
+            print('Удален пользователь ', args.user)
+###############################
+
+
 def switch_choice(args):
     """Выбор запускаемого модуля.
 
@@ -47,53 +136,11 @@ def switch_choice(args):
         args: Namespace, аргументы командной строки.
 
     """
-    if args.command in RUN_OPTS:
-        if args.unit == 'web':
-            if AppConfig.flask_on:
-                webapp_handler()
-            else:
-                logger = Logging.get_generic_logger()
-                logger.exception('Невозможно импортировать модуль flask!')
-        elif args.unit == 'webapi':
-            webapi_handler()
-        else:
-            from core import Runner
-            try:
-                Logging.configure_logging(args.verbose)  # TODO move to initialize
-            except PermissionError as exc:
-                logger = Logging.get_generic_logger()
-                logger.error('Ошибка при инициализации логирования: %s', exc)
-                raise BaseException
-            Runner(args.unit, args.dry).start_task()
-    elif args.command in STOP_OPTS:
-        if args.unit == 'web':
-            webapp_handler(stop=True)
-        elif args.unit == 'webapi':
-            webapi_handler(stop=True)
-    else:
-        from common.daemon_managers import crontab_manager
-        if args.command in ENABLE_OPTS:
-            crontab_manager.activate_task(args.unit)
-        elif args.command in DISABLE_OPTS:
-            crontab_manager.deactivate_task(args.unit)
-
-
-def initialize(args, is_packed):
-    """Инициализация приложения.
-
-    1. Меняет рабочую директорию на необходимую.
-    2. Загружает конфигурацию приложения.
-
-    """
-    AppConfig.is_packed = is_packed
-    update_working_dir()
-    try:
-        AppConfig.set_unit_name(args.unit)
-    except FileNotFoundError:
-        logger = Logging.get_generic_logger()
-        logger.error('Файл конфигурации не найден!')
-        raise BaseException
-    except ConfigError as exc:
-        logger = Logging.get_generic_logger()
-        logger.error('Ошибка в файле конфигураций: %s', exc)
-        raise BaseException
+    if args.option == constants.RUN_OPT_NAME:
+        _handle_run_option(args)
+    elif args.option in constants.ENABLE_OPTS_NAME:
+        crontab_manager.activate_task(args.unit)
+    elif args.option in constants.DISABLE_OPTS_NAME:
+        crontab_manager.deactivate_task(args.unit)
+    elif args.option == 'web':
+        _handle_web_option(args)

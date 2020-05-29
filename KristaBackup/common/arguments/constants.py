@@ -1,17 +1,17 @@
 # -*- encoding: utf-8 -*-
 
 
-def single_action_str(self):
+def _single_action_str(self):
     return '/'.join(list(iter(self)))
 
 
-def multi_action_str(_):
+def _multi_action_str(_):
     cmd_actions = [
         str(arg) for arg in [
-            RUN_OPTS,
-            STOP_OPTS,
-            ENABLE_OPTS,
-            DISABLE_OPTS,
+            RUN_OPT_NAME,
+            STOP_OPT_NAME,
+            ENABLE_OPTS_NAME,
+            ENABLE_OPTS_NAME,
         ]
     ]
     return ', '.join(cmd_actions)
@@ -20,24 +20,36 @@ def multi_action_str(_):
 frozenset_single_action_opts = type(
     'frozenset_argv_action_opts',
     (frozenset,),
-    {'__str__': single_action_str},
+    {'__str__': _single_action_str},
 )
 
 frozenset_multiple_action_opts = type(
     'frozenset_argv_action_opts',
     (frozenset,),
-    {'__str__': multi_action_str},
+    {'__str__': _multi_action_str},
 )
 
 
-RUN_OPTS = frozenset_single_action_opts({'run'})
-STOP_OPTS = frozenset_single_action_opts({'stop'})
+RUN_OPT_NAME = 'run'
 
-ENABLE_OPTS = frozenset_single_action_opts({'enable', 'en'})
-DISABLE_OPTS = frozenset_single_action_opts({'disable', 'dis'})
+START_OPT_NAME = 'start'
+STOP_OPT_NAME = 'stop'
+
+ENABLE_OPT_NAME = 'en'
+ENABLE_OPT_NAME_ALIAS = 'enable'
+
+ENABLE_OPTS_NAME = frozenset_single_action_opts(
+    {ENABLE_OPT_NAME, ENABLE_OPT_NAME_ALIAS},
+)
+
+DISABLE_OPT_NAME = 'dis'
+DISABLE_OPT_NAME_ALIAS = 'disable'
+DISABLE_OPTS_NAME = frozenset_single_action_opts(
+    {DISABLE_OPT_NAME, DISABLE_OPT_NAME_ALIAS},
+)
 
 ARGS_ACTION_OPTS = frozenset_multiple_action_opts(
-    RUN_OPTS | STOP_OPTS | ENABLE_OPTS | DISABLE_OPTS,
+    {RUN_OPT_NAME} | {STOP_OPT_NAME} | ENABLE_OPTS_NAME | DISABLE_OPTS_NAME,
 )
 
 ALL = 'all'

@@ -5,7 +5,7 @@ import os
 import signal
 
 from common.procutil import check_process, get_executable_filename
-from common.YamlConfig import AppConfig
+from common.arguments import constants
 
 
 class AppRunner():
@@ -20,26 +20,24 @@ class AppRunner():
         raise NotImplementedError('Should have implemented this')
         return False
 
-    def run(self):
+    @property
+    def keywords(self):
         exe_filename = get_executable_filename()
-        pid = check_process(exe_filename, self.name)
+        return [self.name, constants.START_OPT_NAME, exe_filename]
+
+    def run(self):
+        pid = check_process(self.keywords)
         if pid:
             logging.warning(
-                'Процесс %s %s уже запущен! PID: %s',
-                exe_filename,
+                'Процесс %s уже запущен! PID: %s',
                 self.name,
                 pid,
             )
             return
 
-        pid = os.fork()
-        if pid == 0:
-            logging.debug(
-                'In the child process that has the PID {}'.format(os.getpid()))
-            self.run_app()
+        self.run_app()
 
     def stop(self):
-        exe_filename = get_executable_filename()
-        pid = check_process(exe_filename, self.name)
+        pid = check_process(self.keywords)
         if pid:
             os.kill(pid, signal.SIGINT)

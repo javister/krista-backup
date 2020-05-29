@@ -48,7 +48,7 @@ def log_to_logger(fn):
 
 class WebModule(AppRunner):
 
-    name = 'webapi'
+    name = 'api'
 
     def get_config(self):
         conf = {}

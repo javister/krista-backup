@@ -3,10 +3,12 @@
   :caption: Содержание:
   :hidden:
 
-  usage.rst
   installation.rst
+  usage.rst
   configuration.rst
+  naming_schemes.rst
   actions/actions_index.rst
+  development.rst
 
 .. _index:
 

@@ -16,6 +16,7 @@ from .WebAppConfig import webappconf
 
 users = {}
 
+
 class User(UserMixin):
     id = 'guest'
     mail = 'foo@bar.com'
@@ -37,9 +38,9 @@ class User(UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def generate_auth_token(self, expiration = 600):
-        s = Serializer(webappconf.config['SECRET_KEY'], expires_in = expiration)
-        return s.dumps({ 'id': self.id })
+    def generate_auth_token(self, expiration=600):
+        s = Serializer(webappconf.config['SECRET_KEY'], expires_in=expiration)
+        return s.dumps({'id': self.id})
 
     def is_admin(self):
         return self.adm
@@ -53,11 +54,19 @@ class User(UserMixin):
         try:
             data = s.loads(token)
         except SignatureExpired:
-            return None # valid token, but expired
+            return None  # valid token, but expired
         except BadSignature:
-            return None # invalid token
+            return None  # invalid token
         user = users[data['id']]
         return user
+
+    def __str__(self):
+        pattern = 'Пользователь: {id: >8}, администратор: {adm!s: >5}, почта: {email}'
+        return pattern.format(
+            id=self.id,
+            email=self.email,
+            adm=self.adm,
+        )
 
 
 current_user = LocalProxy(lambda: _get_user())
@@ -90,6 +99,7 @@ for user in _users.config.get('users', {}).keys():
     u.adm = _users.config['users'][user]['adm']
     users[user] = u
 
+
 def get(id):
     return users.get(id, None)
 
@@ -108,6 +118,7 @@ def add(name, email, password, admin=False):
     u.set_password(password)
     u.adm = admin
     storeUser(name, u)
+
 
 def storeUser(name, u):
     users[name] = u

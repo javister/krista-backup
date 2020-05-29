@@ -20,7 +20,7 @@ def create_sha1sum_file(src_file, dest_file):
         raise FileNotFoundError('Исходный файл не найден')
     buf_size = 65536
     sha1 = hashlib.sha1()
-    with open(dest_file, 'w') as dest_file:
+    with open(dest_file, 'w') as dest_file_:
         with open(src_file, 'rb') as file_content:
             while True:
                 part = file_content.read(buf_size)
@@ -28,5 +28,5 @@ def create_sha1sum_file(src_file, dest_file):
                     break
                 sha1.update(part)
         hash_value = sha1.hexdigest()
-        dest_file.write(hash_value)
+        dest_file_.write(hash_value)
         return hash_value

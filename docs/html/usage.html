@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>Использование &#8212; Документация KristaBackup 1.6</title>
+    <title>Использование &#8212; Документация KristaBackup 1.7</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -15,8 +15,8 @@
     <script type="text/javascript" src="_static/translations.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
-    <link rel="next" title="Установка" href="installation.html" />
-    <link rel="prev" title="KristaBackup" href="index.html" />
+    <link rel="next" title="Конфигурация" href="configuration.html" />
+    <link rel="prev" title="Установка" href="installation.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -33,10 +33,8 @@
 
           <div class="body" role="main">
             
-  <div class="toctree-wrapper compound" id="usage">
-</div>
-<div class="section" id="id1">
-<h1>Использование<a class="headerlink" href="#id1" title="Ссылка на этот заголовок">¶</a></h1>
+  <div class="section" id="usage">
+<span id="id1"></span><h1>Использование<a class="headerlink" href="#usage" title="Ссылка на этот заголовок">¶</a></h1>
 <div class="section" id="run-task">
 <span id="id2"></span><h2>Запуск заданий<a class="headerlink" href="#run-task" title="Ссылка на этот заголовок">¶</a></h2>
 <p>Для запуска заданий вручную:</p>
@@ -101,59 +99,58 @@ python3 KristaBackup.py disable task_name
 <p>В приложение также встроен веб-модуль. С его помощью
 можно просмотривать файлы логов и состояние триггер-файла,
 если он используется.</p>
-<p>Для запуска веб-приложения нужно выполнить следующую команду:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py run web
+<p>Пример работы с веб-приложением:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py web start
+python3 KristaBackup.py web stop  <span class="c1"># Или Ctrl+C</span>
 </pre></div>
 </div>
-<p>Для запуска веб-api нужно выполнить следующую команду:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py run webapi
+<p>Для запуска веб-api (без интерфейса) нужно выполнить следующую команду:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py web --webapi start
 </pre></div>
 </div>
 <p>По умолчанию приложение запускается на <a class="reference external" href="http://127.0.0.1:5555">http://127.0.0.1:5555</a>.
 Хост и порт можно поменять в config.yaml:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">web</span><span class="p">:</span>
   <span class="nt">host</span><span class="p">:</span> <span class="s">&#39;0.0.0.0&#39;</span>
-  <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3333</span>
+  <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">5555</span>
 </pre></div>
 </div>
-<p>Опции можно посмотреть выполнив <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">KristaBackup.py</span> <span class="pre">--help</span></code>.</p>
-<p id="user-utils">Остановить приложение или аpi можно командами</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 KristaBackup.py stop web
-python3 KristaBackup.py stop webapi
-</pre></div>
+<p>Данную информацию можно получить командой <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">KristaBackup.py</span> <span class="pre">--help</span></code>.</p>
 </div>
-</div>
-<div class="section" id="id6">
-<h2>Утилита для управления пользователями веб-приложения<a class="headerlink" href="#id6" title="Ссылка на этот заголовок">¶</a></h2>
-<p>Утилита поддерживает добавление, удаление и обновления свойств пользователей,
-позволяет просматривать список пользователей, добавлять, удалять и редактировать пользователя.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./UsersUtils.py list
-./UsersUtils.py add -u aaa -p passWord -m abcd@mail.com -a
-./UsersUtils.py mod -u aaa -p passWord -m abcd@mail.com -a
-./UsersUtils.py del -u aaa
-./UsersUtils.py check -u aaa
-./UsersUtils.py check -m abcd@mail.com
-</pre></div>
-</div>
-<p>Использование:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>UsersUtils.py действие <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-u USERNAME<span class="o">]</span> <span class="o">[</span>-m EMAIL<span class="o">]</span> <span class="o">[</span>-p PASSW<span class="o">]</span> <span class="o">[</span>-a<span class="o">]</span>
+<div class="section" id="user-utils">
+<span id="id6"></span><h2>Управления пользователями веб-приложения<a class="headerlink" href="#user-utils" title="Ссылка на этот заголовок">¶</a></h2>
+<p>В интерфейсе web модуля существует система пользователей. Пользователи
+с правами администратора могут редактировать права других пользователей
+и управлять заданиями.</p>
+<p>Управлять списком пользователей можно также из консольного интерфейса.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ python3 KristaBackup.py web users list --help
+usage: KristaBackup.py web users <span class="o">[</span>-h<span class="o">]</span> &lt;действие&gt; ...
 
-Опции:
--u    имя пользователя
--p    пароль
--m    abcd@mail.com
--a    включить флаг администратора
+positional arguments:
+  &lt;действие&gt;
+    list      список пользователей
+    add       добавить пользователя
+    upd       обновить пользователя
+    rm        удалить пользователя
+</pre></div>
+</div>
+<p>Пример добавления нового пользователя:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ python3 KristaBackup.py web users add new_user new_user@their.mail pAs<span class="nv">$w0rd</span> --admin
+Добавлен пользователь new_user
 
-Действия:
-list      вывести имя пользователя
-add       добавить пользователя <span class="o">(</span>необходимо указать -u -p -m,
-          параметр -a указывается опицонально<span class="o">)</span>
-mod       изменить свойства пользователя заданного параметром -u,
-          параметры -m -p меняются только если переданы,
-          если не указать параметр -a, то флаг админа будет сброшен
-del       удалить пользователя -u
-check     проверить наличие пользователя по имени
-          или адресу электронной почты
+$ python3 KristaBackup.py web users add --help
+usage: KristaBackup.py web users add <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--plain <span class="p">|</span> --admin<span class="o">]</span>
+                                    user email password
+
+positional arguments:
+  user        имя пользователя
+  email       почтовый адрес
+  password    пароль
+
+optional arguments:
+  -h, --help  show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --plain     назначить стандартные права <span class="o">(</span>default<span class="o">)</span>
+  --admin     назначить права администратора
 </pre></div>
 </div>
 </div>
@@ -178,20 +175,32 @@ check     проверить наличие пользователя по име
 <h3>Навигация</h3>
 <p class="caption"><span class="caption-text">Содержание:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id2">Рекомендуемый способ установки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id3">Сборка исполняемого файла</a></li>
+</ul>
+</li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Использование</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#run-task">Запуск заданий</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#run-action">Запуск действий</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crontab">Работа с crontab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#api">Запуск веб-api или веб-приложения</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id6">Утилита для управления пользователями веб-приложения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#user-utils">Управления пользователями веб-приложения</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Конфигурация</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="configuration.html#configuration-structure">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id2">Общая стуктура</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#id3">Расписание</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configuration.html#id6">Описание заданий</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configuration.html#id9">Пример написания конфигурации</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id7">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id10">Пример написания конфигурации</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="naming_schemes.html">Именованные схемы</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id2">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id3">Виды переменных</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id5">Применение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id6">Идентификатор</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id8">Дополнительно</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="actions/actions_index.html">Действия</a><ul>
@@ -208,14 +217,19 @@ check     проверить наличие пользователя по име
 <li class="toctree-l2"><a class="reference internal" href="actions/dschecker.html">DataSpaceChecker</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Разработка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development.html#id2">Тестирование</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#id5">Дополнительно</a></li>
+</ul>
+</li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="index.html" title="предыдущая глава">KristaBackup</a></li>
-      <li>Next: <a href="installation.html" title="следующая глава">Установка</a></li>
+      <li>Previous: <a href="installation.html" title="предыдущая глава">Установка</a></li>
+      <li>Next: <a href="configuration.html" title="следующая глава">Конфигурация</a></li>
   </ul></li>
 </ul>
 </div>

@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>Разработка &#8212; Документация KristaBackup 1.7</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="prev" title="DataSpaceChecker" href="actions/dschecker.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="development">
+<span id="id1"></span><h1>Разработка<a class="headerlink" href="#development" title="Ссылка на этот заголовок">¶</a></h1>
+<div class="section" id="id2">
+<h2>Тестирование<a class="headerlink" href="#id2" title="Ссылка на этот заголовок">¶</a></h2>
+<p>В проекте реализованы базы для юнит и функциональных тестов.
+На данный момент они выступают для <cite>smoke</cite> тестирования.</p>
+<div class="section" id="id3">
+<h3>Юнит тестирование<a class="headerlink" href="#id3" title="Ссылка на этот заголовок">¶</a></h3>
+<p>Unittest был выбран для упрощения поддержки тестирования
+старых версий python.</p>
+<p>Запуск юнит тестов:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> KristaBackup/
+python3 -m unittest
+</pre></div>
+</div>
+</div>
+<div class="section" id="id4">
+<h3>Функциональное тестирование<a class="headerlink" href="#id4" title="Ссылка на этот заголовок">¶</a></h3>
+<p>Для запуска функциональных тестов используется Pytest. Он выступает обёрткой
+над запуском сценариев в Docker. Сценарии находятся в <code class="docutils literal notranslate"><span class="pre">test/scenarios</span></code>.</p>
+<p>Запуск функциональных тестов:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest
+</pre></div>
+</div>
+<p>Также, при запуске можно выбирать версию python для тестирования. Пример:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest -2    <span class="c1"># python3.2</span>
+pytest -24   <span class="c1"># python3.2 и 3.4</span>
+pytest       <span class="c1"># python3.5, стандартно</span>
+python --all <span class="c1"># запуск для python3.2-3.5</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>Дополнительно<a class="headerlink" href="#id5" title="Ссылка на этот заголовок">¶</a></h2>
+<p>При написании кода и тестов нужно учитывать, что
+поддержка должна быть для всех версий python, начиная с 3.2.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">KristaBackup</a></h1>
+
+
+
+
+
+
+
+
+<h3>Навигация</h3>
+<p class="caption"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id2">Рекомендуемый способ установки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id3">Сборка исполняемого файла</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Использование</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#run-task">Запуск заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#run-action">Запуск действий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#crontab">Работа с crontab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#api">Запуск веб-api или веб-приложения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#user-utils">Управления пользователями веб-приложения</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Конфигурация</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id2">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id3">Расписание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id7">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#id10">Пример написания конфигурации</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="naming_schemes.html">Именованные схемы</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id2">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id3">Виды переменных</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id5">Применение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id6">Идентификатор</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_schemes.html#id8">Дополнительно</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="actions/actions_index.html">Действия</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="actions/action.html">Action (основной)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/archiver.html">Tar и Zip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/cleaner.html">Cleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/rsync.html">Rsync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/pgdump.html">PgDump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/mount_umount.html">Mount и Umount</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/movebkpperiod.html">MoveBkpPeriod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/command.html">Command и Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/progress_ticket.html">InProgressTicket</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/check_backup.html">Check backup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions/dschecker.html">DataSpaceChecker</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Разработка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Тестирование</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">Дополнительно</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="actions/dschecker.html" title="предыдущая глава">DataSpaceChecker</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Быстрый поиск</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, НПО Криста.
+      
+      |
+      <a href="_sources/development.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

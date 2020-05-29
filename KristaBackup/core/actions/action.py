@@ -3,16 +3,14 @@
 import fnmatch
 import functools
 import logging
-import os
 import re
 import subprocess
 import uuid
 from threading import Thread
 
-from common.YamlConfig import AppConfig
-
 from .decorators import side_effecting
 from .utils import create_sha1sum_file
+
 
 class Action:
     """Абстрактный класс действия.
@@ -36,15 +34,16 @@ class Action:
 
     """
 
-    required_attrs = {'name'}  # набор обязательных атрибутов
-
     DRYRUN_POSTFIX = 'DRYRUN'
 
     def __init__(self, name):
         self.name = name
         self.logger = logging.getLogger(name)
+        self.source = None
 
         self.basename = _generate_random_basename()
+        self.scheme = None
+
         self.src_path = '.'
         self.dest_path = '.'
 
@@ -65,6 +64,30 @@ class Action:
                 self.DRYRUN_POSTFIX,
             )
 
+    def prepare_pattern(self, pattern):
+        """Обработка первичных паттернов.
+
+        Args:
+            pattern: Строка. Если use_re_in_patterns is True,
+                то считается, что паттерн имеет формат shell и
+                переводится в формат regex.
+
+        Returns:
+            Строку, готовый к использованию/компиляции паттерн.
+
+        """
+        pattern = pattern.strip()
+        if self.use_re_in_patterns:
+            return pattern
+        
+        translated = fnmatch.translate(pattern)
+        if translated.endswith('(?ms)'):
+            translated = translated[:-5]
+        if translated.endswith('\\Z'):
+            translated = translated[:-2]
+        return translated
+
+
     def get_pattern_matcher(self):
         """Возвращает функцию для проверки паттернов и исключений.
 
@@ -79,34 +102,6 @@ class Action:
             def _matcher(*args):
                 return fnmatch.fnmatch(*args[::-1])
         return _matcher
-
-    def generate_filepath(self, name, extension):
-        """Генерирует путь к выходному файлу.
-
-        Args:
-            name: Строка или None
-            extension: Строка или None
-
-        """
-        time_suffix = AppConfig.get_starttime_str()
-        dirname = self.generate_dirname()
-
-        filename = self.generate_filename(name, time_suffix, extension)
-        return os.path.join(dirname, filename)
-
-    def generate_dirname(self):
-        """Возвращает имя для выходной директории."""
-        return self.dest_path
-
-    def generate_filename(self, name, time_suffix, extension=None):
-        """Возвращает имя для выходного файла."""
-        parts = [self.basename, name, time_suffix]
-        _name = '-'.join(
-            [part for part in parts if part is not None],
-        )
-        if extension:
-            return '.'.join([_name, extension])
-        return _name
 
     @staticmethod
     def stream_watcher_filtered(
@@ -157,47 +152,6 @@ class Action:
         if not stream.closed:
             stream.close()
 
-    def walk_apply(self, src, apply, recursive=True, apply_dirs=False):
-        """Метод проходит по файлам и применяет к ним apply.
-
-        На время выполнения меняет текущую директорию на src. По умолчанию
-        проход рекурсивный.
-
-        Args:
-            src: Строка, исходная директория.
-            apply: Функция, принимает файл/строку.
-            recursive: Логическое значение, задаёт рекурсивный обход.
-            apply_dirs: Логическое значение, обработка и директории.
-
-        """
-        if not os.path.isdir(src):
-            raise AttributeError(
-                'директория src не существует: {0}'.format(src),
-            )
-
-        self.logger.debug('Меняю текущую директорию на %s', src)
-        current_dir = os.getcwd()
-        os.chdir(src)
-
-        walker = (
-            (dirpath[2:], filenames)
-            for dirpath, _, filenames in os.walk('.')
-        )
-        if not recursive:
-            walker = [next(walker)]
-        for (dirpath, filenames) in walker:
-            if apply_dirs and dirpath.strip():
-                apply(dirpath)
-            for filename in filenames:
-                filepath = os.path.join(dirpath, filename)
-                apply(filepath)
-        self.logger.info('Обход файлов в директории %s завершён', src)
-        self.logger.debug(
-            'Возвращаю исходную рабочую директорию %s',
-            current_dir,
-        )
-        os.chdir(current_dir)
-
     def execute_cmdline(
         self,
         cmdline,
@@ -212,9 +166,9 @@ class Action:
             return_stdout: Логическое значение, не использовать наблюдателей,
                 после выполнения вернуть содержимое stdout.
             stdout_params: Словарь, параметры для наблюдателя за stdout вида
-            {'default_level': logging.<LEVEL>, 'remove_header': <bool>, 'filters': <dict>}
+                {'default_level': logging.<LEVEL>, 'remove_header': <bool>, 'filters': <dict>}
             stderr_params: Словарь, параметры для наблюдателя за stderr вида
-            {'default_level': logging.<LEVEL>, 'remove_header': <bool>, 'filters': <dict>}
+                {'default_level': logging.<LEVEL>, 'remove_header': <bool>, 'filters': <dict>}
 
         Формат filters можно найти в описании к stream_watcher_filtered.
         """
@@ -291,9 +245,17 @@ class Action:
         )
 
     def __repr__(self):
+        name = self.__class__.__name__
+        attrs = self.__dict__.copy()
+        if attrs.get('source'):
+            attrs['source'] = '<{cls} \'{name}\'>'.format(
+                cls=attrs.get('source').__class__.__name__,
+                name=attrs.get('source').name,
+            )
+
         return '{name}: {attrs}'.format(
-            name=self.__class__.__name__,
-            attrs=self.__dict__,
+            name=name,
+            attrs=attrs,
         )
 
     def start(self):

@@ -6,14 +6,16 @@ from .check_last_backup import CheckLastBackup
 from .pgdump import PgDump
 from .cleaner import Cleaner
 from .dataspace_checker import DataSpaceChecker
-from .in_progress_ticket import (CheckInProgressTicket, SetInProgressTicket,
-                                 UnsetInProgressTicket)
+from .in_progress_ticket import (
+    CheckInProgressTicket, SetInProgressTicket,
+    UnsetInProgressTicket,
+)
 from .umount import Umount
 from .mount import Mount
 from .rsync import Rsync
 
 
-action_types = (
+_action_types = (
     ('action', Action),
     ('command', Command),
     ('script', Script),
@@ -32,3 +34,5 @@ action_types = (
     ('unset_in_progress_ticket', UnsetInProgressTicket),
     ('check_in_progress_ticket', CheckInProgressTicket),
 )
+
+action_types = dict(_action_types)

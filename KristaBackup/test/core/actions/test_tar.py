@@ -51,4 +51,4 @@ class TestActionNameGeneration(unittest.TestCase):
             random_dest_path,
             self.action.level_folders[level],
         )
-        self.assertEqual(random_test_path, self.action.generate_dirname(level))
+        self.assertEqual(random_test_path, self.action.generate_dirname(level=level))

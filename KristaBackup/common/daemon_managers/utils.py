@@ -1,7 +1,7 @@
 import sys
 
 from common import procutil
-from common.arguments.constants import RUN_OPTS
+from common.arguments.constants import RUN_OPT_NAME
 
 
 def generate_command_line(task):
@@ -17,9 +17,13 @@ def generate_command_line(task):
         str, команда для зпуска
 
     """
-    return '{interpreter} {executable} {run} {task_to_run}'.format(
+    if getattr(sys, 'frozen', False):
+        pattern = '{interpreter} {run} {task_to_run}'
+    else:
+        pattern = '{interpreter} {executable} {run} {task_to_run}'
+    return pattern.format(
         interpreter=sys.executable,
         executable=procutil.get_entrypoint_path(),
-        run=next(iter(RUN_OPTS)),
+        run=RUN_OPT_NAME,
         task_to_run=task,
     )

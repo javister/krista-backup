@@ -20,15 +20,23 @@ from .Forms import LoginForm, RegistrationForm, ScheduleForm, ServersForm
 from .Users import admin_required
 from common import procutil
 
-path = os.path.join(
-    os.path.dirname(procutil.get_entrypoint_path()),
-    'web',
-    'webapp',
-)
+
+if getattr(sys, 'frozen', False):
+    root_path = sys._MEIPASS
+else:
+    root_path = os.path.join(
+        os.path.dirname(procutil.get_entrypoint_path()),
+        'web/webapp',
+    )
+
+template_folder = os.path.join(root_path, 'templates')
+static_folder = os.path.join(root_path, 'static')
 
 app = Flask(
     __name__,
-    root_path=path,
+    root_path=root_path,
+    template_folder=template_folder,
+    static_folder=static_folder,
 )
 
 login = LoginManager(app)
@@ -150,7 +158,7 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         Users.add(form.username.data, form.email.data, form.password.data)
-        flash(u'Поздравляем, вы теперь зарегистрированный пользователь!')
+        flash('Поздравляем, вы теперь зарегистрированный пользователь!')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 

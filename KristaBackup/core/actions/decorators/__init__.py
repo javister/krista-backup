@@ -35,22 +35,6 @@ def use_exclusions(cls):
     cls.__init__ = wrapper
     return cls
 
-
-def use_levels(cls):
-    """Декоратор класса.
-
-    Добавляет атрибуты для работы с уровнями бэкапа.
-    """
-    method = cls.__init__
-    @functools.wraps(method)
-    def wrapper(self, *args, **kwargs):
-        self.level = 0
-        self.level_folders = []
-        return method(self, *args, **kwargs)
-    cls.__init__ = wrapper
-    return cls
-
-
 def use_patterns(cls):
     """Декоратор класса.
 
@@ -61,40 +45,6 @@ def use_patterns(cls):
     def wrapper(self, *args, **kwargs):
         self.patterns = []
         self.prepared_patterns = []
-        return method(self, *args, **kwargs)
-    cls.__init__ = wrapper
-    return cls
-
-
-def use_periods(cls):
-    """Декоратор класса.
-
-    Добавляет атрибуты для работы с периодами.
-    """
-    method = cls.__init__
-    @functools.wraps(method)
-    def wrapper(self, *args, **kwargs):
-        self.basename_list = []
-        self.periods = {}
-        return method(self, *args, **kwargs)
-    cls.__init__ = wrapper
-    return cls
-
-
-def use_postgres(cls):
-    """Декоратор класса.
-
-    Добавляет атрибуты для работы с бэкапом postgres.
-    """
-    method = cls.__init__
-    @functools.wraps(method)
-    def wrapper(self, *args, **kwargs):
-        self.host = None
-        self.port = 5432
-        self.user = None
-        self.password = None
-        self.databases = []
-        self.mode = 'single'
         return method(self, *args, **kwargs)
     cls.__init__ = wrapper
     return cls

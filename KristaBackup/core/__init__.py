@@ -7,20 +7,19 @@
 
 """
 
-from .runner import Runner
-from .initialize import initialize, switch_choice
-
+from .initialize import switch_choice, update_working_dir
 
 try:
     FileNotFoundError = FileNotFoundError
 except NameError:
-    __builtins__['FileNotFoundError'] = IOError
+    __builtins__['FileNotFoundError'] = EnvironmentError
 
 try:
     PermissionError = PermissionError
 except NameError:
-    __builtins__['PermissionError'] = IOError
+    __builtins__['PermissionError'] = EnvironmentError
 
-def run(args, is_packed):
-    initialize(args, is_packed)
+
+def run(args):
+    update_working_dir()
     switch_choice(args)

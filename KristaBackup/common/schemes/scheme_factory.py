@@ -1,6 +1,6 @@
 import uuid
 
-from . import schemes
+from .schemes import schemes
 from .default_scheme import DefaultNamingScheme
 
 

@@ -1,25 +1,36 @@
-from .default_scheme import DefaultNamingScheme
 from .scheme_factory import SchemeFactory
 from .schemes import schemes
+
+
+_default_scheme_id = 'default'
 
 
 def get_scheme(scheme_id=None):
     """Возвращает схему по scheme_id.
 
     Args:
-        scheme_id: Строка, уникальное имя схемы;
-    если None, то возвращает стандартную схему.
+        scheme_id: Строка, уникальное имя схемы.
 
     Returns:
         Scheme или None, если схемы с scheme_id не существует.
 
     """
+    global _default_scheme_id
     if not scheme_id:
-        return DefaultNamingScheme()
-    scheme_class = schemes.get(scheme_id, None)
-    if scheme_class:
-        return scheme_class()
+        scheme_id = _default_scheme_id
+    scheme = schemes.get(scheme_id, None)
+    if scheme:
+        return scheme()
     return None
+
+
+def update_scheme(name, new_scheme):
+    schemes[name] = new_scheme
+
+
+def set_default(scheme_id):
+    global _default_scheme_id
+    _default_scheme_id = scheme_id
 
 
 def get_scheme_by_config(scheme_config):
@@ -32,4 +43,4 @@ def get_scheme_by_config(scheme_config):
         Если схема с текущим scheme_id уже существует.
 
     """
-    return SchemeFactory(scheme_config)
+    return SchemeFactory.from_dict(scheme_config)

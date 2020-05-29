@@ -19,10 +19,11 @@ actions:
 
   test_script:
     type: script
-    src_path: /home/
+    src_path: /home
     cmds:
      - ls -l
-     - echo 'text'
+     - spd-say 'hay, I am a champion! hau hau hau'
+     - echo 'The End.'
 
   test_zip_0:
     basename: test-one-zip
@@ -146,3 +147,4 @@ schedule:
         - test_tar_bzip_1
         -
     cron: 00 17 * * 1-6
+    descr: тест

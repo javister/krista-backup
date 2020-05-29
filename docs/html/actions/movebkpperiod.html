@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>MoveBkpPeriod &#8212; Документация KristaBackup 1.6</title>
+    <title>MoveBkpPeriod &#8212; Документация KristaBackup 1.7</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -35,8 +35,8 @@
             
   <div class="section" id="movebkpperiod">
 <span id="move-bkp-period"></span><h1>MoveBkpPeriod<a class="headerlink" href="#movebkpperiod" title="Ссылка на этот заголовок">¶</a></h1>
-<p>Выполняет копирование файлов из <code class="docutils literal notranslate"><span class="pre">src_path</span></code> в <code class="docutils literal notranslate"><span class="pre">dest_path</span></code>
-по <code class="docutils literal notranslate"><span class="pre">basename_list</span></code>.</p>
+<p>Выполняет копирование выходных файлов из действий в
+<code class="docutils literal notranslate"><span class="pre">action_list</span></code> в директорию <code class="docutils literal notranslate"><span class="pre">dest_path</span></code>.</p>
 <div class="section" id="id1">
 <h2>Параметры:<a class="headerlink" href="#id1" title="Ссылка на этот заголовок">¶</a></h2>
 <table class="colwidths-given docutils align-default">
@@ -52,23 +52,19 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>src_path</p></td>
-<td><p>Каталог, в которой находятся бэкапы с basename из basename_list.</p></td>
-<td><p>путь к директории</p></td>
-</tr>
-<tr class="row-odd"><td><p>dest_path</p></td>
+<tr class="row-even"><td><p>dest_path</p></td>
 <td><p>Каталог для файлов с результатом.</p></td>
 <td><p>путь к директории</p></td>
 </tr>
-<tr class="row-even"><td><p>periods</p></td>
+<tr class="row-odd"><td><p>periods</p></td>
 <td><p>список с периодами</p></td>
 <td><p>{ } (см. пример)</p></td>
 </tr>
-<tr class="row-odd"><td><p>basename_list</p></td>
-<td><p>список из basename, которые требуется скопировать</p></td>
+<tr class="row-even"><td><p>action_list</p></td>
+<td><p>список имён действий, результаты которых требуется скопировать</p></td>
 <td><p>[ ]</p></td>
 </tr>
-<tr class="row-even"><td><p>dry</p></td>
+<tr class="row-odd"><td><p>dry</p></td>
 <td><p>Не выполнять копирование файлов (dryrun).</p></td>
 <td><p>false (стандартное значение)</p></td>
 </tr>
@@ -78,10 +74,9 @@
 <div class="section" id="id2">
 <h2>Пример:<a class="headerlink" href="#id2" title="Ссылка на этот заголовок">¶</a></h2>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">mv_backup</span><span class="p">:</span>
-  <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">копирование бэкапов</span>
-  <span class="nt">basename_list</span><span class="p">:</span>
-      <span class="p p-Indicator">-</span> <span class="s">&#39;etc&#39;</span>
-      <span class="p p-Indicator">-</span> <span class="s">&#39;home_user&#39;</span>
+  <span class="nt">action_list</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">make_full_etc</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">make_full_opt</span>
   <span class="nt">periods</span><span class="p">:</span>
       <span class="nt">weekly</span><span class="p">:</span>
           <span class="c1"># path примет значение weekly</span>
@@ -90,9 +85,28 @@
           <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">month</span>
           <span class="nt">cron</span><span class="p">:</span> <span class="s">&#39;40</span><span class="nv"> </span><span class="s">02</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">*&#39;</span>
           <span class="nt">max_files</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3</span>
-  <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup/0/</span>
   <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup/vault/</span>
+  <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">копирование бэкапов</span>
   <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">move_bkp_period</span>
+
+<span class="nt">make_full_etc</span><span class="p">:</span>
+  <span class="nt">basename</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">etc</span>
+  <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/etc</span>
+  <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup</span>
+  <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+  <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">бэкап файлов /etc 0-го уровня</span>
+  <span class="nt">checksum_file</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+  <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">make</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
+
+<span class="nt">make_full_opt</span><span class="p">:</span>
+  <span class="nt">basename</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">opt</span>
+  <span class="nt">src_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/opt</span>
+  <span class="nt">dest_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/backup</span>
+  <span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+  <span class="nt">descr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">бэкап файлов /opt 0-го уровня</span>
+  <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">make</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tar</span>
 </pre></div>
 </div>
 </div>
@@ -128,20 +142,32 @@
 <h3>Навигация</h3>
 <p class="caption"><span class="caption-text">Содержание:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Установка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#id2">Рекомендуемый способ установки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#id3">Сборка исполняемого файла</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../usage.html">Использование</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../usage.html#run-task">Запуск заданий</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../usage.html#run-action">Запуск действий</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../usage.html#crontab">Работа с crontab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../usage.html#api">Запуск веб-api или веб-приложения</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../usage.html#id6">Утилита для управления пользователями веб-приложения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#user-utils">Управления пользователями веб-приложения</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../installation.html">Установка</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration.html">Конфигурация</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../configuration.html#configuration-structure">Общая стуктура</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id2">Общая стуктура</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configuration.html#id3">Расписание</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id6">Описание заданий</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id9">Пример написания конфигурации</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id7">Описание заданий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html#id10">Пример написания конфигурации</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../naming_schemes.html">Именованные схемы</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../naming_schemes.html#id2">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../naming_schemes.html#id3">Виды переменных</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../naming_schemes.html#id5">Применение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../naming_schemes.html#id6">Идентификатор</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../naming_schemes.html#id8">Дополнительно</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="actions_index.html">Действия</a><ul class="current">
@@ -156,6 +182,11 @@
 <li class="toctree-l2"><a class="reference internal" href="progress_ticket.html">InProgressTicket</a></li>
 <li class="toctree-l2"><a class="reference internal" href="check_backup.html">Check backup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dschecker.html">DataSpaceChecker</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Разработка</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development.html#id2">Тестирование</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development.html#id5">Дополнительно</a></li>
 </ul>
 </li>
 </ul>
