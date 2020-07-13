@@ -8,7 +8,7 @@ TimeoutSec=300
 Restart=always
 RestartSec=30
 User=root
-ExecStart=/usr/bin/python3 /opt/KristaBackup.py run web
+ExecStart=/usr/bin/python3 /opt/KristaBackup.py web start
 
 [Install]
 WantedBy=multi-user.target

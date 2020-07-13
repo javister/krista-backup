@@ -171,7 +171,7 @@ class ActionBuilder:
         1. Если атрибут из action_obj это лист, то атрибут из action_conf
             конвертируется в строку и разбивается по запятым (если он не лист).
         2. По naming_scheme объекту action_obj присваивается атрибут scheme со
-            схемой с соответствующим scheme_id.
+            схемой с соответствующим scheme_id, а naming_scheme присваивается None.
         3. Атрибуту source делается подстановка соответствующего реального действия.
 
         Args:
@@ -190,11 +190,12 @@ class ActionBuilder:
             attr = getattr(action_obj, attribute_name, None)
             if isinstance(attr, list):
                 if not isinstance(action_conf[attribute_name], list):
-                    attr_value = str(action_conf[attribute_name])
-                    attr_value = [
-                        a_value.strip()
-                        for a_value in attr_value.split(',')
-                    ]
+                    attr_value = str(action_conf[attribute_name]).strip()
+                    if attr_value:
+                        attr_value = [
+                            a_value.strip()
+                            for a_value in attr_value.split(',')
+                        ]
             setattr(action_obj, attribute_name, attr_value)
 
     def _update_source_action_conf(self, action_conf):
@@ -220,5 +221,6 @@ class ActionBuilder:
         scheme = action_conf.setdefault('naming_scheme', None)
         if isinstance(scheme, dict):
             action_conf['scheme'] = schemes.get_scheme_by_config(scheme)
-        else:
+            del action_conf['naming_scheme']
+        elif 'scheme' not in action_conf:
             action_conf['scheme'] = schemes.get_scheme(scheme)

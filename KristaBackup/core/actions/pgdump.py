@@ -125,15 +125,14 @@ class PgDump(Action, NameGenerationInterface):
             self.logger.error('Ошибка при выполнении: %s', exc)
             return True
         self.logger.info('Заархивирована база %s', database)
-        
+
         if self.checksum_file:
             hash_filepath = self.generate_hash_filepath(dbname=database)
             self.create_checksum_file(filepath, hash_filepath)
 
     def is_exclusion(self, dbname):
-        matcher = self.get_pattern_matcher()
         for ex in self.prepared_exclusions:
-            if matcher(ex, dbname):
+            if re.match(ex, dbname):
                 return True
         return False
 
@@ -244,7 +243,8 @@ class PgDump(Action, NameGenerationInterface):
             )
             patterns.append(pattern)
             if self.checksum_file:
-                hash_p = self.scheme.get_pgdump_hashfile_pattern(self, dbname=dbname)
+                hash_p = self.scheme.get_pgdump_hashfile_pattern(
+                    self, dbname=dbname)
                 patterns.append(hash_p)
         return patterns
 

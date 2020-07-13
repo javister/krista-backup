@@ -77,8 +77,8 @@ class MoveBkpPeriod(Action, WalkAppierMixin):
         """
         for action in self.action_list:
             files = self._fill_files_by_action(action)
-            min_date = None
-            oldest_files = []
+            max_date = None
+            newest_files = []
 
             for signature, group_files in files.items():
                 for filepath in group_files:
@@ -88,14 +88,14 @@ class MoveBkpPeriod(Action, WalkAppierMixin):
                     )
                     if not date:
                         continue
-                    if not min_date or date < min_date:
-                        min_date = min(date, min_date or date)
-                        oldest_files = [filepath]
-                    elif date == min_date:
-                        oldest_files.append(filepath)
+                    if not max_date or date > max_date:
+                        max_date = max(date, max_date or date)
+                        newest_files = [filepath]
+                    elif date == max_date:
+                        newest_files.append(filepath)
 
-            if min_date:
-                if len(oldest_files) != len(files):
+            if max_date:
+                if len(newest_files) != len(files):
                     self.logger.warning(
                         'Количество групп не соответствует количеству найденных файлов!',
                     )
@@ -112,12 +112,12 @@ class MoveBkpPeriod(Action, WalkAppierMixin):
                         'В каждой группе действия %s по одному файлу',
                         action,
                     )
-                    oldest_files = [
+                    newest_files = [
                         filepath for _, group_files in files.items()
                         for filepath in group_files
                     ]
 
-            self.files_to_move.extend(oldest_files)
+            self.files_to_move.extend(newest_files)
 
         self.logger.info(
             'Найденные файлы для перемещения: %s', self.files_to_move,

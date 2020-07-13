@@ -35,8 +35,11 @@
             
   <div class="section" id="movebkpperiod">
 <span id="move-bkp-period"></span><h1>MoveBkpPeriod<a class="headerlink" href="#movebkpperiod" title="Ссылка на этот заголовок">¶</a></h1>
-<p>Выполняет копирование выходных файлов из действий в
-<code class="docutils literal notranslate"><span class="pre">action_list</span></code> в директорию <code class="docutils literal notranslate"><span class="pre">dest_path</span></code>.</p>
+<p>Выполняет копирование всех выходных файлов из действий в
+<code class="docutils literal notranslate"><span class="pre">action_list</span></code> в директорию <code class="docutils literal notranslate"><span class="pre">dest_path</span></code>. Копируются
+файлы только последнего бэкапа.</p>
+<p>В <code class="docutils literal notranslate"><span class="pre">action_list</span></code> могут быть действия типа <code class="docutils literal notranslate"><span class="pre">Archiver</span></code> (<code class="docutils literal notranslate"><span class="pre">zip</span></code>, <code class="docutils literal notranslate"><span class="pre">tar</span></code>)
+и <code class="docutils literal notranslate"><span class="pre">pgdump</span></code>.</p>
 <div class="section" id="id1">
 <h2>Параметры:<a class="headerlink" href="#id1" title="Ссылка на этот заголовок">¶</a></h2>
 <table class="colwidths-given docutils align-default">

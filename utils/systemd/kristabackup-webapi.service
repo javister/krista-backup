@@ -8,7 +8,7 @@ TimeoutSec=300
 Restart=always
 RestartSec=30
 User=root
-ExecStart=/usr/bin/python3 /opt/KristaBackup.py run webapi
+ExecStart=/usr/bin/python3 /opt/KristaBackup.py web --webapi start
 
 [Install]
 WantedBy=multi-user.target

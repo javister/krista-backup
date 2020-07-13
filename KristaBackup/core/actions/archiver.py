@@ -100,7 +100,7 @@ class Archiver(Action, NameGenerationInterface, WalkAppierMixin):
     def get_patterns(self, *args, **kwargs):
         patterns = [self.scheme.get_fsdump_pattern(self)]
         if self.checksum_file:
-            hash_p = self.scheme.get_fsdump_hashfile_name(self)
+            hash_p = self.scheme.get_fsdump_hashfile_pattern(self)
             patterns.append(hash_p)
         return patterns
 

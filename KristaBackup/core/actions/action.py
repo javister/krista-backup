@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 
 import fnmatch
-import functools
 import logging
 import re
 import subprocess
@@ -79,29 +78,12 @@ class Action:
         pattern = pattern.strip()
         if self.use_re_in_patterns:
             return pattern
-        
         translated = fnmatch.translate(pattern)
         if translated.endswith('(?ms)'):
             translated = translated[:-5]
         if translated.endswith('\\Z'):
             translated = translated[:-2]
-        return translated
-
-
-    def get_pattern_matcher(self):
-        """Возвращает функцию для проверки паттернов и исключений.
-
-        Returns:
-            _matcher(pattern, name): функция, для проверки паттернов.
-
-        """
-        if self.use_re_in_patterns:
-            _matcher = re.match
-        else:
-            @functools.wraps(fnmatch.fnmatch)
-            def _matcher(*args):
-                return fnmatch.fnmatch(*args[::-1])
-        return _matcher
+        return r'\A{0}\Z'.format(translated)
 
     @staticmethod
     def stream_watcher_filtered(
